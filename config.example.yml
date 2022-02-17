@@ -1,0 +1,6 @@
+show_error_details: false
+debug: true
+
+discord:
+  client_id: ""
+  redirect_uri: ""

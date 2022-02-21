@@ -3,3 +3,4 @@ uvicorn
 gunicorn
 uvloop; platform_system != "Windows"
 pyyaml
+aiohttp

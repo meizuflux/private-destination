@@ -13,7 +13,6 @@ class OAuthUrls:
     token: str
     user: str
 
-@dataclass
 class User(TypedDict):
     id: str
     name: str

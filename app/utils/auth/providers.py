@@ -24,3 +24,31 @@ class GithubProvider(OAuthProvider):
             "email": data["email"],
             "avatar_url": data["avatar_url"]
         }
+
+class DiscordProvider(OAuthProvider):
+    name = "Discord"
+    urls = OAuthUrls(
+        authorization=AuthorizationUrl(
+            "https://discord.com/api/oauth2/authorize",
+            True,
+            {
+                "scope": "identify email",
+                "response_type": "code"
+            }
+        ),
+        token="https://discord.com/api/oauth2/token",
+        user="https://discord.com/api/users/@me"
+    )
+
+    @staticmethod
+    def parse_data(data) -> User:
+        if data["avatar"] is None:
+            avatar_url = f"https://cdn.discordapp.com/embed/avatars/{data['discriminator'] % 5}.png"
+        else:
+            avatar_url = f"https://cdn.discordapp.com/avatars/{data['id']}/{data['avatar']}.png?size=64"
+        return {
+            "id": data["id"],
+            "name": data["username"],
+            "email": data.get("email"),
+            "avatar_url": avatar_url
+        }

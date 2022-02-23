@@ -10,9 +10,6 @@ from openapidocs.v3 import Info
 from app.utils.auth import OAuthProvider
 
 
-
-
-
 class CustomApplication(Application):
     config: Dict[str, Union[str, int, bool]]
     session: ClientSession
@@ -41,14 +38,14 @@ class CustomApplication(Application):
         )
 
         self.use_sessions(config["signing_key"])
+
         self.serve_files("frontend/dist", fallback_document="index.html", allow_anonymous=True)
 
+        self.services.add_instance(self)
 
         docs = OpenAPIHandler(info=Info(title="Cats API", version="0.0.1"))
         docs.include = lambda path, _: path.startswith("/api/")
         docs.bind_app(self)
-
-        self.services.add_instance(self)
 
         self.on_start += on_start
         self.after_start += after_start
@@ -66,7 +63,7 @@ async def after_start(app: CustomApplication) -> None:
     final = {k.decode('utf8'): [r.pattern.decode('utf8') for r in v] for (k, v) in dict(app.router.routes).items()}
 
     print(dump(final))
-    print(app.oauth_providers)
+    print("OAuth2 Providers: ", ", ".join(app.oauth_providers))
 
 async def on_stop(app: CustomApplication) -> None:
     print("On stop")

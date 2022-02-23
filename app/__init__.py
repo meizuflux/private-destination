@@ -1,8 +1,10 @@
+from urllib.parse import urlencode
 from blacksheep.server import Application
 from itsdangerous import BadSignature
 from yaml import safe_load
 from app import handlers
 from app import controllers
+from app.utils.app import CustomApplication
 controllers # make it shut up about it being used
 
 from datetime import timezone, datetime
@@ -18,14 +20,8 @@ from guardpost.asynchronous.authentication import AuthenticationHandler, Identit
 from guardpost.authentication import User
 from blacksheep.server.dataprotection import get_serializer
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
-
-
-with open("config.yml") as f:
-    config = safe_load(f)
+from os import environ
+from sys import argv
 
 try:
     import uvloop
@@ -33,45 +29,45 @@ try:
 except ModuleNotFoundError:
     print("Running without `uvloop`")
 
+IS_DEV = "--reload" in argv
 
-app = Application(
-    show_error_details=bool(config["show_error_details"]),
-    debug=bool(config["debug"]),
-)
+with open("config.yml") as f:
+    loaded = safe_load(f)
 
-app.use_sessions("<SIGNING_KEY>")
+    if IS_DEV is True:
+        config = loaded["dev"]
+    else:
+        config = loaded["prod"]
 
-app.state = {
-    "config": config,
-    "db": {}
-}
-
-app.on_start += handlers.before_start
-app.after_start += handlers.after_start
-app.on_stop += handlers.on_stop
-
-app.serve_files("build", fallback_document="index.html", allow_anonymous=True)
+for i, secret in enumerate(config["secrets"], start=1):
+    environ[f"APP_SECRET_{i}"] = secret
 
 
-docs = OpenAPIHandler(info=Info(title="Cats API", version="0.0.1"))
-docs.include = lambda path, _: path.startswith("/api/")
+app = CustomApplication()
 
-docs.bind_app(app)
+app.add_oauth_provider("discord", {
+    "name": "Discord",
+    "urls": {
+        "authorization": {
+            "url": "https://discord.com/api/oauth2/authorize",
+            "state": True,
+            "params": {
+                "response_type": "code",
+                "client_id": app.config["discord"]["client_id"],
+                "scope": "identify email",
+                "redirect_uri": app.config["callback_url"],
+                "prompt": "consent"
+            }
+        },
+        "token": "https://discord.com/api/oauth2/token",
+        "user": "https://discord.com/api/users/@me"
+    }
+})
 
-app.use_cors(
-    allow_methods="*",
-    allow_origins="*",
-    allow_headers="* Authorization",
-    max_age=300,
-)
-
-app.services.add_instance(app)
 
 class AuthHandler(AuthenticationHandler):
     async def authenticate(self, context: Request) -> Optional[Identity]:
         authorization_value = context.get_first_header(b"Authorization")
-        print(authorization_value)
-
         if not authorization_value:
             context.identity = Identity({})
             return None

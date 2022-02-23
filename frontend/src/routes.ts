@@ -4,7 +4,7 @@ import type { RouteDefinition } from 'solid-app-router';
 import Home from './pages/home';
 import AboutData from './pages/about.data';
 
-import { redirect } from './utils';
+import { wrappedRedirect } from './utils/redirect';
 
 export const routes: RouteDefinition[] = [
   {
@@ -26,7 +26,7 @@ export const routes: RouteDefinition[] = [
   },
   {
     path: "/login",
-    component: lazy(() => redirect("https://discord.com/api/oauth2/authorize?client_id=943699345818153000&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fcallback&response_type=token&scope=identify%20email"))
+    component: lazy(() => wrappedRedirect("https://discord.com/api/oauth2/authorize?client_id=943699345818153000&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fcallback&response_type=token&scope=identify%20email"))
   },
   {
     path: '**',

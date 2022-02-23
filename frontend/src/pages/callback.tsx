@@ -1,4 +1,5 @@
 import { onMount } from "solid-js"
+import { redirect } from "../utils/redirect";
 
 export default function AuthCallback() {
     onMount(async () => {
@@ -12,7 +13,7 @@ export default function AuthCallback() {
             headers: {'Content-Type': 'application/json'}
         }
 
-		fetch("http://localhost:8000/auth/", options)
+		fetch("http://localhost:8000/auth/token", options)
 			.then(result => result.json())
 			.then(response => {
 				console.log(response)
@@ -21,7 +22,7 @@ export default function AuthCallback() {
 			})
 			.catch(console.error);
         
-        //window.location.replace("/");
+        redirect("/")
     })
 
     return (

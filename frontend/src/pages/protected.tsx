@@ -2,7 +2,7 @@ import { onMount } from "solid-js";
 
 export default function Protected() {
     onMount(async () => {
-        const token = localStorage.getItem("token")
+        /*const token = localStorage.getItem("token")
         if (token === null) {
             return
         }
@@ -13,6 +13,17 @@ export default function Protected() {
             }
         })
 
-        console.log(await res.json())
+        console.log(await res.json())*/
+
+
     })
+
+    async function ee() {
+        const rest = await fetch("/api/shortner/test")
+        console.log(await rest.json())
+    }
+
+    return (
+        <button onClick={ee}>hi</button>
+    )
 }

@@ -5,6 +5,8 @@ from yaml import safe_load
 from app import handlers
 from app import controllers
 from app.utils.app import CustomApplication
+from app.utils.auth import Credentials
+from app.utils.auth.providers import GithubProvider
 controllers # make it shut up about it being used
 
 from datetime import timezone, datetime
@@ -29,40 +31,9 @@ try:
 except ModuleNotFoundError:
     print("Running without `uvloop`")
 
-IS_DEV = "--reload" in argv
-
-with open("config.yml") as f:
-    loaded = safe_load(f)
-
-    if IS_DEV is True:
-        config = loaded["dev"]
-    else:
-        config = loaded["prod"]
-
-for i, secret in enumerate(config["secrets"], start=1):
-    environ[f"APP_SECRET_{i}"] = secret
-
-
 app = CustomApplication()
 
-app.add_oauth_provider("discord", {
-    "name": "Discord",
-    "urls": {
-        "authorization": {
-            "url": "https://discord.com/api/oauth2/authorize",
-            "state": True,
-            "params": {
-                "response_type": "code",
-                "client_id": app.config["discord"]["client_id"],
-                "scope": "identify email",
-                "redirect_uri": app.config["callback_url"],
-                "prompt": "consent"
-            }
-        },
-        "token": "https://discord.com/api/oauth2/token",
-        "user": "https://discord.com/api/users/@me"
-    }
-})
+app.add_oauth_provider("github", GithubProvider(credentials=Credentials(app.config["github"]["client_id"], app.config["github"]["client_secret"])))
 
 
 class AuthHandler(AuthenticationHandler):

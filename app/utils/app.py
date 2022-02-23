@@ -1,6 +1,6 @@
 from os import environ
 from sys import argv
-from typing import Dict
+from typing import Dict, Union
 from aiohttp import ClientSession
 from blacksheep import Application
 from yaml import dump, safe_load
@@ -14,7 +14,7 @@ from app.utils.auth import OAuthProvider
 
 
 class CustomApplication(Application):
-    config: Dict[str, str | int | bool]
+    config: Dict[str, Union[str, int, bool]]
     session: ClientSession
     oauth_providers: Dict[str, OAuthProvider] = {}
 

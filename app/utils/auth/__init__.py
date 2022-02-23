@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import Callable, Dict, Generic, TypeVar, TypedDict
 
-T = TypeVar("T")
-
 @dataclass
 class AuthorizationUrl:
     url: str
@@ -16,22 +14,26 @@ class OAuthUrls:
     user: str
 
 @dataclass
-class User:
+class User(TypedDict):
     id: str
     name: str
     email: str
     avatar_url: str
 
-    __slots__ = ("id", "name", "avatar_url", "email")
-
-    def __init__(self, info: Dict[str, str]):
-        for attr in self.__slots__:
-            setattr(self, attr, info.get(attr))
+@dataclass
+class Credentials:
+    client_id: str
+    client_secret: str
 
 @dataclass
-class OAuthProvider(Generic[T]):
+class OAuthProvider:
     name: str
     urls: OAuthUrls
+    credentials: Credentials
+
+    def __init__(self, credentials: Credentials):
+        self.credentials = credentials
     
-    def parse_data(self, data: Generic[T]) -> User:
+    @staticmethod
+    def parse_data(data) -> User:
         raise NotImplementedError

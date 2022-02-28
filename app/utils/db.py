@@ -23,8 +23,7 @@ class Database(Pool):
         await self.execute(query, user["id"], user["username"], user["email"], user["avatar_url"], provider)
 
     async def fetch_user(self, uuid: UUID):
-        user_id = self.__data["sessions"][uuid]["id"]
-        return self.__data["users"][user_id]
+        return await self.fetchrow("SELECT * FROM users WHERE id = (SELECT user_id FROM sessions WHERE id =$1);", uuid)
 
     async def create_session(self, user_id: str):
         uuid = await self.fetchval("INSERT INTO sessions (SELECT gen_random_uuid(), $1) RETURNING id;", user_id)

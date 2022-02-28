@@ -1,2 +1,9 @@
-from app.controllers.api.shortner import Shortner
-from app.controllers.api.auth import Auth
+from typing import Tuple, Type
+
+from app.routing import Controller
+from .auth import Auth
+
+def all() -> Tuple[Type[Controller]]:
+    return (
+        Auth,
+    )

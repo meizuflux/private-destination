@@ -2,7 +2,7 @@ from secrets import token_urlsafe
 from urllib.parse import quote
 from aiohttp import web
 from aiohttp_apispec import docs, match_info_schema, querystring_schema
-from app.routing import Controller, view
+from app.routing import APIController, view
 from marshmallow import Schema, fields, validate
 
 from app.utils.auth.providers import providers
@@ -14,7 +14,7 @@ class CallbackQuerystring(Schema):
     code = fields.Str(required=True)
     state = fields.Str()
 
-class Auth(Controller):
+class Auth(APIController):
     @view("login")
     class Login(web.View):
         @querystring_schema(ProviderQuery)
@@ -32,8 +32,6 @@ class Auth(Controller):
             url += f"?redirect_uri={app['config']['callback_url'] + f'/{p}'}&client_id={provider.credentials.client_id}"
             print(url)
 
-            
-
             for k, v in provider.urls.authorization.params.items():
                 url += f"&{k}={quote(v)}"
 
@@ -50,8 +48,8 @@ class Auth(Controller):
                 httponly=True,
                 secure=not app["dev"]
             )
-            if request.cookies.get("id") is not None:
-                res.del_cookie("id")
+            if request.cookies.get("_session") is not None:
+                res.del_cookie("_session")
 
             return res
 
@@ -66,14 +64,14 @@ class Auth(Controller):
             p = request["match_info"]["provider"]
             provider = app["oauth_providers"].get(p)
             if provider is None:
-                return self.json({"message": "oauth provider not found"}, 400)
+                return web.json_response({"message": "oauth provider not found"}, status=400)
 
             state = request["querystring"]["state"]
             code = request["querystring"]["code"]
 
             if provider.urls.authorization.state == True:
                 if state != request.cookies.get("state"):
-                    return self.text("state doesn't match")
+                    return web.json_response({"message": "state doesnt match"}, status=400)
 
             res = web.HTTPFound("/")
             res.del_cookie("state")
@@ -118,3 +116,12 @@ class Auth(Controller):
             res = web.json_response({"message": "Logged out"})
             res.del_cookie("_session")
             return res
+
+    @view("providers")
+    class Providers(web.View):
+        async def get(self):
+            providers = []
+            for key, provider in self.request.app["oauth_providers"].items():
+                providers.append({"key": key, "name": provider.name})
+
+            return web.json_response(providers)

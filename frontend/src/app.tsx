@@ -27,8 +27,13 @@ const App: Component = () => {
             </Link>
           </li>
           <li class="py-2 px-4">
-            <Link href="/api/auth/login?provider=github" class="no-underline hover:underline">
+            <Link href="/login" class="no-underline hover:underline">
               Login
+            </Link>
+          </li>
+          <li class="py-2 px-4">
+            <Link href="/api/auth/logout" class="no-underline hover:underline">
+              Logout
             </Link>
           </li>
 

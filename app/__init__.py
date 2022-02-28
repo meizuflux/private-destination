@@ -1,3 +1,4 @@
+from uuid import UUID
 from app import controllers
 from app.utils.app import CustomApplication
 from app.utils.auth import Credentials
@@ -25,9 +26,10 @@ app.add_oauth_provider("discord", DiscordProvider(credentials=Credentials(app.co
 
 class AuthHandler(AuthenticationHandler):
     async def authenticate(self, context: Request) -> Optional[Identity]:
-        user = context.session.get("user")
-        if user is not None:
-            context.identity = Identity(user, "oauth_" + str(context.session["provider"]))
+        uuid = context.get_cookie("id")
+        if uuid is not None:
+            user = await app.db.fetch_user(UUID(uuid))
+            context.identity = Identity(user, "oauth_" + user["provider"])
             return context.identity
         return context.identity
 

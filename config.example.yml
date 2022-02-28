@@ -1,12 +1,23 @@
 dev:
-  show_error_details: false
+  show_error_details: true
   debug: true
-  secrets:
-    - ""
-    - ""
-    - ""
-  signing_key: ""
-  callback_url: "http://localhost:8000/api/auth/callback"
+  callback_url: "http://localhost:8000/auth/callback"
+  postgres_dsn: ""
+
+  discord:
+    client_id: ""
+    client_secret: ""
+
+  github:
+    client_id: ""
+    client_secret: ""
+    
+prod:
+  show_error_details: true
+  debug: true
+
+  callback_url: "http://localhost:8000/auth/callback"
+  postgres_dsn: ""
 
   discord:
     client_id: ""

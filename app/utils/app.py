@@ -8,11 +8,13 @@ from blacksheep.server.openapi.v3 import OpenAPIHandler
 from openapidocs.v3 import Info
 
 from app.utils.auth import OAuthProvider
+from app.utils.db import Database, create_pool
 
 
 class CustomApplication(Application):
     config: Dict[str, Union[str, int, bool]]
     session: ClientSession
+    db: Database
     oauth_providers: Dict[str, OAuthProvider] = {}
 
     def __init__(self):
@@ -57,7 +59,10 @@ class CustomApplication(Application):
 async def on_start(app: CustomApplication) -> None:
     print("Before start")
 
+    app.db = await create_pool(app, dsn=app.config["postgres_dsn"])
     app.session = ClientSession()
+    with open("schema.sql") as f:
+        await app.db.execute(f.read())
 
 async def after_start(app: CustomApplication) -> None:
     final = {k.decode('utf8'): [r.pattern.decode('utf8') for r in v] for (k, v) in dict(app.router.routes).items()}
@@ -67,4 +72,6 @@ async def after_start(app: CustomApplication) -> None:
 
 async def on_stop(app: CustomApplication) -> None:
     print("On stop")
+    await app.session.close()
+    await app.db.close()
 

@@ -15,7 +15,7 @@ class OAuthUrls:
 
 class User(TypedDict):
     id: str
-    name: str
+    username: str
     email: str
     avatar_url: str
 

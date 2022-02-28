@@ -26,7 +26,11 @@ export const routes: RouteDefinition[] = [
   },
   {
     path: "/login",
-    component: lazy(() => wrappedRedirect("https://discord.com/api/oauth2/authorize?client_id=943699345818153000&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fcallback&response_type=token&scope=identify%20email"))
+    component: lazy(() => import("./pages/login"))
+  },
+  {
+    path: "/user",
+    component: lazy(() => import("./pages/user"))
   },
   {
     path: '**',

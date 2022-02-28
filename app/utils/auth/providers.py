@@ -20,7 +20,7 @@ class GithubProvider(OAuthProvider):
     def parse_data(data) -> User:
         return {
             "id": str(data["id"]),
-            "name": data["login"],
+            "username": data["login"],
             "email": data["email"],
             "avatar_url": data["avatar_url"]
         }
@@ -48,7 +48,12 @@ class DiscordProvider(OAuthProvider):
             avatar_url = f"https://cdn.discordapp.com/avatars/{data['id']}/{data['avatar']}.png?size=64"
         return {
             "id": data["id"],
-            "name": data["username"],
+            "username": data["username"],
             "email": data.get("email"),
             "avatar_url": avatar_url
         }
+
+providers = {
+    "github": GithubProvider,
+    "discord": DiscordProvider
+}

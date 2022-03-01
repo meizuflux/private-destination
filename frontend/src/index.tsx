@@ -1,5 +1,5 @@
 /* @refresh reload */
-import 'windi.css';
+import "bulma/bulma.sass"
 
 import { render } from 'solid-js/web';
 import { Router } from 'solid-app-router';

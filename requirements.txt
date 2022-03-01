@@ -1,5 +1,5 @@
-blacksheep
-uvicorn
+ua_parser
+asyncpg
 gunicorn
 uvloop; platform_system != "Windows"
 pyyaml

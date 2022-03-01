@@ -4,54 +4,50 @@ import { Link, useRoutes, useLocation } from 'solid-app-router';
 import { routes } from './routes';
 
 const App: Component = () => {
-  const location = useLocation();
   const Route = useRoutes(routes);
 
   return (
     <>
-      <nav class="bg-gray-200 text-gray-900 px-4">
-        <ul class="flex items-center">
-          <li class="py-2 px-4">
-            <Link href="/" class="no-underline hover:underline">
-              Home
-            </Link>
-          </li>
-          <li class="py-2 px-4">
-            <Link href="/about" class="no-underline hover:underline">
-              About
-            </Link>
-          </li>
-          <li class="py-2 px-4">
-            <Link href="/error" class="no-underline hover:underline">
-              Error
-            </Link>
-          </li>
-          <li class="py-2 px-4">
-            <Link href="/login" class="no-underline hover:underline">
-              Login
-            </Link>
-          </li>
-          <li class="py-2 px-4">
-            <Link href="/api/auth/logout" class="no-underline hover:underline">
-              Logout
-            </Link>
-          </li>
+        <nav class="navbar" role="navigation" aria-label="main navigation">
+            <div class="navbar-brand">
+                <a class="navbar-item" href="https://bulma.io">
+                <img src="https://bulma.io/images/bulma-logo.png" width="112" height="28" />
+                </a>
 
-          <li class="text-sm flex items-center space-x-1 ml-auto">
-            <span>URL:</span>
-            <input
-              class="w-75px p-1 bg-white text-sm rounded-lg"
-              type="text"
-              readOnly
-              value={location.pathname}
-            />
-          </li>
-        </ul>
-      </nav>
+                <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                </a>
+            </div>
 
-      <main>
+            <div id="navbarBasicExample" class="navbar-menu">
+                <div class="navbar-start">
+                <a class="navbar-item" href="/about">
+                    About
+                </a>
+
+                <a class="navbar-item" href="/dashboard">
+                    Dashboard
+                </a>
+
+                </div>
+
+                <div class="navbar-end">
+                <div class="navbar-item">
+                    <div class="buttons">
+                    <a class="button is-primary" href="/login?signup=true">
+                        <strong>Sign up</strong>
+                    </a>
+                    <a class="button is-light" href="/login">
+                        Log in
+                    </a>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </nav>
         <Route />
-      </main>
     </>
   );
 };

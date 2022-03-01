@@ -124,7 +124,7 @@ class Auth(APIController):
             token = self.request.cookies.get("_session")
             res = web.json_response({"message": "Logged out"})
             res.del_cookie("_session")
-            await self.app["db"].delete_session(UUID(token))
+            await self.request.app["db"].delete_session(UUID(token))
             return res
 
     @view("providers")

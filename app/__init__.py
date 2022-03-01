@@ -11,14 +11,21 @@ from aiohttp_apispec import (
 )
 from sys import argv
 from yaml import safe_load
-from app.utils.auth import Credentials, User
+from app.utils.auth import AuthenticationScheme, Credentials, requires_auth
 from app.utils.auth.providers import providers
 from app.utils.db import create_pool
 
-class AuthenticationScheme(Enum):
-    SESSION = 1
-    API_KEY = 2
-    BOTH = 3
+async def verify_user(request, scheme: AuthenticationScheme, admin: bool):
+    session = request.cookies.get("_session")
+    if session is None:
+            return web.HTTPTemporaryRedirect("/login")
+    user = await request.app["db"].fetch_user(UUID(session))
+    if user is None:
+        return web.HTTPTemporaryRedirect("/login")
+    if admin is True and user["admin"] is False:
+        return web.HTTPUnauthorized()
+    request["user"] = user
+
 
 @web.middleware
 async def authentication_middleware(request, handler):
@@ -27,44 +34,27 @@ async def authentication_middleware(request, handler):
         fn = getattr(handler, request.method.lower())
 
     if hasattr(fn, "requires_auth"):
-        print(fn.requires_auth, fn.admin)
-        session = request.cookies.get("_session")
-        if session is None:
-            return web.HTTPTemporaryRedirect("/login")
-        user = await request.app["db"].fetch_user(UUID(session))
-        if user is None:
-            return web.HTTPTemporaryRedirect("/login")
-        request["user"] = user
-
+        verify = await verify_user(request, fn.auth_scheme, fn.admin)
+        if verify is not None:
+            return verify
 
     return await handler(request)
-
-def requires_auth(*, admin: bool = False, scheme: AuthenticationScheme = AuthenticationScheme.BOTH):
-    def deco(fn):
-        setattr(fn, "requires_auth", True)
-        setattr(fn, "admin", admin)
-        setattr(fn, "auth_scheme", scheme)
-        return fn
-    return deco
-
-@requires_auth()
-async def index(request) -> web.Response:
-    return web.json_response({"message": "hello"})
-
-class Tset(web.View):
-    @requires_auth()
-    async def get(self):
-        return web.json_response({})
-
-async def all(request):
-    return web.json_response({})
 
 with open("frontend/dist/index.html", encoding="utf8") as indexs:
     html = indexs.read()
 
 async def catch_all(request):
-    if str(request.rel_url).startswith("/api/") or str(request.rel_url) == "/api":
+    raw_url = str(request.rel_url)
+    if raw_url.startswith("/api/") or raw_url == "/api":
         return web.HTTPNotFound()
+    if raw_url.startswith("/dashboard"):
+        verify = await verify_user(request, AuthenticationScheme.SESSION, False)
+        if verify is not None:
+            return verify
+    if raw_url.startswith("/admin"):
+        verify = await verify_user(request, AuthenticationScheme.SESSION, True)
+        if verify is not None:
+            return verify
     return web.Response(text=html, content_type='text/html')
 
 async def app_factory():

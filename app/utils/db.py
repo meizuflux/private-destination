@@ -10,24 +10,28 @@ class Database(Pool):
         "users": {}
     }
 
-    def __init__(self, bot, *args, **kwargs):
+    def __init__(self, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.app = bot
+        self.app = app
 
     async def create_user(self, user: User, provider: str):
         query = """
-            insert into users (id, username, email, avatar_url, provider) values ($1, $2, $3, $4, $5) on conflict (id) do update set 
-            username = $2, email = $3, avatar_url = $4, provider = $5
-            where users.id = $1;
+            INSERT INTO users (user_id, username, email, avatar_url, oauth_provider) VALUES ($1, $2, $3, $4, $5) 
+            ON CONFLICT (user_id) DO UPDATE SET
+            username = $2, email = $3, avatar_url = $4, oauth_provider = $5
+            WHERE users.user_id = $1;
         """
         await self.execute(query, user["id"], user["username"], user["email"], user["avatar_url"], provider)
 
     async def fetch_user(self, uuid: UUID):
-        return await self.fetchrow("SELECT * FROM users WHERE id = (SELECT user_id FROM sessions WHERE id =$1);", uuid)
+        return await self.fetchrow("SELECT * FROM users WHERE user_id = (SELECT user_id FROM sessions WHERE token = $1);", uuid)
 
-    async def create_session(self, user_id: str):
-        uuid = await self.fetchval("INSERT INTO sessions (SELECT gen_random_uuid(), $1) RETURNING id;", user_id)
-        return uuid
+    async def create_session(self, user_id: int, *, browser: str, os: str):
+        token = await self.fetchval("INSERT INTO sessions (token, user_id, browser, os) (SELECT gen_random_uuid(), $1, $2, $3) RETURNING token;", user_id, browser, os)
+        return token
+
+    async def delete_session(self, token: UUID):
+        await self.execute("DELETE FROM sessions WHERE token = $1", token)
 
     async def check_session(self, uuid: UUID):
         return await self.fetchval("SELECT EXISTS(SELECT 1 FROM sessions WHERE id = $1", uuid)

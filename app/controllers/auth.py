@@ -1,11 +1,15 @@
+import json
 from secrets import token_urlsafe
 from urllib.parse import quote
+from uuid import UUID
 from aiohttp import web
-from aiohttp_apispec import docs, match_info_schema, querystring_schema
+from aiohttp_apispec import match_info_schema, querystring_schema
 from app.routing import APIController, view
 from marshmallow import Schema, fields, validate
+from app.utils.auth import requires_auth
 
 from app.utils.auth.providers import providers
+from ua_parser import user_agent_parser
 
 class ProviderQuery(Schema):
     provider = fields.Str(required=True, validate=validate.OneOf(providers.keys()))
@@ -97,9 +101,12 @@ class Auth(APIController):
 
             user = provider.parse_data(raw)
 
+            metadata = user_agent_parser.Parse(request.headers.getone("User-Agent"))
+            browser = metadata["user_agent"]["family"].replace("Other", "Unknown")
+            os = metadata["os"]["family"].replace("Other", "UnknownOS")
+
             await app["db"].create_user(user, p)
-            uuid = await app["db"].create_session(user["id"])
-            print(uuid)
+            uuid = await app["db"].create_session(user["id"], browser=browser, os=os)
             res.set_cookie(
                 "_session",
                 str(uuid),
@@ -112,9 +119,12 @@ class Auth(APIController):
 
     @view("logout")
     class Logout(web.View):
+        @requires_auth()
         async def get(self):
+            token = self.request.cookies.get("_session")
             res = web.json_response({"message": "Logged out"})
             res.del_cookie("_session")
+            await self.app["db"].delete_session(UUID(token))
             return res
 
     @view("providers")
@@ -125,3 +135,21 @@ class Auth(APIController):
                 providers.append({"key": key, "name": provider.name})
 
             return web.json_response(providers)
+
+    @view("@me")
+    class Me(web.View):
+        @requires_auth()
+        async def get(self):
+            request = self.request
+            user = request["user"]
+            data = {
+                "user_id": user["user_id"],
+                "username": user["username"],
+                "email": user["email"],
+                "avatar_url": user["avatar_url"],
+                "api_key": user["api_key"],
+                "oauth_provider": user["oauth_provider"],
+                "joined": user["joined"].isoformat()
+            }
+
+            return web.json_response(data)

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from typing import Callable, Dict, Generic, TypeVar, TypedDict
 
 @dataclass
@@ -36,3 +37,16 @@ class OAuthProvider:
     @staticmethod
     def parse_data(data) -> User:
         raise NotImplementedError
+
+class AuthenticationScheme(Enum):
+    SESSION = 1
+    API_KEY = 2
+    BOTH = 3
+
+def requires_auth(*, admin: bool = False, scheme: AuthenticationScheme = AuthenticationScheme.BOTH):
+    def deco(fn):
+        setattr(fn, "requires_auth", True)
+        setattr(fn, "admin", admin)
+        setattr(fn, "auth_scheme", scheme)
+        return fn
+    return deco

@@ -1,8 +1,9 @@
+import { createStore } from "solid-js/store"
 import { redirect } from "./redirect"
 
-export default async (path: string) => {
-    if (localStorage.getItem("token") === null) {
-        redirect("/login")
-        
-    }
+const [state, setState] = createStore({ user: null })
+
+export {
+    state,
+    setState
 }

@@ -15,6 +15,15 @@ from app.utils.auth import AuthenticationScheme, Credentials, requires_auth
 from app.utils.auth.providers import providers
 from app.utils.db import create_pool
 
+import sentry_sdk
+from sentry_sdk.integrations.aiohttp import AioHttpIntegration
+
+sentry_sdk.init(
+      dsn="https://c51ee48c5ae341ba9a16d57657fc89b0@o1007379.ingest.sentry.io/6237979",
+      integrations=[AioHttpIntegration()],
+      send_default_pii=True
+)
+
 async def verify_user(request, scheme: AuthenticationScheme, admin: bool):
     session = request.cookies.get("_session")
     if session is None:
@@ -25,6 +34,11 @@ async def verify_user(request, scheme: AuthenticationScheme, admin: bool):
     if admin is True and user["admin"] is False:
         return web.HTTPUnauthorized()
     request["user"] = user
+    sentry_sdk.set_user({
+        "id": user["user_id"],
+        "username": user["username"],
+        "email": user["email"],
+    })
 
 
 @web.middleware
@@ -72,10 +86,6 @@ async def app_factory():
         in_place=True
     )
 
-
-    for resource in app.router.resources():
-        print(resource.canonical)
-
     app["dev"] = "adev" in argv[0]
     with open("config.yml") as f:
         loaded = safe_load(f)
@@ -89,6 +99,9 @@ async def app_factory():
         app.router.add_static("/assets", "frontend/dist/assets")
 
     app.router.add_get("/{tail:.*}", catch_all)
+
+    for resource in app.router.resources():
+        print(resource.canonical)
 
     app["config"] = config
     app["oauth_providers"] = {}

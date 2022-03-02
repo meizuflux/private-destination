@@ -2,6 +2,7 @@ run dev with
 
 ```bash
 adev runserver --livereload app/__init__.py --app-factory app_factory
+NEW_RELIC_CONFIG_FILE=newrelic.ini newrelic-admin run-program adev runserver --livereload app/__init__.py --app-factory app_factory
 ```
 
 note for running postgres:

@@ -1,9 +1,8 @@
-from enum import Enum
 from uuid import UUID
 from aiohttp import web, ClientSession
-from aiohttp.web_exceptions import HTTPNotFound
-from aiohttp.web_urldispatcher import AbstractRoute, MatchInfoError, PlainResource, ResourceRoute, UrlMappingMatchInfo
 from app import controllers
+import aiohttp_jinja2
+from jinja2 import FileSystemLoader
 
 from aiohttp_apispec import (
     setup_aiohttp_apispec,
@@ -27,7 +26,7 @@ sentry_sdk.init(
 async def verify_user(request, scheme: AuthenticationScheme, admin: bool):
     session = request.cookies.get("_session")
     if session is None:
-            return web.HTTPTemporaryRedirect("/login")
+        return web.HTTPTemporaryRedirect("/login")
     user = await request.app["db"].fetch_user(UUID(session))
     if user is None:
         return web.HTTPTemporaryRedirect("/login")
@@ -71,9 +70,14 @@ async def catch_all(request):
             return verify
     return web.Response(text=html, content_type='text/html')
 
+@aiohttp_jinja2.template("index.html")
+async def index(request):
+    return {"name": "world"}
+
 async def app_factory():
     app = web.Application(middlewares=[authentication_middleware, validation_middleware])
 
+    app.router.add_get("/", index)
     for controller in controllers.all():
         controller.add_routes(app)
 
@@ -86,6 +90,8 @@ async def app_factory():
         in_place=True
     )
 
+    aiohttp_jinja2.setup(app, enable_async=True, loader=FileSystemLoader("./templates"))
+
     app["dev"] = "adev" in argv[0]
     with open("config.yml") as f:
         loaded = safe_load(f)
@@ -97,6 +103,7 @@ async def app_factory():
 
     if app["dev"] is True:
         app.router.add_static("/assets", "frontend/dist/assets")
+        app.router.add_static("/static", "dist")
 
     app.router.add_get("/{tail:.*}", catch_all)
 

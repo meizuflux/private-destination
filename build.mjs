@@ -3,8 +3,6 @@ import fs from "fs"
 import { PurgeCSS } from "purgecss"
 import sass from "sass"
 
-const dev = process.argv.includes("-w") || process.argv.includes("--watch")
-
 const bulma = sass.compile("node_modules/bulma/bulma.sass")
 
 const purgeCSSResult = await new PurgeCSS().purge({
@@ -21,23 +19,15 @@ fs.readdirSync("./static/js").forEach(f => {
 });
 
 fs.readdirSync("./static/css").forEach(f => {
-    if (f !== "bulma.css") all.push("static/css/" + f)
+    all.push("static/css/" + f)
 });
 
 console.log("Building...")
-let result = await esbuild.build({
+await esbuild.build({
     entryPoints: all,
     outdir: "dist",
     bundle: true,
-    watch: dev,
     minify: true,
-    metafile: true,
     logLevel: "debug",
-    sourcemap: dev,
-    platform: "browser"
+    platform: "browser",
 })
-
-let text = await esbuild.analyzeMetafile(result.metafile, {
-    verbose: true,
-})
-console.log(text)

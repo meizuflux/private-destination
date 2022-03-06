@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Login
+{% endblock %}
+
+{% block body %}
+    <div class="container has-text-centered">
+        <div class="column is-4 is-offset-4"></div>
+            {% if restricted == True %}
+                <article class="message is-danger is-medium">
+                    <p class="message-header">
+                        Restricted Access
+                    </p>
+                    <p class="message-body">
+                        The route you were trying to access requires you to be logged in
+                    </p>
+                </article>
+            {% endif %}
+            <h1 class="is-size-1">Login</h1>
+            <div class="buttons is-centered">
+                {% for provider in providers %}
+                    <a class="button is-primary is-vertical" href="/api/auth/login?provider={{provider['key']}}">Login with {{provider["name"]}}</a>
+                {% endfor %}
+            </div>
+    </div>
+{% endblock %}

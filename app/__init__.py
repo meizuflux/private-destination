@@ -74,10 +74,18 @@ async def catch_all(request):
 async def index(request):
     return {"name": "world"}
 
+@aiohttp_jinja2.template("login.html")
+async def login(request):
+    providers = []
+    for key, provider in request.app["oauth_providers"].items():
+        providers.append({"key": key, "name": provider.name})
+    return {"providers": providers}
+
 async def app_factory():
     app = web.Application(middlewares=[authentication_middleware, validation_middleware])
 
     app.router.add_get("/", index)
+    app.router.add_get("/login", login)
     for controller in controllers.all():
         controller.add_routes(app)
 
@@ -121,7 +129,16 @@ async def app_factory():
     with open("schema.sql") as f:
         await app["db"].execute(f.read())
 
+    async def close(a):
+        await a["session"].close()
+        await a["db"].close()
+        
+    app.on_cleanup.append(close)
+
     return app
 
 if __name__ == "__main__":
+    web.run_app(app_factory(), host="localhost", port=8000)
+
+def main():
     web.run_app(app_factory(), host="localhost", port=8000)

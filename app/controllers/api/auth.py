@@ -6,7 +6,7 @@ from aiohttp import web
 from aiohttp_apispec import match_info_schema, querystring_schema
 from app.routing import APIController, view
 from marshmallow import Schema, fields, validate
-from app.utils.auth import requires_auth
+from app.utils.auth import AuthenticationScheme, requires_auth
 
 from app.utils.auth.providers import providers
 from ua_parser import user_agent_parser
@@ -119,7 +119,7 @@ class Auth(APIController):
 
     @view("logout")
     class Logout(web.View):
-        @requires_auth()
+        @requires_auth(scheme=AuthenticationScheme.SESSION)
         async def get(self):
             token = self.request.cookies.get("_session")
             res = web.json_response({"message": "Logged out"})

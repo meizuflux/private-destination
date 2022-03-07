@@ -2,11 +2,13 @@ from typing import List
 from aiohttp import web
 
 def normalize_pattern(pattern: str):
+    if pattern is None:
+        return ""
     if pattern.startswith("/"):
         return pattern
     return "/" + pattern
 
-def view(pattern: str):
+def view(pattern: str = None):
     def decorator(fn):
         setattr(fn, "handler", True)
         setattr(fn, "pattern", normalize_pattern(pattern))

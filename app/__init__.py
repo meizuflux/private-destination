@@ -23,13 +23,17 @@ sentry_sdk.init(
       send_default_pii=True
 )
 
-async def verify_user(request, scheme: AuthenticationScheme, admin: bool):
+async def verify_user(request, scheme: AuthenticationScheme, admin: bool, redirect: bool):
     session = request.cookies.get("_session")
     if session is None:
-        return web.HTTPTemporaryRedirect("/login")
+        if redirect is True:
+            return web.HTTPTemporaryRedirect("/login")
+        return web.HTTPUnauthorized()
     user = await request.app["db"].fetch_user(UUID(session))
     if user is None:
-        return web.HTTPTemporaryRedirect("/login")
+        if redirect is True:
+            return web.HTTPTemporaryRedirect("/login")
+        return web.HTTPUnauthorized()
     if admin is True and user["admin"] is False:
         return web.HTTPUnauthorized()
     request["user"] = user
@@ -47,32 +51,15 @@ async def authentication_middleware(request, handler):
         fn = getattr(handler, request.method.lower())
 
     if hasattr(fn, "requires_auth"):
-        verify = await verify_user(request, fn.auth_scheme, fn.admin)
+        verify = await verify_user(request, fn.auth["scheme"], fn.auth["admin"], fn.auth["redirect"])
         if verify is not None:
             return verify
 
     return await handler(request)
 
-with open("frontend/dist/index.html", encoding="utf8") as indexs:
-    html = indexs.read()
-
-async def catch_all(request):
-    raw_url = str(request.rel_url)
-    if raw_url.startswith("/api/") or raw_url == "/api":
-        return web.HTTPNotFound()
-    if raw_url.startswith("/dashboard"):
-        verify = await verify_user(request, AuthenticationScheme.SESSION, False)
-        if verify is not None:
-            return verify
-    if raw_url.startswith("/admin"):
-        verify = await verify_user(request, AuthenticationScheme.SESSION, True)
-        if verify is not None:
-            return verify
-    return web.Response(text=html, content_type='text/html')
-
-@aiohttp_jinja2.template("index.html")
+@requires_auth(scheme=AuthenticationScheme.SESSION, redirect=True)
 async def index(request):
-    return {"name": "world"}
+    return web.HTTPTemporaryRedirect("/dashboard")
 
 @aiohttp_jinja2.template("login.html")
 async def login(request):
@@ -110,10 +97,7 @@ async def app_factory():
             config = loaded["prod"]
 
     if app["dev"] is True:
-        app.router.add_static("/assets", "frontend/dist/assets")
         app.router.add_static("/static", "dist")
-
-    app.router.add_get("/{tail:.*}", catch_all)
 
     for resource in app.router.resources():
         print(resource.canonical)

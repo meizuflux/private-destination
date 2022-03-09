@@ -1,5 +1,5 @@
 ```bash
-$ psql -h localhost -p 5432 -U postgres
+$ C
 ```
 
 uri is `postgres://postgres:mysecretpassword@localhost:5432/postgres`

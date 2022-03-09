@@ -5,20 +5,40 @@ Testno
 {% endblock %}
 
 {% block body %}
-    <div class="is-loading is-invisible"></div>
-    <div class="container has-text-centered">
+    <div class="is-loading"></div>
+    <div class="container">
         <div class="column is-4 is-offset-4">
-            <h2>API Key</h2>
-            <div class="control">
-                <input id="apiKey" class="input block" type="password" readonly value="{{request['user']['api_key']}}"/>
-                <button class="button is-primary" id="toggleShowApiKey">Show</button>
-                <button class="button is-info" id="copyApiKey">Copy</button>
-                <button class="button is-warning" id="regenApiKey">Regenerate</button>
+            <div class="box">
+                <h2 class="title is-2">API Key</h2>
+                <div class="control">
+                    <input id="api-key" class="input block" type="password" readonly value="{{request['user']['api_key']}}"/>
+                    <div class="buttons has-addons">
+                        <button class="button is-primary is-light" id="toggle-show-api-key">Show</button>
+                        <button class="button is-info is-light" id="copy-api-key">Copy</button>
+                        <button class="button is-danger is-light js-modal-trigger" data-target="regen-modal">
+                            Regenerate
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    
+    <div id="regen-modal" class="modal">
+        <div class="modal-background"></div>
+      
+        <div class="modal-content">
+          <div class="box">
+            <div id="regen-content">
+                <h2 class="title is-2 has-text-danger">Danger</h2>
+                <p>Clicking this button will immediately revoke your current API Key. There is no going back.</p>
+                <button class="button is-danger block mt-2" id="regen-btn">I understand, regenerate my API Key</button>
+            </div>
+            <p class="is-hidden" id="regen-success">Successfully regenerated your API Key</p>
+            <footer class="is-size-7 mt-2">Click anywhere to exit</footer>
+          </div>
+        </div>
+    </div>
 
     <script src="/static/js/settings.js" type="module"></script>
 {% endblock %}

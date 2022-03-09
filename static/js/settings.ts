@@ -1,5 +1,5 @@
-const holder = document.getElementById("apiKey") as HTMLInputElement
-const toggler = document.getElementById("toggleShowApiKey")
+const holder = document.getElementById("api-key") as HTMLInputElement
+const toggler = document.getElementById("toggle-show-api-key")
 
 toggler.addEventListener("click", () => {
     if (holder.type === "password") {
@@ -11,8 +11,7 @@ toggler.addEventListener("click", () => {
     }
 })
 
-const copyButton = document.getElementById("copyApiKey")
-
+const copyButton = document.getElementById("copy-api-key")
 copyButton.addEventListener("click", () => {
     const el = document.createElement('textarea');
     el.value = holder.value;
@@ -30,7 +29,9 @@ copyButton.addEventListener("click", () => {
     }, 1000)
 })
 
-const regenBtn = document.getElementById("regenApiKey")
+const regenBtn = document.getElementById("regen-btn")
+const regenContent = document.getElementById("regen-content")
+const regenSuccess = document.getElementById("regen-success")
 
 regenBtn.addEventListener("click", async () => {
     regenBtn.classList.toggle("is-loading")
@@ -43,9 +44,25 @@ regenBtn.addEventListener("click", async () => {
 
     holder.value = json["api_key"]
 
-    regenBtn.innerText = "Regenerated"
-
-    regenBtn.classList.toggle("is-loading")
+    regenContent.classList.add("is-hidden")
+    regenSuccess.classList.remove("is-hidden")
+    regenBtn.classList.remove("is-loading")
 
     setTimeout(() => regenBtn.innerText = "Regenerate", 1000)
 })
+
+for (const trigger of document.getElementsByClassName("js-modal-trigger")) {
+    const target = document.getElementById(trigger.dataset.target)
+    trigger.addEventListener("click", () => {
+        target.classList.toggle("is-active")
+    })
+}
+
+for (const close of document.getElementsByClassName("modal-background")) {
+    const target = close.closest(".modal")
+    close.addEventListener("click", () => {
+        target.classList.remove("is-active")
+        regenContent.classList.remove("is-hidden")
+        regenSuccess.classList.add("is-hidden")
+    })
+}

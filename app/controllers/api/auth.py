@@ -153,9 +153,10 @@ class Auth(APIController):
 
     @view("api_key")
     class APIKey(web.View):
-        @requires_auth(wants_user_info=False)
+        @requires_auth()
         async def post(self):
             api_key = await generate_api_key(self.request.app["db"])
+            await self.request.app["db"].regenerate_api_key(self.request["user"]["user_id"], api_key)
             return web.json_response({"api_key": api_key})
 
     @view("@me")

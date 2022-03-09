@@ -23,25 +23,34 @@ sentry_sdk.init(
       send_default_pii=True
 )
 
-async def verify_user(request, scheme: AuthenticationScheme, admin: bool, redirect: bool):
+async def verify_user(
+    request,
+    scheme: AuthenticationScheme,
+    admin: bool,
+    redirect: bool,
+    wants_user_info: bool
+):
     session = request.cookies.get("_session")
     if session is None:
         if redirect is True:
             return web.HTTPTemporaryRedirect("/login")
         return web.HTTPUnauthorized()
-    user = await request.app["db"].fetch_user(UUID(session))
-    if user is None:
-        if redirect is True:
-            return web.HTTPTemporaryRedirect("/login")
-        return web.HTTPUnauthorized()
-    if admin is True and user["admin"] is False:
-        return web.HTTPUnauthorized()
-    request["user"] = user
-    sentry_sdk.set_user({
-        "id": user["user_id"],
-        "username": user["username"],
-        "email": user["email"],
-    })
+
+    if wants_user_info is True or admin is True:
+        user = await request.app["db"].fetch_user_by_session(UUID(session))
+        if user is None:
+            if redirect is True:
+                return web.HTTPTemporaryRedirect("/login")
+            return web.HTTPUnauthorized()
+        if admin is True and user["admin"] is False:
+            return web.HTTPUnauthorized()
+        request["user"] = user
+    else:
+        valid = await request.app["db"].validate_session(UUID(session))
+        if valid is not True:
+            if redirect is True:
+                return web.HTTPTemporaryRedirect("/login")
+            return web.HTTPUnauthorized()
 
 
 @web.middleware
@@ -51,15 +60,19 @@ async def authentication_middleware(request, handler):
         fn = getattr(handler, request.method.lower())
 
     if hasattr(fn, "requires_auth"):
-        verify = await verify_user(request, fn.auth["scheme"], fn.auth["admin"], fn.auth["redirect"])
+        verify = await verify_user(request, fn.auth["scheme"], fn.auth["admin"], fn.auth["redirect"], fn.auth["wants_user_info"])
         if verify is not None:
             return verify
 
     return await handler(request)
 
-@requires_auth(scheme=AuthenticationScheme.SESSION, redirect=True)
 async def index(request):
     return web.HTTPTemporaryRedirect("/dashboard")
+
+@aiohttp_jinja2.template("settings.html")
+@requires_auth(scheme=AuthenticationScheme.SESSION, redirect=True)
+async def settings(request):
+    return {}
 
 @aiohttp_jinja2.template("login.html")
 async def login(request):
@@ -73,6 +86,7 @@ async def app_factory():
 
     app.router.add_get("/", index)
     app.router.add_get("/login", login)
+    app.router.add_get("/settings", settings)
     for controller in controllers.all():
         controller.add_routes(app)
 
@@ -85,7 +99,12 @@ async def app_factory():
         in_place=True
     )
 
-    aiohttp_jinja2.setup(app, enable_async=True, loader=FileSystemLoader("./templates"))
+    aiohttp_jinja2.setup(
+        app,
+        enable_async=True,
+        loader=FileSystemLoader("./templates"),
+        context_processors=[aiohttp_jinja2.request_processor]
+    )
 
     app["dev"] = "adev" in argv[0]
     with open("config.yml") as f:

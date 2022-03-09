@@ -1,5 +1,8 @@
-postgres:
-    docker run --name some-postgres --net host -e POSTGRES_PASSWORD=mysecretpassword -d -p 5432:5432 postgres
+run-db:
+    docker run --name db --net host -e POSTGRES_PASSWORD=mysecretpassword -d -p 5432:5432 postgres
+
+start-db:
+    docker start db
 
 dev:
     adev runserver --livereload server.py --app-factory app_factory
@@ -14,5 +17,5 @@ build:
     yarn run rimraf dist && node build.mjs
 
 watch:
-    yarn run chokidar "static/*.*" "templates/*.html" -c "node build.mjs" --initial
+    yarn run chokidar "static/**/!(bulma).*" "templates/*.html" -c "node build.mjs" --initial
 

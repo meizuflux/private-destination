@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Testno
+{% endblock %}
+
+{% block body %}
+    <div class="is-loading is-invisible"></div>
+    <div class="container has-text-centered">
+        <div class="column is-4 is-offset-4">
+            <h2>API Key</h2>
+            <div class="control">
+                <input id="apiKey" class="input block" type="password" readonly value="{{request['user']['api_key']}}"/>
+                <button class="button is-primary" id="toggleShowApiKey">Show</button>
+                <button class="button is-info" id="copyApiKey">Copy</button>
+                <button class="button is-warning" id="regenApiKey">Regenerate</button>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <script src="/static/js/settings.js" type="module"></script>
+{% endblock %}

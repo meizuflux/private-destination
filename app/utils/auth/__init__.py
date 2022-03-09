@@ -43,13 +43,19 @@ class AuthenticationScheme(Enum):
     API_KEY = 2
     BOTH = 3
 
-def requires_auth(*, admin: bool = False, scheme: AuthenticationScheme = AuthenticationScheme.BOTH, redirect: bool = False):
+def requires_auth(*, 
+    admin: bool = False,
+    scheme: AuthenticationScheme = AuthenticationScheme.BOTH,
+    redirect: bool = False,
+    wants_user_info: bool = True
+):
     def deco(fn):
         setattr(fn, "requires_auth", True)
         setattr(fn, "auth", {
             "admin": admin,
             "scheme": scheme,
-            "redirect": redirect
+            "redirect": redirect,
+            "wants_user_info": wants_user_info
         })
         return fn
     return deco

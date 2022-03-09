@@ -11,12 +11,26 @@ from app.utils.auth import AuthenticationScheme, requires_auth
 from app.utils.auth.providers import providers
 from ua_parser import user_agent_parser
 
+import string
+from secrets import choice
+
+from app.utils.db import Database
+
 class ProviderQuery(Schema):
     provider = fields.Str(required=True, validate=validate.OneOf(providers.keys()))
 
 class CallbackQuerystring(Schema):
     code = fields.Str(required=True)
     state = fields.Str()
+
+all_chars = string.ascii_letters + string.digits + "!@#$%^&?<>:;+=-_~"
+
+async def generate_api_key(db: Database):
+    while True:
+        key = "".join(choice(all_chars) for _ in range(128))
+        if await db.validate_api_key(key) is False:
+            break
+    return key
 
 class Auth(APIController):
     @view("login")
@@ -100,6 +114,7 @@ class Auth(APIController):
                 raw = await req.json()
 
             user = provider.parse_data(raw)
+            user["api_key"] = await generate_api_key(app["db"])
 
             metadata = user_agent_parser.Parse(request.headers.getone("User-Agent"))
             browser = metadata["user_agent"]["family"].replace("Other", "Unknown")
@@ -119,10 +134,10 @@ class Auth(APIController):
 
     @view("logout")
     class Logout(web.View):
-        @requires_auth(scheme=AuthenticationScheme.SESSION)
+        @requires_auth(scheme=AuthenticationScheme.SESSION, wants_user_info=False)
         async def get(self):
             token = self.request.cookies.get("_session")
-            res = web.json_response({"message": "Logged out"})
+            res = web.HTTPTemporaryRedirect("/login")
             res.del_cookie("_session")
             await self.request.app["db"].delete_session(UUID(token))
             return res
@@ -135,6 +150,13 @@ class Auth(APIController):
                 providers.append({"key": key, "name": provider.name})
 
             return web.json_response(providers)
+
+    @view("api_key")
+    class APIKey(web.View):
+        @requires_auth(wants_user_info=False)
+        async def post(self):
+            api_key = await generate_api_key(self.request.app["db"])
+            return web.json_response({"api_key": api_key})
 
     @view("@me")
     class Me(web.View):

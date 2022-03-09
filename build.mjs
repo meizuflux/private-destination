@@ -28,6 +28,7 @@ await esbuild.build({
     outdir: "dist",
     bundle: true,
     minify: true,
+    format: "esm",
     logLevel: "debug",
     platform: "browser",
 })

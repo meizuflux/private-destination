@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT NOT NULL,
     email TEXT,
     avatar_url TEXT,
-    api_key TEXT DEFAULT NULL,
+    api_key TEXT,
     oauth_provider TEXT NOT NULL,
 	admin BOOLEAN DEFAULT false,
     joined TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')

@@ -16,14 +16,14 @@ class Database(Pool):
 
     async def create_user(self, user: User, provider: str):
         query = """
-            INSERT INTO users (user_id, username, email, avatar_url, oauth_provider) VALUES ($1, $2, $3, $4, $5) 
+            INSERT INTO users (user_id, username, email, avatar_url, api_key, oauth_provider) VALUES ($1, $2, $3, $4, $5, $6)
             ON CONFLICT (user_id) DO UPDATE SET
-            username = $2, email = $3, avatar_url = $4, oauth_provider = $5
+            username = $2, email = $3, avatar_url = $4, oauth_provider = $6
             WHERE users.user_id = $1;
         """
-        await self.execute(query, user["id"], user["username"], user["email"], user["avatar_url"], provider)
+        await self.execute(query, user["id"], user["username"], user["email"], user["avatar_url"], user["api_key"], provider)
 
-    async def fetch_user(self, uuid: UUID):
+    async def fetch_user_by_session(self, uuid: UUID):
         return await self.fetchrow("SELECT * FROM users WHERE user_id = (SELECT user_id FROM sessions WHERE token = $1);", uuid)
 
     async def create_session(self, user_id: int, *, browser: str, os: str):
@@ -33,8 +33,11 @@ class Database(Pool):
     async def delete_session(self, token: UUID):
         await self.execute("DELETE FROM sessions WHERE token = $1", token)
 
-    async def check_session(self, uuid: UUID):
-        return await self.fetchval("SELECT EXISTS(SELECT 1 FROM sessions WHERE id = $1", uuid)
+    async def validate_session(self, uuid: UUID):
+        return await self.fetchval("SELECT EXISTS(SELECT 1 FROM sessions WHERE token = $1)", uuid)
+
+    async def validate_api_key(self, api_key: str):
+        return await self.fetchval("SELECT EXISTS(SELECT 1 FROM users WHERE api_key = $1);", api_key)
 
 def create_pool(
     app,

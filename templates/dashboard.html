@@ -1,42 +1,24 @@
 {% extends "layout.html" %}
 
-{% block title %}
-Dashboard
-{% endblock %}
-
-{% block body %}
-    <aside class="menu">
-        <p class="menu-label">
-        General
-        </p>
-        <ul class="menu-list">
-        <li><a>Dashboard</a></li>
-        <li><a>Customers</a></li>
-        </ul>
-        <p class="menu-label">
-        Administration
-        </p>
-        <ul class="menu-list">
-        <li><a>Team Settings</a></li>
-        <li>
-            <a class="is-active">Manage Your Team</a>
-            <ul>
-            <li><a>Members</a></li>
-            <li><a>Plugins</a></li>
-            <li><a>Add a member</a></li>
-            </ul>
-        </li>
-        <li><a>Invitations</a></li>
-        <li><a>Cloud Storage Environment Settings</a></li>
-        <li><a>Authentication</a></li>
-        </ul>
-        <p class="menu-label">
-        Transactions
-        </p>
-        <ul class="menu-list">
-            <li><a>Payments</a></li>
-            <li><a>Transfers</a></li>
-            <li><a>Balance</a></li>
-            </ul>
-    </aside>
+{% block main %}
+    <div class="box">
+        <div class="">
+            <h2 class="title is-2">Hello, {{request["user"]["username"]}}</h2>
+            <hr style="border-style: inset;border-width: 1px;">
+        </div>
+        <div class="tile is-ancestor">
+            <div class="tile is-parent">
+            <article class="tile is-child box">
+                <p class="title">Images</p>
+                <p class="subtitle">You have 30 uploaded images</p>
+            </article>
+            </div>
+            <div class="tile is-parent">
+            <article class="tile is-child box">
+                <p class="title">URL Shortner</p>
+                <p class="subtitle">You have 15 shortened URLs</p>
+            </article>
+            </div>
+        </div>
+    </div>
 {% endblock %}

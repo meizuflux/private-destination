@@ -1,20 +1,23 @@
-const holder = document.getElementById("api-key") as HTMLInputElement
-const toggler = document.getElementById("toggle-show-api-key")
+const getById = document.getElementById.bind(document)
 
-toggler.addEventListener("click", () => {
-    if (holder.type === "password") {
-        holder.type = "text";
-        toggler.innerText = "Hide"
+const apiKey = getById("api-key") as HTMLInputElement
+const showBtn = getById("toggle-show-api-key")
+
+// Show Button
+showBtn.addEventListener("click", () => {
+    if (apiKey.type === "password") {
+        apiKey.type = "text";
+        showBtn.innerText = "Hide"
     } else {
-        holder.type = "password";
-        toggler.innerText = "Show"
+        apiKey.type = "password";
+        showBtn.innerText = "Show"
     }
 })
 
-const copyButton = document.getElementById("copy-api-key")
-copyButton.addEventListener("click", () => {
+const copyBtn = getById("copy-api-key")
+copyBtn.addEventListener("click", () => {
     const el = document.createElement('textarea');
-    el.value = holder.value;
+    el.value = apiKey.value;
     el.setAttribute('readonly', '');
     el.style.position = 'absolute';
     el.style.left = '-9999px';
@@ -23,15 +26,32 @@ copyButton.addEventListener("click", () => {
     document.execCommand('copy');
     document.body.removeChild(el);
     
-    copyButton.innerText = "Copied!"
-    setTimeout(function() {
-        copyButton.innerText = "Copy"
-    }, 1000)
+    copyBtn.innerText = "Copied!"
+    setTimeout(() => copyBtn.innerText = "Copy", 1000)
 })
 
-const regenBtn = document.getElementById("regen-btn")
-const regenContent = document.getElementById("regen-content")
-const regenSuccess = document.getElementById("regen-success")
+// Modal open
+for (const trigger of document.getElementsByClassName("js-modal-trigger")) {
+    const target = getById(trigger.dataset.target)
+    trigger.addEventListener("click", () => {
+        target.classList.toggle("is-active")
+    })
+}
+
+// Modal close
+for (const close of document.getElementsByClassName("modal-background")) {
+    const target = close.closest(".modal")
+    close.addEventListener("click", () => {
+        target.classList.remove("is-active")
+        regenContent.classList.remove("is-hidden")
+        regenSuccess.classList.add("is-hidden")
+    })
+}
+
+// Regen API Key
+const regenBtn = getById("regen-btn")
+const regenContent = getById("regen-content")
+const regenSuccess = getById("regen-success")
 
 regenBtn.addEventListener("click", async () => {
     regenBtn.classList.toggle("is-loading")
@@ -42,7 +62,7 @@ regenBtn.addEventListener("click", async () => {
 
     const json = await res.json()
 
-    holder.value = json["api_key"]
+    apiKey.value = json["api_key"]
 
     regenContent.classList.add("is-hidden")
     regenSuccess.classList.remove("is-hidden")
@@ -51,18 +71,15 @@ regenBtn.addEventListener("click", async () => {
     setTimeout(() => regenBtn.innerText = "Regenerate", 1000)
 })
 
-for (const trigger of document.getElementsByClassName("js-modal-trigger")) {
-    const target = document.getElementById(trigger.dataset.target)
-    trigger.addEventListener("click", () => {
-        target.classList.toggle("is-active")
-    })
-}
+const deleteBtn = getById("delete-btn")
+const deleteInput = getById("delete-username-input") as HTMLInputElement
 
-for (const close of document.getElementsByClassName("modal-background")) {
-    const target = close.closest(".modal")
-    close.addEventListener("click", () => {
-        target.classList.remove("is-active")
-        regenContent.classList.remove("is-hidden")
-        regenSuccess.classList.add("is-hidden")
-    })
-}
+deleteInput.addEventListener("input", (e) => {
+    if (e.target.value === deleteInput.placeholder) {
+        deleteBtn.removeAttribute("disabled")
+    }
+    else {
+        deleteBtn.setAttribute("disabled", "true")
+    }
+})
+

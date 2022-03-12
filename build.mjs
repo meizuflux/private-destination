@@ -1,16 +1,5 @@
 import esbuild from "esbuild";
 import fs from "fs"
-import { PurgeCSS } from "purgecss"
-import sass from "sass"
-
-const bulma = sass.compile("node_modules/bulma/bulma.sass")
-
-const purgeCSSResult = await new PurgeCSS().purge({
-    content: ['templates/*.html'],
-    css: [{raw: bulma.css}]
-})
-
-fs.writeFileSync("static/css/bulma.css", purgeCSSResult[0].css)
 
 let all = [];
 

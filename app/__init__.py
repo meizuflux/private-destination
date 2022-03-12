@@ -66,13 +66,8 @@ async def authentication_middleware(request, handler):
 
     return await handler(request)
 
-async def index(request):
+async def index(_):
     return web.HTTPTemporaryRedirect("/dashboard")
-
-@aiohttp_jinja2.template("settings.html")
-@requires_auth(scheme=AuthenticationScheme.SESSION, redirect=True)
-async def settings(request):
-    return {}
 
 @aiohttp_jinja2.template("login.html")
 async def login(request):
@@ -86,7 +81,6 @@ async def app_factory():
 
     app.router.add_get("/", index)
     app.router.add_get("/login", login)
-    app.router.add_get("/settings", settings)
     for controller in controllers.all():
         controller.add_routes(app)
 

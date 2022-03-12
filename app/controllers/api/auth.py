@@ -23,6 +23,9 @@ class CallbackQuerystring(Schema):
     code = fields.Str(required=True)
     state = fields.Str()
 
+class DeleteQuerystring(Schema):
+    redirect = fields.Boolean(truthy = {"True"}, falsy={"False"})
+
 all_chars = string.ascii_letters + string.digits + "!@#$%^&?<>:;+=-_~"
 
 async def generate_api_key(db: Database):
@@ -159,12 +162,24 @@ class Auth(APIController):
             await self.request.app["db"].regenerate_api_key(self.request["user"]["user_id"], api_key)
             return web.json_response({"api_key": api_key})
 
+    @view("delete")
+    class DeleteAccount(web.View):
+        @requires_auth()
+        @querystring_schema(DeleteQuerystring)
+        async def get(self):
+            request = self.request
+
+            await request.app["db"].delete_user(request["user"]["user_id"])
+
+            if request["querystring"].get("redirect") is True:
+                return web.HTTPTemporaryRedirect("/")
+            return web.json_response({"message": "account deleted"})
+
     @view("@me")
     class Me(web.View):
         @requires_auth()
         async def get(self):
-            request = self.request
-            user = request["user"]
+            user = self.request["user"]
             data = {
                 "user_id": user["user_id"],
                 "username": user["username"],

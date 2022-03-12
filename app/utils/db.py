@@ -26,6 +26,9 @@ class Database(Pool):
     async def regenerate_api_key(self, user_id: int, api_key: str):
         return await self.execute("UPDATE users SET api_key = $2 WHERE user_id = $1", user_id, api_key)
 
+    async def delete_user(self, user_id: int):
+        return await self.execute("DELETE FROM users WHERE user_id = $1", user_id)
+
     async def fetch_user_by_session(self, uuid: UUID):
         return await self.fetchrow("SELECT * FROM users WHERE user_id = (SELECT user_id FROM sessions WHERE token = $1);", uuid)
 

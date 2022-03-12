@@ -1,9 +1,7 @@
 __pycache__/
 venv/
 node_modules/
-build/
 dist/
-static/css/bulma.css
 
 config.yml
 .env

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block body %}
-    <div class="container pt-5">
+    <div class="container pt-5" style="padding-left: 32px;padding-right: 32px;">
         <div class="columns">
             <div class="column is-2">
                 <aside class="menu box">
@@ -8,14 +8,15 @@
                         Services
                     </p>
                     <ul class="menu-list">
-                        <li><a href="/dashboard/shortner">URL Shortner</a></li>
-                        <li><a href="/dashboard/cdn">Image CDN</a></li>
+                        <li><a href="/dashboard" class="{{'is-active' if request.rel_url.path == '/dashboard' else ''}}">Home</a></li>
+                        <li><a href="/dashboard/shortner" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/shortner') else ''}}">URL Shortner</a></li>
+                        <li><a href="/dashboard/cdn" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/cdn') else ''}}">Image CDN</a></li>
                     </ul>
                     <p class="menu-label">
                         User
                     </p>
                     <ul class="menu-list">
-                        <li><a href="/dashboard/settings">Settings</a></li>
+                        <li><a href="/dashboard/settings" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings') else ''}}">Settings</a></li>
                         <li><a class="has-text-danger" href="/api/auth/logout">Logout</a></li>
                     </ul>
                   </aside>

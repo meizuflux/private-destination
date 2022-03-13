@@ -99,6 +99,8 @@ async def app_factory():
         loader=FileSystemLoader("./templates"),
         context_processors=[aiohttp_jinja2.request_processor]
     )
+    env = aiohttp_jinja2.get_env(app)
+    env.globals.update(enumerate=enumerate, len=len)
 
     app["dev"] = "adev" in argv[0]
     with open("config.yml") as f:

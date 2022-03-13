@@ -41,8 +41,6 @@ class CustomApplication(Application):
 
         self.use_sessions(config["signing_key"])
 
-        self.serve_files("frontend/dist", fallback_document="index.html", allow_anonymous=True)
-
         self.services.add_instance(self)
 
         docs = OpenAPIHandler(info=Info(title="Cats API", version="0.0.1"))

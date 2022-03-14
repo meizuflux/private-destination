@@ -55,7 +55,7 @@ class Auth(APIController):
             for k, v in provider.urls.authorization.params.items():
                 url += f"&{k}={quote(v)}"
 
-            state = None
+            state = ''
             if provider.urls.authorization.state is True:
                 state = token_urlsafe(32)
                 url += "&state=" + state

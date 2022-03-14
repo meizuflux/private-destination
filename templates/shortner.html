@@ -10,7 +10,14 @@ URL Shortner
         <hr style="border-style: inset;border-width: 1px;">
     </div>
 
-    <button class="button is-primary block">Shorten URL</button>
+    <form class="field has-addons" id="create-form">
+        <div class="control">
+            <input class="input" type="url" placeholder="https://meizuflux.com" id="create-input">
+        </div>
+        <div class="control">
+            <button class="button is-primary" id="create-btn" type="submit">Shorten</button>
+        </div>
+    </form>
 
     {% if values == [] %}
         <p class="title is-3">You haven't shortened any urls.</p>
@@ -23,18 +30,19 @@ URL Shortner
                         <th><a href="/dashboard/shortner?page={{current_page}}&sort=destination&direction={{direction if last_sort == 'destination' else 'desc'}}">Destination</a></th>
                         <th><a href="/dashboard/shortner?page={{current_page}}&sort=views&direction={{direction if last_sort == 'views' else 'desc'}}">Views</a></th>
                         <th><a href="/dashboard/shortner?page={{current_page}}&sort=creation_date&direction={{direction if last_sort == 'creation_date' else 'desc'}}">Creation Date</a></th>
-                        <th>Options</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for i, url in enumerate(values, start=1) %}
                         <tr id="table-row-{{i}}">
-                            <td>{{url["key"]}}</td>
+                            <td><a href="/{{url['key']}}">{{url["key"]}}</a></td>
                             <td><a href="{{url['destination']}}">{{url['destination']}}</a></td>
                             <td>{{url['views']}}</td>
                             <td>{{url["creation_date"]}}</td>
                             <td>
                                 <div class="buttons">
+                                    <button class="button is-info is-small">Copy</button>
                                     <button class="button is-warning is-small">Edit</button>
                                     <button class="button is-danger is-small">Delete</button>
                                 </div>
@@ -64,6 +72,6 @@ URL Shortner
                 </ul>
         </nav>
     {% endif %}
-
+    <script src="/static/js/shortner.js" type="module"></script>
     
 {% endblock main %}

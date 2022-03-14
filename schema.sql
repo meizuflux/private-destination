@@ -32,3 +32,11 @@ CREATE TRIGGER oldSessionsExpiry
     ON sessions
     FOR STATEMENT
     EXECUTE PROCEDURE deleteOldSessions();
+
+CREATE TABLE IF NOT EXISTS urls (
+    owner BIGINT NOT NULL REFERENCES users (user_id),
+    key TEXT NOT NULL,
+    destination TEXT NOT NULL,
+    views BIGINT DEFAULT 0 NOT NULL,
+    creation_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
+);

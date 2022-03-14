@@ -51,7 +51,6 @@ class Auth(APIController):
 
             url = provider.urls.authorization.url
             url += f"?redirect_uri={app['config']['callback_url'] + f'/{p}'}&client_id={provider.credentials.client_id}"
-            print(url)
 
             for k, v in provider.urls.authorization.params.items():
                 url += f"&{k}={quote(v)}"

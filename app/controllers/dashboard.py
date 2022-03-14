@@ -25,32 +25,24 @@ class Dashboard(Controller):
         @querystring_schema(ShortnerQuerystring)
         @aiohttp_jinja2.template("shortner.html")
         async def get(self):
-            current_page = self.request["querystring"].get("page", 1)
+            current_page = self.request["querystring"].get("page", 1) - 1
             direction = self.request["querystring"].get("direction", "desc")
             sort = self.request["querystring"].get("sort", "creation_date")
 
-            values = [
-                {
-                    "key": "dasfajsdbhb341",
-                    "destination": "https://google.com",
-                    "views": 1000,
-                    "creation_date": "14 July 2007"
-                },
-                {
-                    "key": "a21b341",
-                    "destination": "https://meizuflux",
-                    "views": 2000,
-                    "creation_date": "14 July 2008"
-                },
-                {
-                    "key": "412fgsa",
-                    "destination": "https://discord.com",
-                    "views": 3000,
-                    "creation_date": "14 July 2009"
-                }
-            ]
+            query = (
+                f"""
+                SELECT key, destination, views, creation_date 
+                FROM urls 
+                WHERE owner = $1
+                ORDER BY {sort.lower()} {direction.upper()} 
+                LIMIT 50 
+                OFFSET $2
+                """
+            )
+            args = (self.request["user"]["user_id"], current_page * 50)
+            urls = await self.request.app["db"].fetch(query, *args)
 
-            return {"current_page": current_page, "max_pages": 10, "values": values, "direction": "asc" if direction == "desc" else "desc", "last_sort": sort}
+            return {"current_page": current_page + 1, "max_pages": 10, "values": urls, "direction": "asc" if direction == "desc" else "desc", "last_sort": sort}
 
     @view("settings")
     class Settings(web.View):

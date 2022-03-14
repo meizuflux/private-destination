@@ -39,7 +39,7 @@ URL Shortner
                             <td><a href="/{{url['key']}}">{{url["key"]}}</a></td>
                             <td><a href="{{url['destination']}}">{{url['destination']}}</a></td>
                             <td>{{url['views']}}</td>
-                            <td>{{url["creation_date"]}}</td>
+                            <td>{{url["creation_date"].strftime("%d %B %Y")}}</td>
                             <td>
                                 <div class="buttons">
                                     <button class="button is-info is-small">Copy</button>

@@ -34,8 +34,8 @@ CREATE TRIGGER oldSessionsExpiry
     EXECUTE PROCEDURE deleteOldSessions();
 
 CREATE TABLE IF NOT EXISTS urls (
-    owner BIGINT NOT NULL REFERENCES users (user_id),
-    key TEXT NOT NULL,
+    owner BIGINT NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
+    key TEXT NOT NULL PRIMARY KEY,
     destination TEXT NOT NULL,
     views BIGINT DEFAULT 0 NOT NULL,
     creation_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')

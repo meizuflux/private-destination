@@ -40,10 +40,6 @@ class Dashboard(Controller):
                 """
             )
             args = (self.request["user"]["user_id"], current_page * 50)
-<<<<<<< HEAD
-=======
-            print(args)
->>>>>>> bf67aea9a1e5675b451ee6162a89d2256b549524
             urls = await self.request.app["db"].fetch(query, *args)
 
             return {"current_page": current_page + 1, "max_pages": 10, "values": urls, "direction": "asc" if direction == "desc" else "desc", "last_sort": sort}

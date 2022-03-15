@@ -20,3 +20,64 @@ createForm.addEventListener("submit", async (e) => {
 
     location.reload()
 })
+
+for (let row of document.getElementsByClassName("shortner-table-row")) {
+    const cells = row.children as HTMLCollectionOf<HTMLTableCellElement>
+    const data = {
+        id: row.id,
+        key: cells[0].children[0].innerText,
+        destination: cells[1].children[0].innerText,
+        clicks: cells[2].innerText,
+        creationDate: cells[3].innerText
+    }
+    const btns = cells[4].children[0].children
+    
+    const copyBtn = btns[0] as HTMLButtonElement
+    const editBtn = btns[1] as HTMLButtonElement
+    const deleteBtn = btns[2] as HTMLButtonElement
+
+    copyBtn.addEventListener("click", () => {
+        const el = document.createElement('textarea');
+        el.value = location.origin + "/" + data.key;
+        el.setAttribute('readonly', '');
+        el.style.position = 'absolute';
+        el.style.left = '-9999px';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        
+        copyBtn.innerText = "Copied!"
+        setTimeout(() => copyBtn.innerText = "Copy", 1000)
+    })
+
+    editBtn.addEventListener("click", async () => {
+        alert("edited!")
+    })
+
+    deleteBtn.addEventListener("click", async () => {
+        const modal = document.getElementById("delete-modal")
+        const text = document.getElementById("delete-text")
+        text.innerHTML = `Click to confirm that you want to delete short URL with key <code>${data["key"]}</code> pointing to <code>${data["destination"]}</code>`
+        modal.setAttribute("data-target", data["id"])
+        modal.classList.add("is-active")
+    })
+}
+
+// Modal close
+for (const close of document.getElementsByClassName("modal-background")) {
+    const target = close.closest(".modal")
+    close.addEventListener("click", () => {
+        target.classList.remove("is-active")
+    })
+}
+
+const modalDeleteBtn = document.getElementById("delete-btn")
+
+modalDeleteBtn.addEventListener("click", async () => {
+    const modal = modalDeleteBtn.closest(".modal")
+    const target = document.getElementById(modal.getAttribute("data-target"))
+    target.remove()
+
+    modal.classList.remove("is-active")
+})

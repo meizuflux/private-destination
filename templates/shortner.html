@@ -35,7 +35,7 @@ URL Shortner
                 </thead>
                 <tbody>
                     {% for i, url in enumerate(values, start=1) %}
-                        <tr id="table-row-{{i}}">
+                        <tr class="shortner-table-row" id="{{i}}">
                             <td><a href="/{{url['key']}}">{{url["key"]}}</a></td>
                             <td><a href="{{url['destination']}}">{{url['destination']}}</a></td>
                             <td>{{url['clicks']}}</td>
@@ -44,7 +44,7 @@ URL Shortner
                                 <div class="buttons">
                                     <button class="button is-info is-small">Copy</button>
                                     <button class="button is-warning is-small">Edit</button>
-                                    <button class="button is-danger is-small">Delete</button>
+                                    <button class="button is-danger is-small js-modal-trigger" data-target="delete-modal">Delete</button>
                                 </div>
                             </td>
                         </tr>
@@ -71,6 +71,20 @@ URL Shortner
                 {% endif %}
                 </ul>
         </nav>
+        <div id="delete-modal" class="modal">
+            <div class="modal-background"></div>
+          
+            <div class="modal-content">
+              <div class="box">
+                <div>
+                    <h2 class="title is-2">Danger</h2>
+                    <p class="block" id="delete-text"></p>
+                    <button class="button is-danger block mt-2" id="delete-btn">Delete Short URL</button>
+                </div>
+                <footer class="is-size-7 mt-3">Click anywhere to exit</footer>
+              </div>
+            </div>
+        </div>
     {% endif %}
     <script src="/static/js/shortner.js" type="module"></script>
     

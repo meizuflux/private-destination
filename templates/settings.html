@@ -48,16 +48,16 @@ Settings
       
         <div class="modal-content">
           <div class="box">
-            <div id="regen-content">
+            <div>
                 <h2 class="title is-2">Danger</h2>
                 <p class="block">Clicking this button will delete your account, including all items you have created.</p>
-                <div class="field">
+                <form class="field" id="delete-form">
                     <label class="label">Enter your username</label>
                     <div class="control">
                       <input class="input" type="text" placeholder="{{request['user']['username']}}" autocomplete="off" id="delete-username-input">
                       <a href="/api/auth/delete?redirect=True" class="button is-danger block mt-2" id="delete-btn" disabled>Delete Account</a>
                     </div>
-                </div>
+                </form>
                 
             </div>
             <footer class="is-size-7 mt-3">Click anywhere to exit</footer>

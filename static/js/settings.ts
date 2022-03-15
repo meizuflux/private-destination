@@ -73,6 +73,7 @@ regenBtn.addEventListener("click", async () => {
 
 const deleteBtn = getById("delete-btn")
 const deleteInput = getById("delete-username-input") as HTMLInputElement
+const deleteForm = getById("delete-form")
 
 deleteInput.addEventListener("input", (e) => {
     if (e.target.value === deleteInput.placeholder) {

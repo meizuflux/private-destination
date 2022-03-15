@@ -8,7 +8,7 @@ def normalize_pattern(pattern: str):
         return pattern
     return "/" + pattern
 
-def view(pattern: str = None):
+def view(pattern = None):
     def decorator(fn):
         setattr(fn, "handler", True)
         setattr(fn, "pattern", normalize_pattern(pattern))

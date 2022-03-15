@@ -1,18 +1,21 @@
 from uuid import UUID
 from aiohttp import web, ClientSession
 from app import controllers
+import asyncio
 import aiohttp_jinja2
 from jinja2 import FileSystemLoader
 
 from aiohttp_apispec import (
     setup_aiohttp_apispec,
     validation_middleware,
+    match_info_schema
 )
 from sys import argv
 from yaml import safe_load
 from app.utils.auth import AuthenticationScheme, Credentials, requires_auth
 from app.utils.auth.providers import providers
 from app.utils.db import create_pool
+from marshmallow import Schema, fields
 
 import sentry_sdk
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
@@ -22,6 +25,9 @@ sentry_sdk.init(
       integrations=[AioHttpIntegration()],
       send_default_pii=True
 )
+
+class ShortnerMatchInfo(Schema):
+    key = fields.Str(required=True)
 
 async def verify_user(
     request,
@@ -76,13 +82,27 @@ async def login(request):
         providers.append({"key": key, "name": provider.name})
     return {"providers": providers}
 
+@match_info_schema(ShortnerMatchInfo)
+async def shortner(request):
+    key = request["match_info"]["key"]
+    destination = await request.app["db"].fetchval("SELECT destination FROM urls WHERE key = $1", key)
+    if destination is None:
+        return web.Response(body="No shortened URL with that key was found.")
+
+    asyncio.get_event_loop().create_task(request.app["db"].execute("UPDATE urls SET clicks = clicks + 1 WHERE key = $1", key))
+
+    return web.HTTPTemporaryRedirect(destination)
+
 async def app_factory():
     app = web.Application(middlewares=[authentication_middleware, validation_middleware])
 
     app.router.add_get("/", index)
     app.router.add_get("/login", login)
+
     for controller in controllers.all():
         controller.add_routes(app)
+
+    app.router.add_get("/{key}", shortner)
 
     setup_aiohttp_apispec(
         app=app, 

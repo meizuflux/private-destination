@@ -9,7 +9,7 @@ from marshmallow import Schema, fields, validate
 class ShortnerQuerystring(Schema):
     page = fields.Integer(required=False)
     direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
-    sort = fields.String(validate=validate.OneOf({"key", "destination", "views", "creation_date"}))
+    sort = fields.String(validate=validate.OneOf({"key", "destination", "clicks", "creation_date"}))
 
 class Dashboard(Controller):
     @view()
@@ -17,7 +17,8 @@ class Dashboard(Controller):
         @requires_auth(scheme=AuthenticationScheme.SESSION, redirect=True)
         @aiohttp_jinja2.template("dashboard.html")
         async def get(self):
-            return {}
+            urls = await self.request.app["db"].fetchval("SELECT count(key) FROM urls WHERE owner = $1", self.request["user"]["user_id"])
+            return {"url_count": urls}
 
     @view("shortner")
     class Shortner(web.View):
@@ -31,7 +32,7 @@ class Dashboard(Controller):
 
             query = (
                 f"""
-                SELECT key, destination, views, creation_date 
+                SELECT key, destination, clicks, creation_date 
                 FROM urls 
                 WHERE owner = $1
                 ORDER BY {sort.lower()} {direction.upper()} 

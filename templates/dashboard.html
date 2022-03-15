@@ -16,8 +16,12 @@
         </div>
         <div class="tile is-parent">
         <article class="tile is-child box">
-            <p class="title">URL Shortner</p>
-            <p class="subtitle">You have 15 shortened URLs</p>
+            <p class="title"><a href="/dashboard/shortner">URL Shortner</a></p>
+            {% if url_count > 0 %}
+                <p class="subtitle">You have {{url_count}} shortened URLs</p>
+            {% else %}
+                <p class="subtitle">You haven't shortened any URLs</p>
+            {% endif %}
         </article>
         </div>
     </div>

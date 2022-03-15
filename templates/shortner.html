@@ -28,7 +28,7 @@ URL Shortner
                     <tr>
                         <th><a href="/dashboard/shortner?page={{current_page}}&sort=key&direction={{direction if last_sort == 'key' else 'desc'}}">Key</a></th>
                         <th><a href="/dashboard/shortner?page={{current_page}}&sort=destination&direction={{direction if last_sort == 'destination' else 'desc'}}">Destination</a></th>
-                        <th><a href="/dashboard/shortner?page={{current_page}}&sort=views&direction={{direction if last_sort == 'views' else 'desc'}}">Views</a></th>
+                        <th><a href="/dashboard/shortner?page={{current_page}}&sort=clicks&direction={{direction if last_sort == 'clicks' else 'desc'}}">Clicks</a></th>
                         <th><a href="/dashboard/shortner?page={{current_page}}&sort=creation_date&direction={{direction if last_sort == 'creation_date' else 'desc'}}">Creation Date</a></th>
                         <th>Actions</th>
                     </tr>
@@ -38,7 +38,7 @@ URL Shortner
                         <tr id="table-row-{{i}}">
                             <td><a href="/{{url['key']}}">{{url["key"]}}</a></td>
                             <td><a href="{{url['destination']}}">{{url['destination']}}</a></td>
-                            <td>{{url['views']}}</td>
+                            <td>{{url['clicks']}}</td>
                             <td>{{url["creation_date"].strftime("%d %B %Y")}}</td>
                             <td>
                                 <div class="buttons">

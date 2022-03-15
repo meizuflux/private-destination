@@ -26,7 +26,7 @@ class CallbackQuerystring(Schema):
 class DeleteQuerystring(Schema):
     redirect = fields.Boolean(truthy = {"True"}, falsy={"False"})
 
-all_chars = string.ascii_letters + string.digits + "!@#$%^&?<>:;+=-_~"
+all_chars = string.ascii_letters + string.digits + "!@$%^&?<>:;+=-_~"
 
 async def generate_api_key(db: Database):
     while True:

@@ -30,6 +30,5 @@ class Shortner(APIController):
             if key == "":
                 key = await generate_url_key(req.app["db"])
 
-            query = "insert into urls (owner, key, destination) values ($1, $2, $3)"
-            row = await self.request.app["db"].fetchrow(query, req["user"]["user_id"], key, json["destination"])
+            row = await self.request.app["db"].create_short_url(req["user"]["user_id"], key, json["destination"])
             return web.json_response({})

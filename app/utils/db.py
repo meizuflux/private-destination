@@ -32,18 +32,23 @@ class Database(Pool):
     async def fetch_user_by_session(self, uuid: UUID):
         return await self.fetchrow("SELECT * FROM users WHERE user_id = (SELECT user_id FROM sessions WHERE token = $1);", uuid)
 
+    async def fetch_user_by_api_key(self, api_key: str):
+        return await self.fetchrow("SELECT * FROM users WHERE api_key = $1", api_key)
+
     async def create_session(self, user_id: int, *, browser: str, os: str):
-        token = await self.fetchval("INSERT INTO sessions (token, user_id, browser, os) (SELECT gen_random_uuid(), $1, $2, $3) RETURNING token;", user_id, browser, os)
-        return token
+        return await self.fetchval("INSERT INTO sessions (token, user_id, browser, os) (SELECT gen_random_uuid(), $1, $2, $3) RETURNING token;", user_id, browser, os)
 
     async def delete_session(self, token: UUID):
-        await self.execute("DELETE FROM sessions WHERE token = $1", token)
+        return await self.execute("DELETE FROM sessions WHERE token = $1", token)
 
     async def validate_session(self, uuid: UUID):
         return await self.fetchval("SELECT EXISTS(SELECT 1 FROM sessions WHERE token = $1)", uuid)
 
     async def validate_api_key(self, api_key: str):
         return await self.fetchval("SELECT EXISTS(SELECT 1 FROM users WHERE api_key = $1);", api_key)
+
+    async def create_short_url(self, owner: int, key: str, destination: str):
+        return await self.fetchrow("INSERT INTO urls (owner, key, destination) VALUES ($1, $2, $3)", owner, key, destination)
 
 def create_pool(
     app,

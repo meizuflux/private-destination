@@ -57,7 +57,7 @@ async def verify_user(
         api_key = request.headers.get("x-api-key")
         if api_key is not None:
             if wants_user_info is True or admin is True:
-                user = await request.app["db"].fetchrow("select * from users where api_key = $1", api_key)
+                user = await request.app["db"].fetch_user_by_api_key(api_key)
                 if user is None:
                     valid = False
                 else:
@@ -66,7 +66,7 @@ async def verify_user(
                     else:
                         request["user"] = user
             else:
-                valid = await request.app["db"].fetchval("SELECT EXISTS(SELECT 1 FROM users WHERE api_key = $1)", api_key)
+                valid = await request.app["db"].validate_api_key(api_key)
     if valid is False:
         if redirect is True:
             return web.HTTPTemporaryRedirect("/login")

@@ -22,23 +22,23 @@ createForm.addEventListener("submit", async (e) => {
 })
 
 for (let row of document.getElementsByClassName("shortner-table-row")) {
-    const cells = row.children as HTMLCollectionOf<HTMLTableCellElement>
-    const data = {
-        id: row.id,
-        key: cells[0].children[0].innerText,
-        destination: cells[1].children[0].innerText,
-        clicks: cells[2].innerText,
-        creationDate: cells[3].innerText
-    }
-    const btns = cells[4].children[0].children
+    const cells = row.querySelectorAll("td")
+
+    const id = row.id
+    const key = cells[0].firstElementChild.innerText // enclosed inside a <a> tag
+    const destination = cells[1].firstElementChild.innerText // same as above
+    const clicks = cells[2].innerText
+    const creationDate = cells[3].innerText
+
+    const btns = cells[4].firstElementChild.children as HTMLCollectionOf<HTMLButtonElement>
     
-    const copyBtn = btns[0] as HTMLButtonElement
-    const editBtn = btns[1] as HTMLButtonElement
-    const deleteBtn = btns[2] as HTMLButtonElement
+    const copyBtn = btns[0]
+    const editBtn = btns[1]
+    const deleteBtn = btns[2]
 
     copyBtn.addEventListener("click", () => {
         const el = document.createElement('textarea');
-        el.value = location.origin + "/" + data.key;
+        el.value = location.origin + "/" + key;
         el.setAttribute('readonly', '');
         el.style.position = 'absolute';
         el.style.left = '-9999px';
@@ -58,8 +58,8 @@ for (let row of document.getElementsByClassName("shortner-table-row")) {
     deleteBtn.addEventListener("click", async () => {
         const modal = document.getElementById("delete-modal")
         const text = document.getElementById("delete-text")
-        text.innerHTML = `Click to confirm that you want to delete short URL with key <code>${data["key"]}</code> pointing to <code>${data["destination"]}</code>`
-        modal.setAttribute("data-target", data["id"])
+        text.innerHTML = `Click to confirm that you want to delete short URL with key <code>${key}</code> pointing to <code>${destination}</code> created on <code>${creationDate}</code>`
+        modal.setAttribute("data-target", id)
         modal.classList.add("is-active")
     })
 }

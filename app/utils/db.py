@@ -5,11 +5,6 @@ from asyncpg import Connection, Pool, Record
 
 
 class Database(Pool):
-    __data = {
-        "sessions": {},
-        "users": {}
-    }
-
     def __init__(self, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.app = app
@@ -23,18 +18,10 @@ class Database(Pool):
         """
         return await self.execute(query, user["id"], user["username"], user["email"], user["avatar_url"], user["api_key"], provider)
 
-    async def regenerate_api_key(self, user_id: int, api_key: str):
-        return await self.execute("UPDATE users SET api_key = $2 WHERE user_id = $1", user_id, api_key)
-
     async def delete_user(self, user_id: int):
         return await self.execute("DELETE FROM users WHERE user_id = $1", user_id)
 
-    async def fetch_user_by_session(self, uuid: UUID):
-        return await self.fetchrow("SELECT * FROM users WHERE user_id = (SELECT user_id FROM sessions WHERE token = $1);", uuid)
-
-    async def fetch_user_by_api_key(self, api_key: str):
-        return await self.fetchrow("SELECT * FROM users WHERE api_key = $1", api_key)
-
+    
     async def create_session(self, user_id: int, *, browser: str, os: str):
         return await self.fetchval("INSERT INTO sessions (token, user_id, browser, os) (SELECT gen_random_uuid(), $1, $2, $3) RETURNING token;", user_id, browser, os)
 
@@ -44,8 +31,19 @@ class Database(Pool):
     async def validate_session(self, uuid: UUID):
         return await self.fetchval("SELECT EXISTS(SELECT 1 FROM sessions WHERE token = $1)", uuid)
 
+    async def fetch_user_by_session(self, uuid: UUID):
+        return await self.fetchrow("SELECT * FROM users WHERE user_id = (SELECT user_id FROM sessions WHERE token = $1);", uuid)
+
+
     async def validate_api_key(self, api_key: str):
         return await self.fetchval("SELECT EXISTS(SELECT 1 FROM users WHERE api_key = $1);", api_key)
+    
+    async def regenerate_api_key(self, user_id: int, api_key: str):
+        return await self.execute("UPDATE users SET api_key = $2 WHERE user_id = $1", user_id, api_key)
+
+    async def fetch_user_by_api_key(self, api_key: str):
+        return await self.fetchrow("SELECT * FROM users WHERE api_key = $1", api_key)
+
 
     async def create_short_url(self, owner: int, key: str, destination: str):
         return await self.fetchrow("INSERT INTO urls (owner, key, destination) VALUES ($1, $2, $3)", owner, key, destination)

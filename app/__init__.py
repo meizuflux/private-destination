@@ -3,6 +3,7 @@ from aiohttp import web, ClientSession
 from app import controllers
 import asyncio
 import aiohttp_jinja2
+from aiohttp import web
 from jinja2 import FileSystemLoader
 
 from aiohttp_apispec import (
@@ -30,34 +31,46 @@ class ShortnerMatchInfo(Schema):
     key = fields.Str(required=True)
 
 async def verify_user(
-    request,
+    request: web.Request,
     scheme: AuthenticationScheme,
     admin: bool,
     redirect: bool,
     wants_user_info: bool
 ):
-    session = request.cookies.get("_session")
-    if session is None:
+    valid = False
+    if (scheme is AuthenticationScheme.SESSION or scheme is AuthenticationScheme.BOTH):
+        session = request.cookies.get("_session")
+        if session is not None:
+            if wants_user_info is True or admin is True:
+                user = await request.app["db"].fetch_user_by_session(UUID(session))
+                if user is None:
+                    if redirect is True:
+                        return web.HTTPTemporaryRedirect("/login")
+                    return web.HTTPUnauthorized()
+                if admin is True and user["admin"] is False:
+                    return web.HTTPUnauthorized()
+                request["user"] = user
+                valid = True
+            else:
+                valid = await request.app["db"].validate_session(UUID(session))
+    if (scheme is AuthenticationScheme.API_KEY or scheme is AuthenticationScheme.BOTH) and valid is False:
+        api_key = request.headers.get("x-api-key")
+        if api_key is not None:
+            if wants_user_info is True or admin is True:
+                user = await request.app["db"].fetchrow("select * from users where api_key = $1", api_key)
+                if user is None:
+                    valid = False
+                else:
+                    if admin is True and user["admin"] is False:
+                        valid = False
+                    else:
+                        request["user"] = user
+            else:
+                valid = await request.app["db"].fetchval("SELECT EXISTS(SELECT 1 FROM users WHERE api_key = $1)", api_key)
+    if valid is False:
         if redirect is True:
             return web.HTTPTemporaryRedirect("/login")
         return web.HTTPUnauthorized()
-
-    if wants_user_info is True or admin is True:
-        user = await request.app["db"].fetch_user_by_session(UUID(session))
-        if user is None:
-            if redirect is True:
-                return web.HTTPTemporaryRedirect("/login")
-            return web.HTTPUnauthorized()
-        if admin is True and user["admin"] is False:
-            return web.HTTPUnauthorized()
-        request["user"] = user
-    else:
-        valid = await request.app["db"].validate_session(UUID(session))
-        if valid is not True:
-            if redirect is True:
-                return web.HTTPTemporaryRedirect("/login")
-            return web.HTTPUnauthorized()
-
 
 @web.middleware
 async def authentication_middleware(request, handler):

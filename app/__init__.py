@@ -98,11 +98,13 @@ async def login(request):
 @match_info_schema(ShortnerMatchInfo)
 async def shortner(request):
     key = request["match_info"]["key"]
-    destination = await request.app["db"].fetchval("SELECT destination FROM urls WHERE key = $1", key)
+    destination = await request.app["db"].get_short_url_destination(key)
     if destination is None:
         return web.Response(body="No shortened URL with that key was found.")
 
-    asyncio.get_event_loop().create_task(request.app["db"].execute("UPDATE urls SET clicks = clicks + 1 WHERE key = $1", key))
+    print(destination)
+
+    asyncio.get_event_loop().create_task(request.app["db"].add_short_url_click(key))
 
     return web.HTTPTemporaryRedirect(destination)
 
@@ -115,7 +117,7 @@ async def app_factory():
     for controller in controllers.all():
         controller.add_routes(app)
 
-    app.router.add_get("/{key}", shortner)
+    app.router.add_get("/{key}", shortner) # catch all so it has to go last after all the other routes are created
 
     setup_aiohttp_apispec(
         app=app, 

@@ -24,7 +24,6 @@ createForm.addEventListener("submit", async (e) => {
 for (let row of document.getElementsByClassName("shortner-table-row")) {
     const cells = row.querySelectorAll("td")
 
-    const id = row.id
     const key = cells[0].firstElementChild.innerText // enclosed inside a <a> tag
     const destination = cells[1].firstElementChild.innerText // same as above
     const clicks = cells[2].innerText
@@ -59,7 +58,7 @@ for (let row of document.getElementsByClassName("shortner-table-row")) {
         const modal = document.getElementById("delete-modal")
         const text = document.getElementById("delete-text")
         text.innerHTML = `Click to confirm that you want to delete short URL with key <code>${key}</code> pointing to <code>${destination}</code> created on <code>${creationDate}</code>`
-        modal.setAttribute("data-target", id)
+        modal.setAttribute("data-target", key)
         modal.classList.add("is-active")
     })
 }
@@ -76,7 +75,18 @@ const modalDeleteBtn = document.getElementById("delete-btn")
 
 modalDeleteBtn.addEventListener("click", async () => {
     const modal = modalDeleteBtn.closest(".modal")
-    const target = document.getElementById(modal.getAttribute("data-target"))
+
+    const id = modal.getAttribute("data-target")
+
+    const target = document.getElementById(id)
+
+    const res = await fetch(`/api/shortner/${encodeURIComponent(id)}`, {
+        method: "DELETE"
+    })
+
+    console.log(await res.json())
+
+
     target.remove()
 
     modal.classList.remove("is-active")

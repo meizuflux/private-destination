@@ -17,7 +17,7 @@ class Dashboard(Controller):
         @requires_auth(scheme=AuthenticationScheme.SESSION, redirect=True)
         @aiohttp_jinja2.template("dashboard.html")
         async def get(self):
-            urls = await self.request.app["db"].fetchval("SELECT count(key) FROM urls WHERE owner = $1", self.request["user"]["user_id"])
+            urls = await self.request.app["db"].get_short_url_count(self.request["user"]["user_id"])
             return {"url_count": urls}
 
     @view("shortner")
@@ -30,20 +30,20 @@ class Dashboard(Controller):
             direction = self.request["querystring"].get("direction", "desc")
             sort = self.request["querystring"].get("sort", "creation_date")
 
-            query = (
-                f"""
-                SELECT key, destination, clicks, creation_date 
-                FROM urls 
-                WHERE owner = $1
-                ORDER BY {sort.lower()} {direction.upper()} 
-                LIMIT 50 
-                OFFSET $2
-                """
+            urls = await self.request.app["db"].get_short_urls(
+                sort=sort.lower(),
+                direction=direction.upper(),
+                owner=self.request["user"]["user_id"],
+                offset=current_page * 50
             )
-            args = (self.request["user"]["user_id"], current_page * 50)
-            urls = await self.request.app["db"].fetch(query, *args)
+            max_pages = await self.request.app["db"].get_short_url_max_pages(self.request["user"]["user_id"])
 
-            return {"current_page": current_page + 1, "max_pages": 10, "values": urls, "direction": "asc" if direction == "desc" else "desc", "last_sort": sort}
+            return {
+                "current_page": current_page + 1,
+                "max_pages": max_pages,
+                "values": urls,
+                "direction": "asc" if direction == "desc" else "desc", "last_sort": sort
+            }
 
     @view("settings")
     class Settings(web.View):

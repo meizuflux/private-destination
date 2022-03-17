@@ -2,6 +2,7 @@ from uuid import UUID, uuid4
 
 from app.utils.auth import User
 from asyncpg import Connection, Pool, Record
+from math import ceil
 
 
 class Database(Pool):
@@ -47,6 +48,40 @@ class Database(Pool):
 
     async def create_short_url(self, owner: int, key: str, destination: str):
         return await self.fetchrow("INSERT INTO urls (owner, key, destination) VALUES ($1, $2, $3)", owner, key, destination)
+
+    async def delete_short_url(self, key: str):
+        return await self.execute("DELETE FROM urls WHERE key = $1", key)
+
+    async def check_short_url_exists(self, key: str):
+        return await self.fetchval("SELECT EXISTS(SELECT 1 FROM urls WHERE key = $1)", key)
+
+    async def get_short_url_destination(self, key: str):
+        return await self.fetchval("SELECT destination FROM urls WHERE key = $1", key)
+
+    async def add_short_url_click(self, key: str):
+        return await self.execute("UPDATE urls SET clicks = clicks + 1 WHERE key = $1", key)
+
+    async def get_short_url_count(self, owner: int):
+        return await self.fetchval("SELECT count(key) FROM urls WHERE owner = $1", owner)
+
+    async def get_short_urls(self, *, sort: str, direction: str, owner: int, offset: int):
+        # sort and direction weren't working as args to get passed so they have to go directly into the query
+        # this is fine as they both are sanitized with the api-spec
+        query = (
+            f"""
+            SELECT key, destination, clicks, creation_date 
+            FROM urls 
+            WHERE owner = $1
+            ORDER BY {sort} {direction.upper()}
+            LIMIT 50 
+            OFFSET $2
+            """
+        )
+        return await self.fetch(query, owner, offset)
+
+    async def get_short_url_max_pages(self, owner: int) -> int:
+        urls = await self.fetchval("SELECT count(key) FROM urls WHERE owner = $1", owner)
+        return ceil(urls / 50)
 
 def create_pool(
     app,

@@ -10,9 +10,9 @@ Settings
         <div class="control">
             <input id="api-key" class="input block" type="password" readonly value="{{request['user']['api_key']}}"/>
             <div class="buttons has-addons">
-                <button class="button is-primary is-light" id="toggle-show-api-key">Show</button>
-                <button class="button is-info is-light" id="copy-api-key">Copy</button>
-                <button class="button is-danger is-light js-modal-trigger" data-target="regen-modal">
+                <button class="button is-primary" id="toggle-show-api-key">Show</button>
+                <button class="button is-info" id="copy-api-key">Copy</button>
+                <button class="button is-danger js-modal-trigger" data-target="regen-modal">
                     Regenerate
                 </button>
             </div>
@@ -22,8 +22,8 @@ Settings
     <div class="box">
         <h2 class="title is-2">Account Management</h2>
         <div class="buttons has-addons">
-            <a class="button is-warning is-light" href="/api/auth/login?provider={{request['user']['oauth_provider']}}">Refresh User Info</a>
-            <button class="button is-danger is-light js-modal-trigger" data-target="delete-modal">Delete Account</button>
+            <a class="button is-warning" href="/api/auth/login?provider={{request['user']['oauth_provider']}}">Refresh User Info</a>
+            <button class="button is-danger js-modal-trigger" data-target="delete-modal">Delete Account</button>
         </div>
     </div>
 

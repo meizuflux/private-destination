@@ -11,7 +11,7 @@ URL Shortner
     </div>
 
     <form class="field has-addons" id="create-form">
-        <div class="control">
+        <div class="control is-expanded">
             <input class="input" type="url" placeholder="https://meizuflux.com" id="create-input">
         </div>
         <div class="control">
@@ -20,7 +20,7 @@ URL Shortner
     </form>
 
     {% if values == [] %}
-        <p class="title is-3">You haven't shortened any urls.</p>
+        <p class="title is-3">You haven't shortened any urls. Shorten your first one above!</p>
     {% else %}
         <div class="table-container">
             <table class="table is-striped is-hoverable is-fullwidth is-bordered" data-row-len="{{len(values)}}">
@@ -35,7 +35,7 @@ URL Shortner
                 </thead>
                 <tbody>
                     {% for i, url in enumerate(values, start=1) %}
-                        <tr class="shortner-table-row" id="{{i}}">
+                        <tr class="shortner-table-row" id="{{url['key']}}">
                             <td><a href="/{{url['key']}}">{{url["key"]}}</a></td>
                             <td><a href="{{url['destination']}}">{{url['destination']}}</a></td>
                             <td>{{url['clicks']}}</td>

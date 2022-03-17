@@ -17,5 +17,5 @@ build:
     yarn run rimraf dist && node build.mjs
 
 watch:
-    yarn run chokidar "static/**/!(bulma).*" "templates/*.html" -c "node build.mjs" --initial
+    yarn run chokidar "static/**/*.*" "templates/*.html" -c "node build.mjs" --initial
 

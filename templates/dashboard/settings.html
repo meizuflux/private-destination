@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "dashboard/layout.html" %}
 
 {% block title %}
 Settings
@@ -8,7 +8,7 @@ Settings
     <div class="box">
         <h2 class="title is-2">API Key</h2>
         <div class="control">
-            <input id="api-key" class="input block" type="password" readonly value="{{request['user']['api_key']}}"/>
+            <input id="api-key" class="input block" type="password" readonly value="{{user['api_key']}}"/>
             <div class="buttons has-addons">
                 <button class="button is-primary" id="toggle-show-api-key">Show</button>
                 <button class="button is-info" id="copy-api-key">Copy</button>
@@ -22,7 +22,7 @@ Settings
     <div class="box">
         <h2 class="title is-2">Account Management</h2>
         <div class="buttons has-addons">
-            <a class="button is-warning" href="/api/auth/login?provider={{request['user']['oauth_provider']}}">Refresh User Info</a>
+            <a class="button is-warning" href="/api/auth/login?provider={{user['oauth_provider']}}">Refresh User Info</a>
             <button class="button is-danger js-modal-trigger" data-target="delete-modal">Delete Account</button>
         </div>
     </div>
@@ -54,7 +54,7 @@ Settings
                 <form class="field" id="delete-form">
                     <label class="label">Enter your username</label>
                     <div class="control">
-                      <input class="input" type="text" placeholder="{{request['user']['username']}}" autocomplete="off" id="delete-username-input">
+                      <input class="input" type="text" placeholder="{{user['username']}}" autocomplete="off" id="delete-username-input">
                       <a href="/api/auth/delete?redirect=True" class="button is-danger block mt-2" id="delete-btn" disabled>Delete Account</a>
                     </div>
                 </form>

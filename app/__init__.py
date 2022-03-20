@@ -13,7 +13,7 @@ from aiohttp_apispec import (
 )
 from sys import argv
 from yaml import safe_load
-from app.utils.auth import AuthenticationScheme, Credentials, requires_auth
+from app.utils.auth import Credentials, Scopes
 from app.utils.auth.providers import providers
 from app.utils.db import create_pool
 from marshmallow import Schema, fields
@@ -35,47 +35,43 @@ def truncate(text: str, limit: int):
         return text[0:limit-3] + "..."
     return text
 
+
 async def verify_user(
     request: web.Request,
-    scheme: AuthenticationScheme,
+    *,
     admin: bool,
     redirect: bool,
-    wants_user_info: bool
+    scopes: Scopes
 ):
-    valid = False
-    if (scheme is AuthenticationScheme.SESSION or scheme is AuthenticationScheme.BOTH):
+    async def by_session():
         session = request.cookies.get("_session")
         if session is not None:
-            if wants_user_info is True or admin is True:
-                user = await request.app["db"].fetch_user_by_session(UUID(session))
-                if user is None:
-                    if redirect is True:
-                        return web.HTTPTemporaryRedirect("/login")
-                    return web.HTTPUnauthorized()
-                if admin is True and user["admin"] is False:
-                    return web.HTTPUnauthorized()
-                request["user"] = user
-                valid = True
+            if scopes is not None or admin is True:
+                user = await request.app["db"].fetch_user_by_session(UUID(session), scopes)
+                return user
             else:
-                valid = await request.app["db"].validate_session(UUID(session))
-    if (scheme is AuthenticationScheme.API_KEY or scheme is AuthenticationScheme.BOTH) and valid is False:
+                return await request.app["db"].validate_session(UUID(session))
+
+    async def by_api_key():
         api_key = request.headers.get("x-api-key")
         if api_key is not None:
-            if wants_user_info is True or admin is True:
-                user = await request.app["db"].fetch_user_by_api_key(api_key)
-                if user is None:
-                    valid = False
-                else:
-                    if admin is True and user["admin"] is False:
-                        valid = False
-                    else:
-                        request["user"] = user
+            if scopes is not None or admin is True:
+                user = await request.app["db"].fetch_user_by_api_key(api_key, scopes)
+                return user
             else:
-                valid = await request.app["db"].validate_api_key(api_key)
-    if valid is False:
+                return await request.app["db"].validate_api_key(api_key)
+
+    user = await by_session() or await by_api_key()
+
+    if not user:
         if redirect is True:
             return web.HTTPTemporaryRedirect("/login")
         return web.HTTPUnauthorized()
+    
+    if admin is True and user["admin"] is False:
+        return web.HTTPForbidden()
+
+    request["user"] = user
 
 @web.middleware
 async def authentication_middleware(request, handler):
@@ -84,11 +80,29 @@ async def authentication_middleware(request, handler):
         fn = getattr(handler, request.method.lower())
 
     if hasattr(fn, "requires_auth"):
-        verify = await verify_user(request, fn.auth["scheme"], fn.auth["admin"], fn.auth["redirect"], fn.auth["wants_user_info"])
-        if verify is not None:
-            return verify
+        error = await verify_user(request,
+            admin=fn.auth["admin"],
+            redirect=fn.auth["redirect"],
+            scopes=fn.auth["scopes"]
+        )
+        if error is not None:
+            return await handle_errors(request, error)
 
     return await handler(request)
+
+async def handle_errors(request: web.Request, error: web.HTTPException):
+    if not str(request.rel_url).startswith("/api"):
+        if error.status in {403, 404, 500}:
+            return await aiohttp_jinja2.render_template_async(f"errors/{error.status}.html", request, {}, status=error.status)
+
+    raise error
+
+@web.middleware
+async def exception_middleware(request: web.Request, handler):
+    try:
+        return await handler(request)
+    except web.HTTPException as e: # handle exceptions here
+        return await handle_errors(request, e)
 
 async def index(_):
     return web.HTTPTemporaryRedirect("/dashboard")
@@ -114,7 +128,7 @@ async def shortner(request):
     return web.HTTPTemporaryRedirect(destination)
 
 async def app_factory():
-    app = web.Application(middlewares=[authentication_middleware, validation_middleware])
+    app = web.Application(middlewares=[authentication_middleware, validation_middleware, exception_middleware])
 
     app.router.add_get("/", index)
     app.router.add_get("/login", login)

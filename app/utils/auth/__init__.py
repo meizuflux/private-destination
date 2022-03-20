@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Dict, Generic, TypeVar, TypedDict
+from typing import Dict, Tuple, TypedDict, Union
+
+Scopes = Union[Tuple[str], None, str]
 
 @dataclass
 class AuthorizationUrl:
@@ -38,24 +40,17 @@ class OAuthProvider:
     def parse_data(data) -> User:
         raise NotImplementedError
 
-class AuthenticationScheme(Enum):
-    SESSION = 1
-    API_KEY = 2
-    BOTH = 3
-
 def requires_auth(*, 
     admin: bool = False,
-    scheme: AuthenticationScheme = AuthenticationScheme.BOTH,
     redirect: bool = False,
-    wants_user_info: bool = True
+    scopes: Scopes = "*" # a tuple represents the columns, a false means don't fetch the user, and true means to get all columns (*)
 ):
     def deco(fn):
         setattr(fn, "requires_auth", True)
         setattr(fn, "auth", {
             "admin": admin,
-            "scheme": scheme,
             "redirect": redirect,
-            "wants_user_info": wants_user_info
+            "scopes": scopes
         })
         return fn
     return deco

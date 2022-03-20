@@ -6,7 +6,7 @@ from aiohttp import web
 from aiohttp_apispec import match_info_schema, querystring_schema
 from app.routing import APIController, view
 from marshmallow import Schema, fields, validate
-from app.utils.auth import AuthenticationScheme, requires_auth
+from app.utils.auth import requires_auth
 
 from app.utils.auth.providers import providers
 from ua_parser import user_agent_parser
@@ -136,7 +136,7 @@ class Auth(APIController):
 
     @view("logout")
     class Logout(web.View):
-        @requires_auth(scheme=AuthenticationScheme.SESSION, wants_user_info=False)
+        @requires_auth(scopes=None)
         async def get(self):
             token = self.request.cookies.get("_session")
             res = web.HTTPTemporaryRedirect("/login")
@@ -155,7 +155,7 @@ class Auth(APIController):
 
     @view("api_key")
     class APIKey(web.View):
-        @requires_auth()
+        @requires_auth(scopes="user_id")
         async def post(self):
             api_key = await generate_api_key(self.request.app["db"])
             await self.request.app["db"].regenerate_api_key(self.request["user"]["user_id"], api_key)
@@ -163,7 +163,7 @@ class Auth(APIController):
 
     @view("delete")
     class DeleteAccount(web.View):
-        @requires_auth()
+        @requires_auth(scopes="user_id")
         @querystring_schema(DeleteQuerystring)
         async def get(self):
             request = self.request

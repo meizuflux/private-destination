@@ -3,7 +3,7 @@ import aiohttp_jinja2
 from app.routing import Controller, view
 from aiohttp import web
 
-from app.utils.auth import requires_auth, AuthenticationScheme
+from app.utils.auth import requires_auth
 from marshmallow import Schema, fields, validate
 
 class ShortnerQuerystring(Schema):
@@ -14,17 +14,17 @@ class ShortnerQuerystring(Schema):
 class Dashboard(Controller):
     @view()
     class Index(web.View):
-        @requires_auth(scheme=AuthenticationScheme.SESSION, redirect=True)
-        @aiohttp_jinja2.template("dashboard.html")
+        @requires_auth(redirect=True, scopes="user_id")
+        @aiohttp_jinja2.template("dashboard/dashboard.html")
         async def get(self):
             urls = await self.request.app["db"].get_short_url_count(self.request["user"]["user_id"])
             return {"url_count": urls}
 
     @view("shortner")
     class Shortner(web.View):
-        @requires_auth(scheme=AuthenticationScheme.SESSION, redirect=True)
+        @requires_auth(redirect=True, scopes="user_id")
         @querystring_schema(ShortnerQuerystring)
-        @aiohttp_jinja2.template("shortner.html")
+        @aiohttp_jinja2.template("dashboard/shortner.html")
         async def get(self):
             current_page = self.request["querystring"].get("page", 1) - 1
             direction = self.request["querystring"].get("direction", "desc")
@@ -47,7 +47,7 @@ class Dashboard(Controller):
 
     @view("settings")
     class Settings(web.View):
-        @aiohttp_jinja2.template("settings.html")
-        @requires_auth(scheme=AuthenticationScheme.SESSION, redirect=True)
+        @aiohttp_jinja2.template("dashboard/settings.html")
+        @requires_auth(redirect=True, scopes=("api_key", "oauth_provider", "username"))
         async def get(self):
-            return {}
+            return {"user": self.request["user"]}

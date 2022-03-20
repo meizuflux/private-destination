@@ -1,6 +1,6 @@
 import string
 from app.routing import APIController, view
-from app.utils.auth import requires_auth, AuthenticationScheme
+from app.utils.auth import requires_auth
 from app.utils.db import Database
 from aiohttp import web
 from aiohttp_apispec import json_schema, match_info_schema
@@ -27,7 +27,7 @@ async def generate_url_key(db: Database):
 class Shortner(APIController):
     @view()
     class Create(web.View):
-        @requires_auth()
+        @requires_auth(scopes="user_id")
         @json_schema(CreateUrlSchema())
         async def post(self):
             req = self.request
@@ -44,7 +44,7 @@ class Shortner(APIController):
 
     @view("{key}")
     class Manipulate(web.View):
-        @requires_auth()
+        @requires_auth(scopes=None)
         @match_info_schema(KeyMatchSchema)
         async def delete(self):
             req = self.request

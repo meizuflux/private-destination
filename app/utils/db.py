@@ -1,9 +1,13 @@
 from uuid import UUID, uuid4
 
-from app.utils.auth import User
+from app.utils.auth import Scopes, User
 from asyncpg import Connection, Pool, Record
 from math import ceil
 
+def form_scopes(scopes: Scopes) -> str:
+    if isinstance(scopes, str):
+        return scopes
+    return ", ".join(scopes)
 
 class Database(Pool):
     def __init__(self, app, *args, **kwargs):
@@ -32,8 +36,8 @@ class Database(Pool):
     async def validate_session(self, uuid: UUID):
         return await self.fetchval("SELECT EXISTS(SELECT 1 FROM sessions WHERE token = $1)", uuid)
 
-    async def fetch_user_by_session(self, uuid: UUID):
-        return await self.fetchrow("SELECT * FROM users WHERE user_id = (SELECT user_id FROM sessions WHERE token = $1);", uuid)
+    async def fetch_user_by_session(self, uuid: UUID, scopes: Scopes):
+        return await self.fetchrow(f"SELECT {form_scopes(scopes)} FROM users WHERE user_id = (SELECT user_id FROM sessions WHERE token = $1);", uuid)
 
 
     async def validate_api_key(self, api_key: str):
@@ -42,8 +46,8 @@ class Database(Pool):
     async def regenerate_api_key(self, user_id: int, api_key: str):
         return await self.execute("UPDATE users SET api_key = $2 WHERE user_id = $1", user_id, api_key)
 
-    async def fetch_user_by_api_key(self, api_key: str):
-        return await self.fetchrow("SELECT * FROM users WHERE api_key = $1", api_key)
+    async def fetch_user_by_api_key(self, api_key: str, scopes: Scopes):
+        return await self.fetchrow(f"SELECT {form_scopes(scopes)} FROM users WHERE api_key = $1", api_key)
 
 
     async def create_short_url(self, owner: int, key: str, destination: str):

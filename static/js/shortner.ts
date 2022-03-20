@@ -1,25 +1,60 @@
+const urlRegex = new RegExp(/http(s)?:\/\/[-a-zA-Z0-9@:%_\+~#=]{1,256}\.[a-z]{2,6}[-a-zA-Z0-9@:%_\+.~#?&//=]*/)
+
 const createForm = document.getElementById("create-form")
-const createInput = document.getElementById("create-input") as HTMLInputElement
-const createBtn = document.getElementById("create-btn") as HTMLButtonElement
+const createKeyHelp = document.getElementById("create-key-help")
+const createUrlHelp = document.getElementById("create-url-help")
 
-const l = document.getElementById("logger")
+function badUrlInput(urlElem: HTMLInputElement) {
+    urlElem.classList.add("is-danger")
+    createUrlHelp.classList.add("is-danger")
+    createUrlHelp.innerText = "Please enter a URL"
+}
 
-createForm.addEventListener("submit", async (e) => {
+createForm.addEventListener("submit", async (e: SubmitEvent) => {
     e.preventDefault()
+    const elements = e.target.elements as HTMLFormControlsCollection
 
-    await fetch("/api/shortner", {
+    const [keyElem, urlElem] = [elements["create-key"], elements["create-url"]]
+    let [key, url] = [keyElem.value, urlElem.value]
+
+    if (url === "") {
+        badUrlInput(urlElem)
+        return
+    }
+
+    if ((!(url.startsWith("https://") || url.startsWith("http://")))) {
+        url = "https://" + url
+    }
+
+    if (!urlRegex.test(url)) {
+        badUrlInput(urlElem)
+        return
+    }
+
+    const res = await fetch("/api/shortner", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            "key": "",
-            "destination": createInput.value
+            "key": key,
+            "destination": url
         })
     })
 
-    location.reload()
+
+    if (res.ok) {
+        location.reload()
+    }
+
+    // HTTP 409 Conflict (the key already exists)
+    if (res.status == 409) {
+        keyElem.classList.add("is-danger")
+        createKeyHelp.classList.add("is-danger")
+        createKeyHelp.innerText = "A shortened URL with this key already exists"
+    }
 })
+
 
 for (let row of document.getElementsByClassName("shortner-table-row")) {
     const cells = row.querySelectorAll("td")
@@ -85,7 +120,6 @@ modalDeleteBtn.addEventListener("click", async () => {
     })
 
     console.log(await res.json())
-
 
     target.remove()
 

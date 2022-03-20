@@ -6,6 +6,7 @@ from aiohttp import web
 from aiohttp_apispec import json_schema, match_info_schema
 from marshmallow import Schema, fields
 from secrets import choice
+from asyncpg import UniqueViolationError
 
 class CreateUrlSchema(Schema):
     key = fields.String()
@@ -35,7 +36,10 @@ class Shortner(APIController):
             if key == "":
                 key = await generate_url_key(req.app["db"])
 
-            row = await self.request.app["db"].create_short_url(req["user"]["user_id"], key, json["destination"])
+            try:
+                row = await self.request.app["db"].create_short_url(req["user"]["user_id"], key, json["destination"])
+            except UniqueViolationError:
+                return web.HTTPConflict(reason="already exists")
             return web.json_response({})
 
     @view("{key}")

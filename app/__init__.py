@@ -30,6 +30,11 @@ sentry_sdk.init(
 class ShortnerMatchInfo(Schema):
     key = fields.Str(required=True)
 
+def truncate(text: str, limit: int):
+    if len(text) > limit:
+        return text[0:limit-3] + "..."
+    return text
+
 async def verify_user(
     request: web.Request,
     scheme: AuthenticationScheme,
@@ -135,7 +140,7 @@ async def app_factory():
         context_processors=[aiohttp_jinja2.request_processor]
     )
     env = aiohttp_jinja2.get_env(app)
-    env.globals.update(enumerate=enumerate, len=len)
+    env.globals.update(enumerate=enumerate, len=len, truncate=truncate)
 
     app["dev"] = "adev" in argv[0]
     with open("config.yml") as f:

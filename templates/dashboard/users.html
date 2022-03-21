@@ -10,38 +10,34 @@ URL Shortner
         <hr style="border-style: inset;border-width: 1px;">
     </div>
 
-    {% if users == [] %}
-        <p class="title is-3">There are no unauthorized users</p>
-    {% else %}
-        <div class="table-container">
-            <table class="table is-striped is-hoverable is-fullwidth is-bordered" data-row-len="{{len(values)}}">
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>User ID</th>
-                        <th>OAuth Provider</th>
-                        <th>Joined</th>
-                        <th>Actions</th>
+    <div class="table-container">
+        <table class="table is-striped is-hoverable is-fullwidth is-bordered" data-row-len="{{len(values)}}">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>User ID</th>
+                    <th>OAuth Provider</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i, u in enumerate(users, start=1) %}
+                    <tr class="users-table-row" id="{{u['user_id']}}">
+                        <td>{{truncate(u["username"], 15)}}</td>
+                        <td><code>{{u["user_id"]}}</code></a></td>
+                        <td>{{u['oauth_provider']}}</td>
+                        <td>{{u["joined"].strftime("%d %B %Y at %H:%M")}}</td>
+                        <td>
+                            <div class="buttons">
+                                <button class="button is-info is-small">Authorize</button>
+                                <button class="button is-danger is-small">Delete</button>                                </div>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {% for i, u in enumerate(users, start=1) %}
-                        <tr class="users-table-row" id="{{u['user_id']}}">
-                            <td>{{truncate(u["username"], 15)}}</td>
-                            <td>{{u["user_id"]}}</a></td>
-                            <td>{{u['oauth_provider']}}</td>
-                            <td>{{u["joined"].strftime("%d %B %Y")}}</td>
-                            <td>
-                                <div class="buttons">
-                                    <button class="button is-info is-small">Authorize</button>
-                                    <button class="button is-danger is-small">Delete</button>                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     <script src="/static/js/users.js" type="module"></script>
     
 {% endblock main %}

@@ -36,6 +36,9 @@ def truncate(text: str, limit: int):
         return text[0:limit-3] + "..."
     return text
 
+class HTTPPendingAuthorization(web.HTTPClientError):
+    status_code = 499
+    reason = "Pending Authorization"
 
 async def verify_user(
     request: web.Request,
@@ -44,7 +47,6 @@ async def verify_user(
     redirect: bool,
     scopes: Scopes
 ):
-    print(scopes)
     async def by_session():
         session = request.cookies.get("_session")
         if session is not None:
@@ -71,10 +73,6 @@ async def verify_user(
         return web.HTTPUnauthorized()
 
     if user["authorized"] is False:
-        print("not authorized")
-        class HTTPPendingAuthorization(web.HTTPClientError):
-            status_code = 499
-            reason = "Pending Authorization"
         return HTTPPendingAuthorization()
     
     if admin is True and user["admin"] is False:
@@ -129,8 +127,6 @@ async def shortner(request):
     destination = await request.app["db"].get_short_url_destination(key)
     if destination is None:
         return web.Response(body="No shortened URL with that key was found.")
-
-    print(destination)
 
     asyncio.get_event_loop().create_task(request.app["db"].add_short_url_click(key))
 

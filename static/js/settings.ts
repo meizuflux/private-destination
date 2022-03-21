@@ -27,7 +27,13 @@ copyBtn.addEventListener("click", () => {
     document.body.removeChild(el);
     
     copyBtn.innerText = "Copied!"
-    setTimeout(() => copyBtn.innerText = "Copy", 1000)
+    copyBtn.classList.add("is-success")
+    copyBtn.classList.remove("is-info")
+    setTimeout(() => {
+        copyBtn.innerText = "Copy"
+        copyBtn.classList.remove("is-success")
+        copyBtn.classList.add("is-info")
+    }, 1000)
 })
 
 // Modal open

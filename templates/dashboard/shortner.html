@@ -5,10 +5,8 @@
 {% endblock title %}
 
 {% block main %}
-    <div>
-        <h2 class="title is-2">URL Shortner</h2>
-        <hr style="border-style: inset;border-width: 1px;">
-    </div>
+    <h2 class="title is-2">URL Shortner</h2>
+    <hr style="border-style: inset;border-width: 1px;">
 
     <form class="field" id="create-form" autocomplete="off">
         <div class="field">
@@ -30,73 +28,70 @@
         </div>
     </form>
 
-    {% if values == [] %}
-        <p class="title is-3">No shortened URLs.</p>
-    {% else %}
-        <div class="table-container">
-            <table class="table is-striped is-hoverable is-fullwidth is-bordered" data-row-len="{{len(values)}}">
-                <thead>
-                    <tr>
-                        <th><a href="/dashboard/shortner?page={{current_page}}&sort=key&direction={{direction if last_sort == 'key' else 'desc'}}">Key</a></th>
-                        <th><a href="/dashboard/shortner?page={{current_page}}&sort=destination&direction={{direction if last_sort == 'destination' else 'desc'}}">Destination</a></th>
-                        <th><a href="/dashboard/shortner?page={{current_page}}&sort=clicks&direction={{direction if last_sort == 'clicks' else 'desc'}}">Clicks</a></th>
-                        <th><a href="/dashboard/shortner?page={{current_page}}&sort=creation_date&direction={{direction if last_sort == 'creation_date' else 'desc'}}">Creation Date</a></th>
-                        <th>Actions</th>
+    <hr style="border-style: inset;border-width: 1px;">
+    <div class="table-container">
+        <table class="table is-striped is-hoverable is-fullwidth is-bordered" data-row-len="{{len(values)}}">
+            <thead>
+                <tr>
+                    <th><a href="/dashboard/shortner?page={{current_page}}&sort=key&direction={{direction if last_sort == 'key' else 'desc'}}">Key</a></th>
+                    <th><a href="/dashboard/shortner?page={{current_page}}&sort=destination&direction={{direction if last_sort == 'destination' else 'desc'}}">Destination</a></th>
+                    <th><a href="/dashboard/shortner?page={{current_page}}&sort=clicks&direction={{direction if last_sort == 'clicks' else 'desc'}}">Clicks</a></th>
+                    <th><a href="/dashboard/shortner?page={{current_page}}&sort=creation_date&direction={{direction if last_sort == 'creation_date' else 'desc'}}">Creation Date</a></th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i, url in enumerate(values, start=1) %}
+                    <tr class="shortner-table-row" id="{{url['key']}}">
+                        <td><a href="/{{url['key']}}">{{truncate(url["key"], 15)}}</a></td>
+                        <td><a href="{{url['destination']}}">{{truncate(url['destination'], 64)}}</a></td>
+                        <td><code>{{url['clicks']}}</code></td>
+                        <td>{{url["creation_date"].strftime("%d %B %Y at %H:%M")}}</td>
+                        <td>
+                            <div class="buttons">
+                                <button class="button is-info is-small">Copy</button>
+                                <button class="button is-warning is-small">Edit</button>
+                                <button class="button is-danger is-small js-modal-trigger" data-target="delete-modal">Delete</button>
+                            </div>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {% for i, url in enumerate(values, start=1) %}
-                        <tr class="shortner-table-row" id="{{url['key']}}">
-                            <td><a href="/{{url['key']}}">{{truncate(url["key"], 15)}}</a></td>
-                            <td><a href="{{url['destination']}}">{{truncate(url['destination'], 64)}}</a></td>
-                            <td>{{url['clicks']}}</td>
-                            <td>{{url["creation_date"].strftime("%d %B %Y")}}</td>
-                            <td>
-                                <div class="buttons">
-                                    <button class="button is-info is-small">Copy</button>
-                                    <button class="button is-warning is-small">Edit</button>
-                                    <button class="button is-danger is-small js-modal-trigger" data-target="delete-modal">Delete</button>
-                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <nav class="pagination is-centered">
-            <ul class="pagination-list">
-                {% if current_page != 1 %}
-                    <li><a class="pagination-link" href="/dashboard/shortner">1</a></li>
-                    <li><span class="pagination-ellipsis">&hellip;</span></li>
-                    {% if current_page != 2 %}
-                        <li><a class="pagination-link" href="/dashboard/shortner?page={{current_page - 1}}">{{current_page - 1}}</a></li>
-                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <nav class="pagination is-centered">
+        <ul class="pagination-list">
+            {% if current_page != 1 %}
+                <li><a class="pagination-link" href="/dashboard/shortner">1</a></li>
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+                {% if current_page != 2 %}
+                    <li><a class="pagination-link" href="/dashboard/shortner?page={{current_page - 1}}">{{current_page - 1}}</a></li>
                 {% endif %}
-                <li><a class="pagination-link is-current">{{current_page}}</a></li>
-                {% if current_page != max_pages %}
-                    {% if current_page != max_pages - 1 %}
-                        <li><a class="pagination-link" href="/dashboard/shortner?page={{current_page + 1}}">{{current_page + 1}}</a></li>
-                    {% endif %}
-                    <li><span class="pagination-ellipsis">&hellip;</span></li>
-                    <li><a class="pagination-link" href="/dashboard/shortner?page={{max_pages}}">{{max_pages}}</a></li>
+            {% endif %}
+            <li><a class="pagination-link is-current">{{current_page}}</a></li>
+            {% if current_page != max_pages %}
+                {% if current_page != max_pages - 1 %}
+                    <li><a class="pagination-link" href="/dashboard/shortner?page={{current_page + 1}}">{{current_page + 1}}</a></li>
                 {% endif %}
-                </ul>
-        </nav>
-        <div id="delete-modal" class="modal">
-            <div class="modal-background"></div>
-          
-            <div class="modal-content">
-              <div class="box">
-                <div>
-                    <h2 class="title is-2">Danger</h2>
-                    <p id="delete-text"></p>
-                    <button class="button is-danger block mt-2" id="delete-btn">Delete Short URL</button>
-                </div>
-                <footer class="is-size-7 mt-3">Click anywhere to exit</footer>
-              </div>
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+                <li><a class="pagination-link" href="/dashboard/shortner?page={{max_pages}}">{{max_pages}}</a></li>
+            {% endif %}
+            </ul>
+    </nav>
+    <div id="delete-modal" class="modal">
+        <div class="modal-background"></div>
+        
+        <div class="modal-content">
+            <div class="box">
+            <div>
+                <h2 class="title is-2">Danger</h2>
+                <p id="delete-text"></p>
+                <button class="button is-danger block mt-2" id="delete-btn">Delete Short URL</button>
+            </div>
+            <footer class="is-size-7 mt-3">Click anywhere to exit</footer>
             </div>
         </div>
-    {% endif %}
+    </div>
     <script src="/static/js/shortner.js" type="module"></script>
     
 {% endblock main %}

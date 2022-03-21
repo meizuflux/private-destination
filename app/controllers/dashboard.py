@@ -38,11 +38,14 @@ class Dashboard(Controller):
             )
             max_pages = await self.request.app["db"].get_short_url_max_pages(self.request["user"]["user_id"])
 
+            if max_pages == 0:
+                max_pages = 1
             return {
                 "current_page": current_page + 1,
                 "max_pages": max_pages,
                 "values": urls,
-                "direction": "asc" if direction == "desc" else "desc", "last_sort": sort
+                "direction": "asc" if direction == "desc" else "desc",
+                "last_sort": sort
             }
 
     @view("settings")

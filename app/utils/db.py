@@ -80,7 +80,7 @@ class Database(Pool):
             FROM urls 
             WHERE owner = $1
             ORDER BY {sort} {direction.upper()}
-            LIMIT 50 
+            LIMIT 50
             OFFSET $2
             """
         )

@@ -173,11 +173,7 @@ async def app_factory():
         else:
             config = loaded["prod"]
 
-    if app["dev"] is True:
-        app.router.add_static("/static", "dist")
-
-    for resource in app.router.resources():
-        print(resource.canonical)
+    app.router.add_static("/static", "dist")
 
     app["config"] = config
     app["oauth_providers"] = {}

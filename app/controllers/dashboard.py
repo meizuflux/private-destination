@@ -14,7 +14,7 @@ class ShortnerQuerystring(Schema):
 class Dashboard(Controller):
     @view()
     class Index(web.View):
-        @requires_auth(redirect=True, scopes=["user_id", "admin"])
+        @requires_auth(redirect=True, scopes=["user_id", "username", "admin"])
         @aiohttp_jinja2.template("dashboard/dashboard.html")
         async def get(self):
             urls = await self.request.app["db"].get_short_url_count(self.request["user"]["user_id"])

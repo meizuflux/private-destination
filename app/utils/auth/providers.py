@@ -43,7 +43,7 @@ class DiscordProvider(OAuthProvider):
     @staticmethod
     def parse_data(data) -> User:
         if data["avatar"] is None:
-            avatar_url = f"https://cdn.discordapp.com/embed/avatars/{data['discriminator'] % 5}.png"
+            avatar_url = f"https://cdn.discordapp.com/embed/avatars/{str(int(data['discriminator']) % 5)}.png"
         else:
             avatar_url = f"https://cdn.discordapp.com/avatars/{data['id']}/{data['avatar']}.png?size=64"
         return {

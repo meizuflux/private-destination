@@ -16,3 +16,9 @@ build:
 watch:
     yarn run chokidar "static/**/*.*" "templates/*.html" -c "node build.mjs" --initial
 
+dbuild:
+    docker build -t mzf_one .
+
+drun:
+    docker run -dp 8000:8000 -t --name mzf_one mzf_one
+

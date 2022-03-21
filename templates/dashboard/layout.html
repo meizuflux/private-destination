@@ -2,7 +2,7 @@
 {% block body %}
     <div class="container pt-5" style="padding-left: 32px;padding-right: 32px;">
         <div class="columns">
-            <div class="column is-2">
+            <div class="column is-3">
                 <aside class="menu box">
                     <p class="menu-label">
                         Services
@@ -11,6 +11,9 @@
                         <li><a href="/dashboard" class="{{'is-active' if request.rel_url.path == '/dashboard' else ''}}">Home</a></li>
                         <li><a href="/dashboard/shortner" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/shortner') else ''}}">URL Shortner</a></li>
                         <li><a href="/dashboard/cdn" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/cdn') else ''}}">Image CDN</a></li>
+                        {% if user["admin"] %}
+                            <li><a href="/dashboard/users" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/users') else ''}}">Manage Users</a></li>
+                        {% endif %}
                     </ul>
                     <p class="menu-label">
                         User
@@ -21,7 +24,7 @@
                     </ul>
                   </aside>
             </div>
-            <div class="column is-10">
+            <div class="column is-19">
                 {% block main %}
                 {% endblock %}
             </div>

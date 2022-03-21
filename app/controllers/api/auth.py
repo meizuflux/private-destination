@@ -136,7 +136,7 @@ class Auth(APIController):
 
     @view("logout")
     class Logout(web.View):
-        @requires_auth(scopes=None)
+        @requires_auth()
         async def get(self):
             token = self.request.cookies.get("_session")
             res = web.HTTPTemporaryRedirect("/login")
@@ -173,20 +173,3 @@ class Auth(APIController):
             if request["querystring"].get("redirect") is True:
                 return web.HTTPTemporaryRedirect("/")
             return web.json_response({"message": "account deleted"})
-
-    @view("@me")
-    class Me(web.View):
-        @requires_auth()
-        async def get(self):
-            user = self.request["user"]
-            data = {
-                "user_id": user["user_id"],
-                "username": user["username"],
-                "email": user["email"],
-                "avatar_url": user["avatar_url"],
-                "api_key": user["api_key"],
-                "oauth_provider": user["oauth_provider"],
-                "joined": user["joined"].isoformat()
-            }
-
-            return web.json_response(data)

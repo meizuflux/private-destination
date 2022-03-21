@@ -1,5 +1,6 @@
 from uuid import UUID
 from aiohttp import web, ClientSession
+from aiohttp.web_exceptions import HTTPClientError
 from app import controllers
 import asyncio
 import aiohttp_jinja2
@@ -43,6 +44,7 @@ async def verify_user(
     redirect: bool,
     scopes: Scopes
 ):
+    print(scopes)
     async def by_session():
         session = request.cookies.get("_session")
         if session is not None:
@@ -67,6 +69,13 @@ async def verify_user(
         if redirect is True:
             return web.HTTPTemporaryRedirect("/login")
         return web.HTTPUnauthorized()
+
+    if user["authorized"] is False:
+        print("not authorized")
+        class HTTPPendingAuthorization(web.HTTPClientError):
+            status_code = 499
+            reason = "Pending Authorization"
+        return HTTPPendingAuthorization()
     
     if admin is True and user["admin"] is False:
         return web.HTTPForbidden()
@@ -92,7 +101,7 @@ async def authentication_middleware(request, handler):
 
 async def handle_errors(request: web.Request, error: web.HTTPException):
     if not str(request.rel_url).startswith("/api"):
-        if error.status in {403, 404, 500}:
+        if error.status in {403, 404, 499, 500}:
             return await aiohttp_jinja2.render_template_async(f"errors/{error.status}.html", request, {}, status=error.status)
 
     raise error
@@ -127,6 +136,9 @@ async def shortner(request):
 
     return web.HTTPTemporaryRedirect(destination)
 
+async def user_processor(request: web.Request):
+    return {"user": request.get("user")}
+
 async def app_factory():
     app = web.Application(middlewares=[authentication_middleware, validation_middleware, exception_middleware])
 
@@ -151,7 +163,7 @@ async def app_factory():
         app,
         enable_async=True,
         loader=FileSystemLoader("./templates"),
-        context_processors=[aiohttp_jinja2.request_processor]
+        context_processors=[aiohttp_jinja2.request_processor, user_processor]
     )
     env = aiohttp_jinja2.get_env(app)
     env.globals.update(enumerate=enumerate, len=len, truncate=truncate)

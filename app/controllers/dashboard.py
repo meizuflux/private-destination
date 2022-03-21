@@ -14,7 +14,7 @@ class ShortnerQuerystring(Schema):
 class Dashboard(Controller):
     @view()
     class Index(web.View):
-        @requires_auth(redirect=True, scopes="user_id")
+        @requires_auth(redirect=True, scopes=["user_id", "admin"])
         @aiohttp_jinja2.template("dashboard/dashboard.html")
         async def get(self):
             urls = await self.request.app["db"].get_short_url_count(self.request["user"]["user_id"])
@@ -22,7 +22,7 @@ class Dashboard(Controller):
 
     @view("shortner")
     class Shortner(web.View):
-        @requires_auth(redirect=True, scopes="user_id")
+        @requires_auth(redirect=True, scopes=["user_id", "admin"])
         @querystring_schema(ShortnerQuerystring)
         @aiohttp_jinja2.template("dashboard/shortner.html")
         async def get(self):
@@ -48,6 +48,14 @@ class Dashboard(Controller):
     @view("settings")
     class Settings(web.View):
         @aiohttp_jinja2.template("dashboard/settings.html")
-        @requires_auth(redirect=True, scopes=("api_key", "oauth_provider", "username"))
+        @requires_auth(redirect=True, scopes=["api_key", "oauth_provider", "username", "admin"])
         async def get(self):
-            return {"user": self.request["user"]}
+            return {}
+
+    @view("users")
+    class Users(web.View):
+        @aiohttp_jinja2.template("dashboard/users.html")
+        @requires_auth(admin=True, redirect=True)
+        async def get(self):
+            users = await self.request.app["db"].get_unauthorized_users()
+            return {"users": users}

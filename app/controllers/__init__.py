@@ -1,5 +1,6 @@
 from typing import Tuple, Type
 from app.controllers.api.shortner import Shortner
+from app.controllers.api.users import Users
 from app.controllers.dashboard import Dashboard
 
 from app.routing import Controller
@@ -9,5 +10,6 @@ def all():
     return (
         Auth,
         Dashboard,
-        Shortner
+        Shortner,
+        Users
     )

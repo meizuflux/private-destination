@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Tuple, TypedDict, Union
+from typing import Dict, List, TypedDict, Union
 
-Scopes = Union[Tuple[str], None, str]
+Scopes = Union[List[str], None, str]
 
 @dataclass
 class AuthorizationUrl:
@@ -43,8 +43,18 @@ class OAuthProvider:
 def requires_auth(*, 
     admin: bool = False,
     redirect: bool = False,
-    scopes: Scopes = "*" # a tuple represents the columns, a false means don't fetch the user, and true means to get all columns (*)
+    scopes: Scopes = None # a tuple represents the columns, a false means don't fetch the user, and true means to get all columns (*)
 ):
+    if scopes is not None:
+        if isinstance(scopes, str):
+            scopes = [scopes]
+    else:
+        scopes = []
+    if not (len(scopes) == 1 and scopes[0] == "*"):
+        if admin is True:
+            scopes.append("admin")
+        scopes.append("authorized")
+    
     def deco(fn):
         setattr(fn, "requires_auth", True)
         setattr(fn, "auth", {

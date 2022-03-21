@@ -26,6 +26,9 @@ class Database(Pool):
     async def delete_user(self, user_id: int):
         return await self.execute("DELETE FROM users WHERE user_id = $1", user_id)
 
+    async def get_unauthorized_users(self):
+        return await self.fetch("SELECT user_id, username, oauth_provider, joined FROM users WHERE authorized = false")
+
     
     async def create_session(self, user_id: int, *, browser: str, os: str):
         return await self.fetchval("INSERT INTO sessions (token, user_id, browser, os) (SELECT gen_random_uuid(), $1, $2, $3) RETURNING token;", user_id, browser, os)

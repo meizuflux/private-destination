@@ -7,7 +7,7 @@ for (let user of document.getElementsByClassName("users-table-row")) {
 
     authorizationBtn.addEventListener("click", async () => {
         const res = await fetch(`/api/users/${user_id}/${authorizationBtn.innerText === "Authorize" ? "authorize" : "unauthorize"}`)
-        user.remove()
+        location.reload()
     })
 
     deleteBtn.addEventListener("click", async () => {

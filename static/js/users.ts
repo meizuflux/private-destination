@@ -1,5 +1,5 @@
 for (let user of document.getElementsByClassName("users-table-row")) {
-    const user_id = parseInt(user.id)
+    const user_id = user.getAttribute("data-id")
 
     const buttons = user.lastElementChild.firstElementChild as HTMLDivElement
     const authorizationBtn = buttons.firstElementChild as HTMLButtonElement
@@ -7,13 +7,11 @@ for (let user of document.getElementsByClassName("users-table-row")) {
 
     authorizationBtn.addEventListener("click", async () => {
         const res = await fetch(`/api/users/${user_id}/${authorizationBtn.innerText === "Authorize" ? "authorize" : "unauthorize"}`)
-
-        location.reload()
+        user.remove()
     })
 
     deleteBtn.addEventListener("click", async () => {
         const res = await fetch(`/api/users/${user_id}/delete`)
-
         user.remove()
     })
 }

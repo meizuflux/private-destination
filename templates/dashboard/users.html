@@ -58,8 +58,8 @@ URL Shortner
                 </tr>
             </thead>
             <tbody>
-                {% for u in users %}
-                    <tr class="users-table-row" id="{{u['user_id']}}">
+                {% for i, u in enumerate(users, start=1) %}
+                    <tr class="users-table-row" data-id="{{u['user_id']}}">
                         <td>{{truncate(u["username"], 15)}}</td>
                         <td><code>{{u["user_id"]}}</code></a></td>
                         <td><code>{{u["authorized"]}}</code></td>

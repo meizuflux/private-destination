@@ -26,8 +26,18 @@ class Database(Pool):
     async def delete_user(self, user_id: int):
         return await self.execute("DELETE FROM users WHERE user_id = $1", user_id)
 
-    async def get_unauthorized_users(self):
-        return await self.fetch("SELECT user_id, username, oauth_provider, joined FROM users WHERE authorized = false")
+    async def get_users(self, sortby: str, direction: str):
+        query = (
+            f"""
+            SELECT
+                user_id, username, oauth_provider, joined, authorized
+            FROM
+                users
+            ORDER BY {sortby} {direction.upper()}
+            """
+        )
+
+        return await self.fetch(query)
 
     
     async def create_session(self, user_id: int, *, browser: str, os: str):
@@ -71,7 +81,7 @@ class Database(Pool):
     async def get_short_url_count(self, owner: int):
         return await self.fetchval("SELECT count(key) FROM urls WHERE owner = $1", owner)
 
-    async def get_short_urls(self, *, sort: str, direction: str, owner: int, offset: int):
+    async def get_short_urls(self, *, sortby: str, direction: str, owner: int, offset: int):
         # sort and direction weren't working as args to get passed so they have to go directly into the query
         # this is fine as they both are sanitized with the api-spec
         query = (
@@ -79,7 +89,7 @@ class Database(Pool):
             SELECT key, destination, clicks, creation_date 
             FROM urls 
             WHERE owner = $1
-            ORDER BY {sort} {direction.upper()}
+            ORDER BY {sortby} {direction.upper()}
             LIMIT 50
             OFFSET $2
             """

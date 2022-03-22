@@ -9,7 +9,11 @@ from marshmallow import Schema, fields, validate
 class ShortnerQuerystring(Schema):
     page = fields.Integer(required=False)
     direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
-    sort = fields.String(validate=validate.OneOf({"key", "destination", "clicks", "creation_date"}))
+    sortby = fields.String(validate=validate.OneOf({"key", "destination", "clicks", "creation_date"}))
+
+class UsersQuerystring(Schema):
+    direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
+    sortby = fields.String(validate=validate.OneOf({"username", "user_id", "authorized", "oauth_provider", "joined"}))
 
 class Dashboard(Controller):
     @view()
@@ -28,10 +32,10 @@ class Dashboard(Controller):
         async def get(self):
             current_page = self.request["querystring"].get("page", 1) - 1
             direction = self.request["querystring"].get("direction", "desc")
-            sort = self.request["querystring"].get("sort", "creation_date")
+            sortby = self.request["querystring"].get("sortby", "creation_date")
 
             urls = await self.request.app["db"].get_short_urls(
-                sort=sort.lower(),
+                sortby=sortby.lower(),
                 direction=direction.upper(),
                 owner=self.request["user"]["user_id"],
                 offset=current_page * 50
@@ -44,8 +48,6 @@ class Dashboard(Controller):
                 "current_page": current_page + 1,
                 "max_pages": max_pages,
                 "values": urls,
-                "direction": "asc" if direction == "desc" else "desc",
-                "last_sort": sort
             }
 
     @view("settings")
@@ -58,7 +60,11 @@ class Dashboard(Controller):
     @view("users")
     class Users(web.View):
         @aiohttp_jinja2.template("dashboard/users.html")
+        @querystring_schema(UsersQuerystring)
         @requires_auth(admin=True, redirect=True)
         async def get(self):
-            users = await self.request.app["db"].get_unauthorized_users()
+            direction = self.request["querystring"].get("direction", "desc")
+            sortby = self.request["querystring"].get("sortby", "joined")
+
+            users = await self.request.app["db"].get_users(sortby, direction)
             return {"users": users}

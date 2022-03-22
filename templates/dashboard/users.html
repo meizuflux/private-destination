@@ -10,28 +10,70 @@ URL Shortner
         <hr style="border-style: inset;border-width: 1px;">
     </div>
 
+    
+
+    <div class="field">
+        <div class="field-label pb-1" style="text-align: left;">
+            <label class="label">Sort By</label>
+        </div>
+        <div class="field-body">
+            <form class="field is-narrow has-addons">
+                <div class="control">
+                    <div class="select">
+                        <select name="sortby" title="Sort By">
+                            <option value="username" selected>Username</option>
+                            <option value="user_id">User ID</option>
+                            <option value="authorized" selected>Authorized</option>
+                            <option value="oauth_provider">Provider</option>
+                            <option value="joined">Joined</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="control">
+                    <div class="select">
+                        <select name="direction" title="Direction">
+                            <option value="desc" selected>Descending</option>
+                            <option value="asc">Ascending</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="button is-primary" type="submit">
+                    Go
+                </button>
+            </form>
+        </div>
+    </div>
+
+
     <div class="table-container">
-        <table class="table is-striped is-hoverable is-fullwidth is-bordered" data-row-len="{{len(values)}}">
+        <table class="table is-striped is-hoverable is-fullwidth is-bordered">
             <thead>
                 <tr>
                     <th>Username</th>
                     <th>User ID</th>
-                    <th>OAuth Provider</th>
+                    <th>Authorized</th>
+                    <th>Provider</th>
                     <th>Joined</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for i, u in enumerate(users, start=1) %}
+                {% for u in users %}
                     <tr class="users-table-row" id="{{u['user_id']}}">
                         <td>{{truncate(u["username"], 15)}}</td>
                         <td><code>{{u["user_id"]}}</code></a></td>
+                        <td><code>{{u["authorized"]}}</code></td>
                         <td>{{u['oauth_provider']}}</td>
                         <td>{{u["joined"].strftime("%d %B %Y at %H:%M")}}</td>
                         <td>
                             <div class="buttons">
-                                <button class="button is-info is-small">Authorize</button>
-                                <button class="button is-danger is-small">Delete</button>                                </div>
+                                {% if u["authorized"]%}
+                                    <button class="button is-warning is-small">Unauthorize</button>
+                                {% else %}
+                                    <button class="button is-info is-small">Authorize</button>
+                                {% endif %}
+                                <button class="button is-danger is-small">Delete</button>
+                            </div>
                         </td>
                     </tr>
                 {% endfor %}

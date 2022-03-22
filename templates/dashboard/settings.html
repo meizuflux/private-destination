@@ -33,9 +33,9 @@ Settings
         <div class="modal-content">
           <div class="box">
             <div id="regen-content">
-                <h2 class="title is-2">Danger</h2>
-                <p>Clicking this button will immediately revoke your current API Key and generate a new one. You will not be able to use your old API Key anymore.</p>
-                <button class="button is-danger block mt-2" id="regen-btn">I understand, regenerate my API Key</button>
+                <h2 class="is-size-2">Danger</h2>
+                <p class="pb-2">Clicking this button will immediately revoke your current API Key and generate a new one. You will not be able to use your old API Key anymore.</p>
+                <button class="button is-danger block mt-2" id="regen-btn">I understand the consequences</button>
             </div>
             <p class="is-hidden" id="regen-success">Successfully regenerated your API Key</p>
             <footer class="is-size-7 mt-3">Click anywhere to exit</footer>
@@ -49,13 +49,13 @@ Settings
         <div class="modal-content">
           <div class="box">
             <div>
-                <h2 class="title is-2">Danger</h2>
-                <p class="block">Clicking this button will delete your account, including all items you have created.</p>
+                <h2 class="is-size-2">Danger</h2>
+                <p class="pb-2">Clicking this button will delete your account, including all items you have created.</p>
                 <form class="field" id="delete-form">
                     <label class="label">Enter your username</label>
                     <div class="control">
                       <input class="input" type="text" placeholder="{{user['username']}}" autocomplete="off" id="delete-username-input">
-                      <a href="/api/auth/delete?redirect=True" class="button is-danger block mt-2" id="delete-btn" disabled>Delete Account</a>
+                      <a href="/api/auth/delete?redirect=True" class="button is-danger block mt-2" id="delete-btn" disabled>I understand the consequences</a>
                     </div>
                 </form>
                 

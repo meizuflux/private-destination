@@ -42,6 +42,17 @@ class Users(APIController):
 
             return web.json_response({"message": "user authorized"})
 
+    @view("{user_id}/unauthorize")
+    class Unauthorize(web.View):
+        @requires_auth(admin=True)
+        @match_info_schema(UserIdMatchinfo)
+        async def get(self):
+            user_id = self.request["match_info"]["user_id"]
+
+            await self.request.app["db"].execute("UPDATE users SET authorized = false WHERE user_id = $1", user_id)
+
+            return web.json_response({"message": "user unauthorized"})
+
     @view("{user_id}/delete")
     class Deny(web.View):
         @requires_auth(admin=True)

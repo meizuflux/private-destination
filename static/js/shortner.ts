@@ -59,8 +59,8 @@ createForm.addEventListener("submit", async (e: SubmitEvent) => {
 for (let row of document.getElementsByClassName("shortner-table-row")) {
     const cells = row.querySelectorAll("td")
 
-    const key = cells[0].firstElementChild.innerText // enclosed inside a <a> tag
-    const destination = cells[1].firstElementChild.innerText // same as above
+    const key = (cells[0].firstElementChild as HTMLLinkElement).innerText // enclosed inside a <a> tag
+    const destination = (cells[1].firstElementChild as HTMLLinkElement).innerText // same as above
     const clicks = cells[2].innerText
     const creationDate = cells[3].innerText
 
@@ -98,7 +98,7 @@ for (let row of document.getElementsByClassName("shortner-table-row")) {
     deleteBtn.addEventListener("click", async () => {
         const modal = document.getElementById("delete-modal")
         const text = document.getElementById("delete-text")
-        text.innerHTML = `Click to confirm that you want to delete short URL with key <code>${key}</code> pointing to <code>${destination}</code> created on <code>${creationDate}</code>`
+        text.innerHTML = `Clicking this button will immediately delete short url with key <code>${key}</code> pointing to <code>${destination}</code> created on <code>${creationDate}</code>. You will no longer be able to use this and the key will be able to be taken by someone else.`
         modal.setAttribute("data-target", key)
         modal.classList.add("is-active")
     })

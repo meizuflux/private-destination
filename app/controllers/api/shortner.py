@@ -1,21 +1,27 @@
 import string
+from secrets import choice
+
+from aiohttp import web
+from aiohttp_apispec import json_schema, match_info_schema
+from asyncpg import UniqueViolationError
+from marshmallow import Schema, fields
+
 from app.routing import APIController, view
 from app.utils.auth import requires_auth
 from app.utils.db import Database
-from aiohttp import web
-from aiohttp_apispec import json_schema, match_info_schema
-from marshmallow import Schema, fields
-from secrets import choice
-from asyncpg import UniqueViolationError
+
 
 class CreateUrlSchema(Schema):
     key = fields.String()
     destination = fields.String()
 
+
 class KeyMatchSchema(Schema):
     key = fields.String(required=True)
 
+
 all_chars = string.ascii_letters + string.digits + "!@$%<>:+=-_~"
+
 
 async def generate_url_key(db: Database):
     while True:
@@ -23,6 +29,7 @@ async def generate_url_key(db: Database):
         if await db.check_short_url_exists(key) is False:
             break
     return key
+
 
 class Shortner(APIController):
     @view()

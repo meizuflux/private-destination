@@ -7,18 +7,12 @@ start-db:
 dev:
     adev runserver --livereload server.py --app-factory app_factory
 
-venv:
-    python -m venv venv
+format:
+    isort . && black .
 
 build:
     node build.mjs
 
 watch:
     yarn run chokidar "static/**/*.*" "templates/*.html" -c "node build.mjs" --initial
-
-dbuild:
-    docker build -t mzf_one .
-
-drun:
-    docker run -dp 8000:8000 -t --name mzf_one mzf_one
 

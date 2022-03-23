@@ -4,7 +4,6 @@ gunicorn
 uvloop; platform_system != "Windows"
 pyyaml
 aiohttp
-aiohttp-devtools
 aiohttp-apispec
 marshmallow
 sentry_sdk

@@ -41,17 +41,18 @@
                 </select>
                 <div class="control">
                     <div class="select">
-                        <select name="sortby" title="Sort By">
+                        <select name="sortby" title="Sort By" id="sortby">
                             <option value="key">Username</option>
                             <option value="destination">Destination</option>
                             <option value="clicks">Clicks</option>
-                            <option value="creation_date">Creation date</option>
+                            <option value="creation_date" selected>Creation date</option>
                         </select>
                     </div>
                 </div>
                 <div class="control">
                     <div class="select">
-                        <select name="direction" title="Direction">
+                        <select name="direction" title="Direction" id="direction">
+                            <option class="is-hidden" selected></option>
                             <option value="desc" selected>Descending</option>
                             <option value="asc">Ascending</option>
                         </select>

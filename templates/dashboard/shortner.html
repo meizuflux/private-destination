@@ -5,8 +5,8 @@
 {% endblock title %}
 
 {% block main %}
-    <h2 class="title is-2">URL Shortner</h2>
-    <hr style="border-style: inset;border-width: 1px;">
+    <h1 class="title">URL Shortner</h1>
+    <h2 class="subtitle mb-2">View and create shortened URLs</h2>
 
     <form class="field" id="create-form" autocomplete="off">
         <div class="field">
@@ -28,10 +28,8 @@
         </div>
     </form>
 
-    <hr style="border-style: inset;border-width: 1px;">
-
     <div class="field">
-        <div class="field-label pb-1" style="text-align: left;">
+        <div class="field-label mb-1" style="text-align: left;">
             <label class="label">Sort By</label>
         </div>
         <div class="field-body">
@@ -121,7 +119,7 @@
             <div class="box">
             <div>
                 <h2 class="is-size-2">Danger</h2>
-                <p id="delete-text" class="pb-2"></p>
+                <p id="delete-text" class="mb-2"></p>
                 <button class="button is-danger block" id="delete-btn">I understand the consequences</button>
             </div>
             <footer class="is-size-7 mt-3">Click anywhere to exit</footer>

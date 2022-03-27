@@ -7,8 +7,8 @@ start-db:
 dev:
     adev runserver --livereload server.py --app-factory app_factory
 
-venv:
-    python -m venv venv
+format:
+    isort . && black .
 
 build:
     node scripts/build.mjs && node scripts/code-editor.mjs

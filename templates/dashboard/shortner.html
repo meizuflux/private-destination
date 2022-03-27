@@ -5,8 +5,8 @@
 {% endblock title %}
 
 {% block main %}
-    <h2 class="title is-2">URL Shortner</h2>
-    <hr style="border-style: inset;border-width: 1px;">
+    <h1 class="title">URL Shortner</h1>
+    <h2 class="subtitle mb-2">View and create shortened URLs</h2>
 
     <form class="field" id="create-form" autocomplete="off">
         <div class="field">
@@ -28,10 +28,8 @@
         </div>
     </form>
 
-    <hr style="border-style: inset;border-width: 1px;">
-
     <div class="field">
-        <div class="field-label pb-1" style="text-align: left;">
+        <div class="field-label mb-1" style="text-align: left;">
             <label class="label">Sort By</label>
         </div>
         <div class="field-body">
@@ -41,17 +39,18 @@
                 </select>
                 <div class="control">
                     <div class="select">
-                        <select name="sortby" title="Sort By">
+                        <select name="sortby" title="Sort By" id="sortby">
                             <option value="key">Username</option>
                             <option value="destination">Destination</option>
                             <option value="clicks">Clicks</option>
-                            <option value="creation_date">Creation date</option>
+                            <option value="creation_date" selected>Creation date</option>
                         </select>
                     </div>
                 </div>
                 <div class="control">
                     <div class="select">
-                        <select name="direction" title="Direction">
+                        <select name="direction" title="Direction" id="direction">
+                            <option class="is-hidden" selected></option>
                             <option value="desc" selected>Descending</option>
                             <option value="asc">Ascending</option>
                         </select>
@@ -120,7 +119,7 @@
             <div class="box">
             <div>
                 <h2 class="is-size-2">Danger</h2>
-                <p id="delete-text" class="pb-2"></p>
+                <p id="delete-text" class="mb-2"></p>
                 <button class="button is-danger block" id="delete-btn">I understand the consequences</button>
             </div>
             <footer class="is-size-7 mt-3">Click anywhere to exit</footer>

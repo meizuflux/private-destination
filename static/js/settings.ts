@@ -15,25 +15,23 @@ showBtn.addEventListener("click", () => {
 })
 
 const copyBtn = getById("copy-api-key")
-copyBtn.addEventListener("click", () => {
-    const el = document.createElement('textarea');
-    el.value = apiKey.value;
-    el.setAttribute('readonly', '');
-    el.style.position = 'absolute';
-    el.style.left = '-9999px';
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
+copyBtn.addEventListener("click", async () => {
+    await navigator.clipboard.writeText(apiKey.value)
+        .then(
+        () => {
+            copyBtn.innerText = "Copied!"
+            copyBtn.classList.add("is-success")
+            copyBtn.classList.remove("is-info")
+            setTimeout(() => {
+                copyBtn.innerText = "Copy"
+                copyBtn.classList.remove("is-success")
+                copyBtn.classList.add("is-info")
+            }, 1000)
+        },
+        (r) => alert('Could not copy codeblock:\n' + r.toString())
+        )
+
     
-    copyBtn.innerText = "Copied!"
-    copyBtn.classList.add("is-success")
-    copyBtn.classList.remove("is-info")
-    setTimeout(() => {
-        copyBtn.innerText = "Copy"
-        copyBtn.classList.remove("is-success")
-        copyBtn.classList.add("is-info")
-    }, 1000)
 })
 
 // Modal open

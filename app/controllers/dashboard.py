@@ -1,19 +1,22 @@
-from aiohttp_apispec import querystring_schema
 import aiohttp_jinja2
-from app.routing import Controller, view
 from aiohttp import web
-
-from app.utils.auth import requires_auth
+from aiohttp_apispec import querystring_schema
 from marshmallow import Schema, fields, validate
+
+from app.routing import Controller, view
+from app.utils.auth import requires_auth
+
 
 class ShortnerQuerystring(Schema):
     page = fields.Integer(required=False)
     direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
     sortby = fields.String(validate=validate.OneOf({"key", "destination", "clicks", "creation_date"}))
 
+
 class UsersQuerystring(Schema):
     direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
     sortby = fields.String(validate=validate.OneOf({"username", "user_id", "authorized", "oauth_provider", "joined"}))
+
 
 class Dashboard(Controller):
     @view()
@@ -38,7 +41,7 @@ class Dashboard(Controller):
                 sortby=sortby.lower(),
                 direction=direction.upper(),
                 owner=self.request["user"]["user_id"],
-                offset=current_page * 50
+                offset=current_page * 50,
             )
             max_pages = await self.request.app["db"].get_short_url_max_pages(self.request["user"]["user_id"])
 

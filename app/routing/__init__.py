@@ -1,5 +1,7 @@
 from typing import List
+
 from aiohttp import web
+
 
 def normalize_pattern(pattern: str):
     if pattern is None:
@@ -8,12 +10,15 @@ def normalize_pattern(pattern: str):
         return pattern
     return "/" + pattern
 
-def view(pattern = None):
+
+def view(pattern=None):
     def decorator(fn):
         setattr(fn, "handler", True)
         setattr(fn, "pattern", normalize_pattern(pattern))
         return fn
+
     return decorator
+
 
 class ControllerMeta(type):
     __views__ = []
@@ -26,6 +31,7 @@ class ControllerMeta(type):
             if hasattr(value, "handler"):
                 cls.__views__.append(web.view(cls.class_name() + value.pattern, value))
 
+
 class Controller(metaclass=ControllerMeta):
     __views__: List[web.RouteDef]
 
@@ -33,7 +39,7 @@ class Controller(metaclass=ControllerMeta):
         views: List[web.RouteDef] = []
         for base in reversed(cls.__mro__):
             for member in base.__dict__.values():
-                if hasattr(member, 'handler'):
+                if hasattr(member, "handler"):
                     views.append(web.view(cls.class_name() + member.pattern, member))
 
         cls.__views__ = views
@@ -46,6 +52,7 @@ class Controller(metaclass=ControllerMeta):
     def class_name(cls):
         return "/" + cls.__name__.lower()
 
+
 class APIController(Controller):
     __views__: List[web.RouteDef]
 
@@ -53,7 +60,7 @@ class APIController(Controller):
         views: List[web.RouteDef] = []
         for base in reversed(cls.__mro__):
             for member in base.__dict__.values():
-                if hasattr(member, 'handler'):
+                if hasattr(member, "handler"):
                     views.append(web.view(cls.class_name() + member.pattern, member))
 
         cls.__views__ = views

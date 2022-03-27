@@ -4,7 +4,7 @@ import fs from "fs"
 let all = [];
 
 fs.readdirSync("./static/js").forEach(f => {
-    all.push("static/js/" + f)
+    if (f != "code-editor.ts") all.push("static/js/" + f)
 });
 
 fs.readdirSync("./static/css").forEach(f => {

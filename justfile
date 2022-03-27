@@ -11,14 +11,8 @@ venv:
     python -m venv venv
 
 build:
-    node build.mjs
+    node scripts/build.mjs && node scripts/code-editor.mjs
 
 watch:
     yarn run chokidar "static/**/*.*" "templates/*.html" -c "node build.mjs" --initial
-
-dbuild:
-    docker build -t mzf_one .
-
-drun:
-    docker run -dp 8000:8000 -t --name mzf_one mzf_one
 

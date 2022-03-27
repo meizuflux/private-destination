@@ -11,7 +11,6 @@ fs.readdirSync("./static/css").forEach(f => {
     all.push("static/css/" + f)
 });
 
-console.log("Building...")
 await esbuild.build({
     entryPoints: all,
     outdir: "dist",

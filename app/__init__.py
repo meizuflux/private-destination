@@ -1,17 +1,14 @@
 from sys import argv
-from uuid import UUID
 
 import aiohttp_jinja2
 import sentry_sdk
 from aiohttp import ClientSession, web
 from aiohttp_apispec import setup_aiohttp_apispec, validation_middleware
 from jinja2 import FileSystemLoader
-from marshmallow import Schema, fields
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from yaml import safe_load
 
-from app.utils.auth import Credentials, Scopes
-from app.utils.auth.providers import providers
+from app.utils.auth import verify_user
 from app.utils.db import create_pool
 
 sentry_sdk.init(
@@ -29,46 +26,6 @@ def truncate(text: str, limit: int):
     return text
 
 
-class HTTPPendingAuthorization(web.HTTPClientError):
-    status_code = 499
-    reason = "Pending Authorization"
-
-
-async def verify_user(request: web.Request, *, admin: bool, redirect: bool, scopes: Scopes):
-    async def by_session():
-        session = request.cookies.get("_session")
-        if session is not None:
-            if scopes is not None or admin is True:
-                user = await request.app["db"].fetch_user_by_session(UUID(session), scopes)
-                return user
-            else:
-                return await request.app["db"].validate_session(UUID(session))
-
-    async def by_api_key():
-        api_key = request.headers.get("x-api-key")
-        if api_key is not None:
-            if scopes is not None or admin is True:
-                user = await request.app["db"].fetch_user_by_api_key(api_key, scopes)
-                return user
-            else:
-                return await request.app["db"].validate_api_key(api_key)
-
-    user = await by_session() or await by_api_key()
-
-    if not user:
-        if redirect is True:
-            return web.HTTPFound("/login")
-        return web.HTTPUnauthorized()
-
-    if user["authorized"] is False:
-        return HTTPPendingAuthorization()
-
-    if admin is True and user["admin"] is False:
-        return web.HTTPForbidden()
-
-    request["user"] = user
-
-
 @web.middleware
 async def authentication_middleware(request, handler):
     fn = handler
@@ -79,7 +36,7 @@ async def authentication_middleware(request, handler):
         error = await verify_user(
             request, admin=fn.auth["admin"], redirect=fn.auth["redirect"], scopes=fn.auth["scopes"]
         )
-        if error is not None:
+        if isinstance(error, web.HTTPException):
             return await handle_errors(request, error)
 
     return await handler(request)
@@ -111,8 +68,8 @@ async def app_factory():
     app = web.Application(middlewares=[authentication_middleware, validation_middleware, exception_middleware])
 
     # blueprints
+    app.router.add_routes(blueprints.auth.bp)
     app.router.add_routes(blueprints.dashboard.bp)
-    app.router.add_routes(blueprints.api.auth.bp)
     app.router.add_routes(blueprints.api.shortner.bp)
     app.router.add_routes(blueprints.api.users.bp)
 
@@ -149,12 +106,6 @@ async def app_factory():
     app.router.add_static("/static", "dist")
 
     app["config"] = config
-    app["oauth_providers"] = {}
-
-    for name, cls in providers.items():
-        app["oauth_providers"][name] = cls(
-            credentials=Credentials(app["config"][name]["client_id"], app["config"][name]["client_secret"])
-        )
 
     app["db"] = await create_pool(app, dsn=app["config"]["postgres_dsn"])
     app["session"] = ClientSession()

@@ -17,30 +17,30 @@ class Database(Pool):
         super().__init__(*args, **kwargs)
         self.app = app
 
-    async def create_user(self, user: User, provider: str):
+    async def create_user(self, user: User, hashed_password: str):
         query = """
-            INSERT INTO users (user_id, username, email, avatar_url, api_key, oauth_provider) VALUES ($1, $2, $3, $4, $5, $6)
-            ON CONFLICT (user_id) DO UPDATE SET
-            username = $2, email = $3, avatar_url = $4, oauth_provider = $6
-            WHERE users.user_id = $1;
+            INSERT INTO users (username, email, password, api_key)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id
         """
-        return await self.execute(
-            query, user["id"], user["username"], user["email"], user["avatar_url"], user["api_key"], provider
-        )
+        return await self.fetchval(query, user["username"], user["email"], hashed_password, user["api_key"])
 
     async def delete_user(self, user_id: int):
-        return await self.execute("DELETE FROM users WHERE user_id = $1", user_id)
+        return await self.execute("DELETE FROM users WHERE id = $1", user_id)
 
     async def get_users(self, sortby: str, direction: str):
         query = f"""
             SELECT
-                user_id, username, oauth_provider, joined, authorized
+                id, username, email, joined, authorized
             FROM
                 users
             ORDER BY {sortby} {direction.upper()}
             """
 
         return await self.fetch(query)
+
+    async def get_hash_and_id(self, email: str):
+        return await self.fetchrow("SELECT id, password FROM users WHERE email = $1", email)
 
     async def create_session(self, user_id: int, *, browser: str, os: str):
         return await self.fetchval(
@@ -58,7 +58,7 @@ class Database(Pool):
 
     async def fetch_user_by_session(self, uuid: UUID, scopes: Scopes):
         return await self.fetchrow(
-            f"SELECT {form_scopes(scopes)} FROM users WHERE user_id = (SELECT user_id FROM sessions WHERE token = $1);",
+            f"SELECT {form_scopes(scopes)} FROM users WHERE id = (SELECT user_id FROM sessions WHERE token = $1);",
             uuid,
         )
 
@@ -66,7 +66,7 @@ class Database(Pool):
         return await self.fetchval("SELECT EXISTS(SELECT 1 FROM users WHERE api_key = $1);", api_key)
 
     async def regenerate_api_key(self, user_id: int, api_key: str):
-        return await self.execute("UPDATE users SET api_key = $2 WHERE user_id = $1", user_id, api_key)
+        return await self.execute("UPDATE users SET api_key = $2 WHERE id = $1", user_id, api_key)
 
     async def fetch_user_by_api_key(self, api_key: str, scopes: Scopes):
         return await self.fetchrow(f"SELECT {form_scopes(scopes)} FROM users WHERE api_key = $1", api_key)

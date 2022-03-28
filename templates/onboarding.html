@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{"Sign Up" if type == "signup" else "Login"}}
+{% endblock %}
+
+{% block body%}
+    <div class="container">
+        <div class="columns is-centered mt-3">
+            <div class="column is-5">
+                <form action="/auth/{{'signup' if type == 'signup' else 'login'}}" method="POST">
+                    <h1 class="title">{{"Sign Up" if type == "signup" else "Login"}}</h1>
+                    {% if type == "signup" %}
+                        <div class="field">
+                            <label class="label">Username</label>
+                            <div class="control">
+                                <input id="username" name="username" class="input {{'is-danger' if username_error else ''}}" type="text" placeholder="A unique username">
+                                {% if username_error %}
+                                    {% for error in username_error %}
+                                        <p class="help is-danger">{{error}}</p>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="field">
+                        <label class="label">Email</label>
+                        <div class="control">
+                            <input id="email" name="email" class="input {{'is-danger' if email_error else ''}}" type="email" placeholder="Your email">
+                            {% if email_error %}
+                                {% for error in email_error %}
+                                    <p class="help is-danger">{{error}}</p>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">Password</label>
+                        <div class="control">
+                            <input id="password" name="password" class="input {{'is-danger' if password_error else ''}}" type="password" placeholder="A secure password">
+                            {% if password_error %}
+                                {% for error in password_error %}
+                                    <p class="help is-danger">{{error}}</p>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <label class="checkbox">
+                                <input type="checkbox" id="show-password">
+                                <span id="show-password-text">Show</span> Password
+                            </label>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <button class="button is-info" type="submit">{{"Sign Up" if type == "signup" else "Login"}}</button>
+                    </div>
+
+                    <footer class="is-underlined">
+                        {% if type == "signup" %}
+                            <a href="/auth/login">I already have an account</a>
+                        {% else %}
+                            <a href="/auth/signup">Create an account</a>
+                        {% endif %}
+                    </footer>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/onboarding.js"
+{% endblock %}

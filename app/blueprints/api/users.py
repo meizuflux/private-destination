@@ -20,12 +20,10 @@ async def get(request: web.Request) -> web.Response:
 
     return web.json_response(
         {
-            "user_id": user["user_id"],
+            "id": user["id"],
             "username": user["username"],
             "email": user["email"],
-            "avatar_url": user["avatar_url"],
             "api_key": user["api_key"],
-            "oauth_provider": user["oauth_provider"],
             "joined": user["joined"].isoformat(),
             "authorized": user["authorized"],
             "admin": user["admin"],
@@ -39,7 +37,7 @@ async def get(request: web.Request) -> web.Response:
 async def get(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
 
-    await request.app["db"].execute("UPDATE users SET authorized = true WHERE user_id = $1", user_id)
+    await request.app["db"].execute("UPDATE users SET authorized = true WHERE id = $1", user_id)
 
     return web.json_response({"message": "user authorized"})
 
@@ -50,7 +48,7 @@ async def get(request: web.Request) -> web.Response:
 async def get(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
 
-    await request.app["db"].execute("UPDATE users SET authorized = false WHERE user_id = $1", user_id)
+    await request.app["db"].execute("UPDATE users SET authorized = false WHERE id = $1", user_id)
 
     return web.json_response({"message": "user unauthorized"})
 
@@ -61,6 +59,6 @@ async def get(request: web.Request) -> web.Response:
 async def get(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
 
-    await request.app["db"].execute("DELETE FROM users WHERE user_id = $1", user_id)
+    await request.app["db"].execute("DELETE FROM users WHERE id = $1", user_id)
 
     return web.json_response({"message": "user deleted"})

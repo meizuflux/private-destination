@@ -18,9 +18,9 @@ URL Shortner
                     <div class="select">
                         <select name="sortby" title="Sort By" id="sortby">
                             <option value="username">Username</option>
+                            <option value="email">Email</option>
                             <option value="user_id">User ID</option>
                             <option value="authorized" selected>Authorized</option>
-                            <option value="oauth_provider">Provider</option>
                             <option value="joined">Joined</option>
                         </select>
                     </div>
@@ -42,24 +42,24 @@ URL Shortner
 
 
     <div class="table-container">
-        <table class="table is-striped is-hoverable is-fullwidth is-bordered">
+        <table class="table is-striped is-hoverable is-fullwidth is-bordered is-narrow">
             <thead>
                 <tr>
                     <th>Username</th>
+                    <th>Email</th>
                     <th>User ID</th>
                     <th>Authorized</th>
-                    <th>Provider</th>
                     <th>Joined</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for i, u in enumerate(users, start=1) %}
-                    <tr class="users-table-row" data-id="{{u['user_id']}}">
+                    <tr class="users-table-row" data-id="{{u['id']}}">
                         <td>{{truncate(u["username"], 15)}}</td>
-                        <td><code>{{u["user_id"]}}</code></a></td>
+                        <td>{{u["email"]}}</td>
+                        <td><code>{{u["id"]}}</code></a></td>
                         <td><code>{{u["authorized"]}}</code></td>
-                        <td>{{u['oauth_provider']}}</td>
                         <td>{{u["joined"].strftime("%d %B %Y at %H:%M")}}</td>
                         <td>
                             <div class="buttons">

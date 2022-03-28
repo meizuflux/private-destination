@@ -35,7 +35,7 @@ bp = Blueprint("/api/shortner")
 
 
 @bp.post("")
-@requires_auth(scopes="user_id")
+@requires_auth(scopes="id")
 @json_schema(CreateUrlSchema())
 async def create_short_url(request: web.Request) -> web.Response:
     json = request["json"]
@@ -44,7 +44,7 @@ async def create_short_url(request: web.Request) -> web.Response:
         key = await generate_url_key(request.app["db"])
 
     try:
-        row = await request.app["db"].create_short_url(request["user"]["user_id"], key, json["destination"])
+        row = await request.app["db"].create_short_url(request["user"]["id"], key, json["destination"])
     except UniqueViolationError:
         return web.HTTPConflict(reason="already exists")
     return web.json_response({})

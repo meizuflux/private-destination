@@ -6,6 +6,7 @@ from aiohttp_apispec import match_info_schema
 from marshmallow import Schema, fields
 
 from app.routing import Blueprint
+from app.utils.auth import verify_user
 
 bp = Blueprint()
 
@@ -15,22 +16,16 @@ class ShortnerMatchInfo(Schema):
 
 
 @bp.get("/")
-async def index(_: web.Request) -> web.Response:
-    return web.HTTPFound("/dashboard")
+async def login(request: web.Request) -> web.Response:
+    if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
+        return web.HTTPFound("/dashboard")
 
-
-@bp.get("/login")
-@aiohttp_jinja2.template("login.html")
-async def login(request):
-    providers = []
-    for key, provider in request.app["oauth_providers"].items():
-        providers.append({"key": key, "name": provider.name})
-    return {"providers": providers}
+    return await aiohttp_jinja2.render_template_async("index.html", request, {})
 
 
 @bp.get("/{key}")
 @match_info_schema(ShortnerMatchInfo)
-async def shortner(request):
+async def shortner(request: web.Request) -> web.Response:
     key = request["match_info"]["key"]
     destination = await request.app["db"].get_short_url_destination(key)
     if destination is None:

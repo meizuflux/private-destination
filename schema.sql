@@ -1,10 +1,9 @@
 CREATE TABLE IF NOT EXISTS users (
-    user_id BIGINT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     username TEXT NOT NULL,
-    email TEXT,
-    avatar_url TEXT,
+    email TEXT UNIQUE,
+    password TEXT,
     api_key TEXT,
-    oauth_provider TEXT NOT NULL,
 	admin BOOLEAN DEFAULT false,
     authorized BOOLEAN DEFAULT false,
     joined TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
@@ -12,7 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS sessions (
     token UUID NOT NULL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
     expires TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT ((NOW() + interval '1 day') AT TIME ZONE 'UTC'),
 
@@ -21,7 +20,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 
 CREATE TABLE IF NOT EXISTS urls (
-    owner BIGINT NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
+    owner BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     key TEXT NOT NULL PRIMARY KEY,
     destination TEXT NOT NULL,
     clicks BIGINT DEFAULT 0 NOT NULL,

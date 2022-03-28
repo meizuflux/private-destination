@@ -15,22 +15,24 @@ class ShortnerQuerystring(Schema):
 
 class UsersQuerystring(Schema):
     direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
-    sortby = fields.String(validate=validate.OneOf({"username", "user_id", "authorized", "oauth_provider", "joined"}))
+    sortby = fields.String(validate=validate.OneOf({"username", "id", "authorized", "email", "joined"}))
 
 
 bp = Blueprint("/dashboard")
 
+# these all need the admin scope for the sidebar "Manage Users" to show
+
 
 @bp.get("")
-@requires_auth(redirect=True, scopes=["user_id", "username", "admin"])
+@requires_auth(redirect=True, scopes=["id", "username", "admin"])
 @aiohttp_jinja2.template("dashboard/dashboard.html")
 async def index(request: web.Request) -> web.Response:
-    urls = await request.app["db"].get_short_url_count(request["user"]["user_id"])
+    urls = await request.app["db"].get_short_url_count(request["user"]["id"])
     return {"url_count": urls}
 
 
 @bp.get("/shortner")
-@requires_auth(redirect=True, scopes=["user_id", "admin"])
+@requires_auth(redirect=True, scopes=["id", "admin"])
 @querystring_schema(ShortnerQuerystring)
 @aiohttp_jinja2.template("dashboard/shortner.html")
 async def shortner(request: web.Request) -> web.Response:
@@ -41,10 +43,10 @@ async def shortner(request: web.Request) -> web.Response:
     urls = await request.app["db"].get_short_urls(
         sortby=sortby.lower(),
         direction=direction.upper(),
-        owner=request["user"]["user_id"],
+        owner=request["user"]["id"],
         offset=current_page * 50,
     )
-    max_pages = await request.app["db"].get_short_url_max_pages(request["user"]["user_id"])
+    max_pages = await request.app["db"].get_short_url_max_pages(request["user"]["id"])
 
     if max_pages == 0:
         max_pages = 1
@@ -57,7 +59,7 @@ async def shortner(request: web.Request) -> web.Response:
 
 @bp.get("/settings")
 @aiohttp_jinja2.template("dashboard/settings.html")
-@requires_auth(redirect=True, scopes=["api_key", "oauth_provider", "username", "admin"])
+@requires_auth(redirect=True, scopes=["api_key", "username", "admin"])
 async def settings(_: web.Request) -> web.Response:
     return {}
 

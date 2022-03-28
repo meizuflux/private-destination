@@ -168,11 +168,3 @@ async def app_factory():
     app.on_cleanup.append(close)
 
     return app
-
-
-if __name__ == "__main__":
-    web.run_app(app_factory(), host="localhost", port=8000)
-
-
-def main():
-    web.run_app(app_factory(), host="localhost", port=8000)

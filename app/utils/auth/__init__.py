@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from enum import Enum
 from typing import Dict, List, TypedDict, Union
 
 Scopes = Union[List[str], None, str]

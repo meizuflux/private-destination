@@ -1,22 +1,15 @@
-import asyncio
 from sys import argv
 from uuid import UUID
 
 import aiohttp_jinja2
 import sentry_sdk
 from aiohttp import ClientSession, web
-from aiohttp.web_exceptions import HTTPClientError
-from aiohttp_apispec import (
-    match_info_schema,
-    setup_aiohttp_apispec,
-    validation_middleware,
-)
+from aiohttp_apispec import setup_aiohttp_apispec, validation_middleware
 from jinja2 import FileSystemLoader
 from marshmallow import Schema, fields
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from yaml import safe_load
 
-from app import controllers
 from app.utils.auth import Credentials, Scopes
 from app.utils.auth.providers import providers
 from app.utils.db import create_pool
@@ -27,9 +20,7 @@ sentry_sdk.init(
     send_default_pii=True,
 )
 
-
-class ShortnerMatchInfo(Schema):
-    key = fields.Str(required=True)
+from app import blueprints
 
 
 def truncate(text: str, limit: int):
@@ -66,7 +57,7 @@ async def verify_user(request: web.Request, *, admin: bool, redirect: bool, scop
 
     if not user:
         if redirect is True:
-            return web.HTTPTemporaryRedirect("/login")
+            return web.HTTPFound("/login")
         return web.HTTPUnauthorized()
 
     if user["authorized"] is False:
@@ -112,30 +103,6 @@ async def exception_middleware(request: web.Request, handler):
         return await handle_errors(request, e)
 
 
-async def index(_):
-    return web.HTTPTemporaryRedirect("/dashboard")
-
-
-@aiohttp_jinja2.template("login.html")
-async def login(request):
-    providers = []
-    for key, provider in request.app["oauth_providers"].items():
-        providers.append({"key": key, "name": provider.name})
-    return {"providers": providers}
-
-
-@match_info_schema(ShortnerMatchInfo)
-async def shortner(request):
-    key = request["match_info"]["key"]
-    destination = await request.app["db"].get_short_url_destination(key)
-    if destination is None:
-        return web.Response(body="No shortened URL with that key was found.")
-
-    asyncio.get_event_loop().create_task(request.app["db"].add_short_url_click(key))
-
-    return web.HTTPTemporaryRedirect(destination)
-
-
 async def user_processor(request: web.Request):
     return {"user": request.get("user")}
 
@@ -143,13 +110,14 @@ async def user_processor(request: web.Request):
 async def app_factory():
     app = web.Application(middlewares=[authentication_middleware, validation_middleware, exception_middleware])
 
-    app.router.add_get("/", index)
-    app.router.add_get("/login", login)
+    # blueprints
+    app.router.add_routes(blueprints.dashboard.bp)
+    app.router.add_routes(blueprints.api.auth.bp)
+    app.router.add_routes(blueprints.api.shortner.bp)
+    app.router.add_routes(blueprints.api.users.bp)
 
-    for controller in controllers.all():
-        controller.add_routes(app)
-
-    app.router.add_get("/{key}", shortner)  # catch all so it has to go last after all the other routes are created
+    # default routes but it has to go last since it has a catch-all
+    app.router.add_routes(blueprints.base.bp)
 
     setup_aiohttp_apispec(
         app=app,

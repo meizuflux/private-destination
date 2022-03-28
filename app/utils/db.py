@@ -1,5 +1,5 @@
 from math import ceil
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from asyncpg import Connection, Pool, Record
 

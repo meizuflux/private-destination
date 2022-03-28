@@ -24,3 +24,12 @@ you can do it by user_id too or however you please but your user row has to have
 `403` is for when the user is logged in but not allowed to view the resource
 
 `499` is for when the user's account is pending authorization. this technically would fall under `403` but I wanted an easier way to change the error page
+
+# todo list
+rewrite auth to just be username, email, and password. use `passlib` and use `getpass` for script to create admin user
+
+rewrite app to use html forms instead of js because I hate JS with a passion
+
+maybe password reset(?)
+
+maybe a bulma dark theme since light theme burns my eyes

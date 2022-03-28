@@ -50,11 +50,10 @@ async def verify_user(request: web.Request, *, admin: bool, redirect: bool, scop
     async def by_session():
         session = request.cookies.get("_session")
         if session is not None:
-            if scopes is not None or admin is True:
+            if scopes is not None:
                 user = await request.app["db"].fetch_user_by_session(UUID(session), scopes)
                 return user
             else:
-                print("here")
                 return await request.app["db"].validate_session(UUID(session))
 
     async def by_api_key():

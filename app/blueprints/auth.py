@@ -61,7 +61,7 @@ class SignUpForm(Schema):
 
 class LoginForm(Schema):
     email = fields.Email(required=True)
-    password = fields.Field(require=True, validate=validate.Length(8, 128))
+    password = fields.Field(require=True)
 
 
 bp = Blueprint("/auth")

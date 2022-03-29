@@ -11,7 +11,7 @@ from ua_parser import user_agent_parser
 from webargs.aiohttpparser import AIOHTTPParser
 
 from app.routing import Blueprint
-from app.utils.auth import requires_auth
+from app.utils.auth import requires_auth, verify_user
 from app.utils.db import Database
 
 
@@ -22,7 +22,7 @@ class RaiseErrorParser(AIOHTTPParser):
 
 parser = RaiseErrorParser()
 
-all_chars = string.ascii_letters + string.digits + "!@$%^&?<>:;+=-_~"
+all_chars = string.ascii_letters + string.digits + "!@%^&?<>:;+=-_~"
 
 
 async def generate_api_key(db: Database) -> str:
@@ -70,6 +70,9 @@ bp = Blueprint("/auth")
 @bp.get("/signup")
 @bp.post("/signup")
 async def signup(request: web.Request) -> web.Response:
+    if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
+        return web.HTTPFound("/dashboard")
+
     if request.method == "POST":
         try:
             args = await parser.parse(SignUpForm(), request, locations=["form"])
@@ -107,6 +110,9 @@ async def signup(request: web.Request) -> web.Response:
 @bp.get("/login")
 @bp.post("/login")
 async def login(request: web.Request) -> web.Response:
+    if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
+        return web.HTTPFound("/dashboard")
+
     if request.method == "POST":
         try:
             args = await parser.parse(LoginForm(), request, locations=["form"])

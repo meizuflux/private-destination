@@ -60,7 +60,7 @@ const regenSuccess = getById("regen-success")
 regenBtn.addEventListener("click", async () => {
     regenBtn.classList.toggle("is-loading")
 
-    const res = await fetch("/api/auth/api_key", {
+    const res = await fetch("/api/users/me/api_key", {
         method: "POST"
     })
 

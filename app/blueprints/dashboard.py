@@ -59,13 +59,8 @@ async def shortner(request: web.Request) -> web.Response:
 
 @bp.get("/settings")
 @aiohttp_jinja2.template("dashboard/settings.html")
-@requires_auth(redirect=True, scopes=["api_key", "username", "admin", "id"])
+@requires_auth(redirect=True, scopes=["api_key", "username", "admin"])
 async def settings(_: web.Request) -> web.Response:
-    print(_["user"]["id"])
-    print(_["user"]["api_key"])
-    print("\n")
-    print(await _.app["db"].fetchval("select api_key from users where id = $1", _["user"]["id"]))
-    print(_["user"]["api_key"] == await _.app["db"].fetchval("select api_key from users where id = $1", _["user"]["id"]))
     return {}
 
 

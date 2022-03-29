@@ -5,10 +5,8 @@
 {% endblock title %}
 
 {% block main %}
-    <div>
-        <h2 class="title is-2">Hello, {{request["user"]["username"]}}</h2>
-        <hr style="border-style: inset;border-width: 1px;">
-    </div>
+    <h1 class="title">Hello, {{request["user"]["username"]}}</h1>
+    <h2 class="subtitle mb-2">Welcome to the <code>mzf.one</code> dashboard</h2>
     <div class="tile is-ancestor">
         <div class="tile is-parent">
         <article class="tile is-child box">

@@ -47,10 +47,7 @@ async def create_short_url(request: web.Request) -> web.Response:
         await request.app["db"].create_short_url(request["user"]["id"], key, json["destination"])
     except UniqueViolationError:
         return web.HTTPConflict(reason="already exists")
-    return web.json_response({
-        "key": key,
-        "destination": json["destination"]
-    })
+    return web.json_response({"key": key, "destination": json["destination"]})
 
 
 @bp.delete("/{key}")

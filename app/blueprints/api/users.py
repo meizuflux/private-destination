@@ -1,8 +1,8 @@
 from aiohttp import web
 from aiohttp_apispec import match_info_schema
 from marshmallow import Schema, fields
-from app.blueprints.auth import generate_api_key
 
+from app.blueprints.auth import generate_api_key
 from app.routing import Blueprint
 from app.utils.auth import requires_auth
 
@@ -31,12 +31,14 @@ async def get(request: web.Request) -> web.Response:
         }
     )
 
+
 @bp.post("/me/api_key")
 @requires_auth(scopes="id")
 async def regen_api_key(request: web.Request) -> web.Response:
     new_api_key = await generate_api_key(request.app["db"])
     await request.app["db"].regenerate_api_key(request["user"]["id"], new_api_key)
     return web.json_response({"api_key": new_api_key})
+
 
 @bp.get("/{user_id}/authorize")
 @requires_auth(admin=True)
@@ -69,5 +71,3 @@ async def get(request: web.Request) -> web.Response:
     await request.app["db"].execute("DELETE FROM users WHERE id = $1", user_id)
 
     return web.json_response({"message": "user deleted"})
-
-

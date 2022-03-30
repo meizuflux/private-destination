@@ -6,12 +6,12 @@ for (let user of document.getElementsByClassName("users-table-row")) {
     const deleteBtn = buttons.lastElementChild
 
     authorizationBtn.addEventListener("click", async () => {
-        const res = await fetch(`/api/users/${user_id}/${authorizationBtn.innerText === "Authorize" ? "authorize" : "unauthorize"}`)
+        const res = await fetch(`/api/users/${user_id}/${authorizationBtn.innerText === "Authorize" ? "authorize" : "unauthorize"}`, {method: "POST"})
         location.reload()
     })
 
     deleteBtn.addEventListener("click", async () => {
-        const res = await fetch(`/api/users/${user_id}/delete`)
+        const res = await fetch(`/api/users/${user_id}/delete`, {method: "DELETE"})
         user.remove()
     })
 }

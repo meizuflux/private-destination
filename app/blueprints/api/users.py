@@ -16,7 +16,7 @@ bp = Blueprint("/api/users")
 
 @bp.get("/me")
 @requires_auth(scopes="*")
-async def get(request: web.Request) -> web.Response:
+async def me(request: web.Request) -> web.Response:
     user = request["user"]
 
     return web.json_response(
@@ -40,10 +40,10 @@ async def regen_api_key(request: web.Request) -> web.Response:
     return web.json_response({"api_key": new_api_key})
 
 
-@bp.get("/{user_id}/authorize")
+@bp.post("/{user_id}/authorize")
 @requires_auth(admin=True)
 @match_info_schema(UserIdMatchinfo)
-async def get(request: web.Request) -> web.Response:
+async def authorize_user(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
 
     await request.app["db"].execute("UPDATE users SET authorized = true WHERE id = $1", user_id)
@@ -51,10 +51,10 @@ async def get(request: web.Request) -> web.Response:
     return web.json_response({"message": "user authorized"})
 
 
-@bp.get("/{user_id}/unauthorize")
+@bp.post("/{user_id}/unauthorize")
 @requires_auth(admin=True)
 @match_info_schema(UserIdMatchinfo)
-async def get(request: web.Request) -> web.Response:
+async def unauthorize_user(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
 
     await request.app["db"].execute("UPDATE users SET authorized = false WHERE id = $1", user_id)
@@ -62,10 +62,10 @@ async def get(request: web.Request) -> web.Response:
     return web.json_response({"message": "user unauthorized"})
 
 
-@bp.get("/{user_id}/delete")
+@bp.delete("/{user_id}/delete")
 @requires_auth(admin=True)
 @match_info_schema(UserIdMatchinfo)
-async def get(request: web.Request) -> web.Response:
+async def delete_user(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
 
     await request.app["db"].execute("DELETE FROM users WHERE id = $1", user_id)

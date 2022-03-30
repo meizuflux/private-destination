@@ -13,7 +13,7 @@ from app.utils.db import Database
 
 class CreateUrlSchema(Schema):
     key = fields.String()
-    destination = fields.String()
+    destination = fields.String(required=True)
 
 
 class KeyMatchSchema(Schema):

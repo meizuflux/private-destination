@@ -8,7 +8,7 @@ from app.utils.auth import requires_auth
 
 
 class ShortnerQuerystring(Schema):
-    page = fields.Integer(required=False)
+    page = fields.Integer()
     direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
     sortby = fields.String(validate=validate.OneOf({"key", "destination", "clicks", "creation_date"}))
 
@@ -20,7 +20,7 @@ class UsersQuerystring(Schema):
 
 bp = Blueprint("/dashboard")
 
-# these all need the admin scope for the sidebar "Manage Users" to show
+# these all need the 'admin' scope for the sidebar "Manage Users" to show
 
 
 @bp.get("")

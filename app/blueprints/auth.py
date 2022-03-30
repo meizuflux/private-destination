@@ -35,8 +35,8 @@ async def generate_api_key(db: Database) -> str:
 
 async def login_user(request: web.Request, user_id: int) -> web.Response:
     metadata = user_agent_parser.Parse(request.headers.getone("User-Agent"))
-    browser = metadata["user_agent"]["family"].replace("Other", "Unknown")
-    os = metadata["os"]["family"].replace("Other", "Unknown")
+    browser = metadata["user_agent"]["family"]
+    os = metadata["os"]["family"]
 
     uuid = await request.app["db"].create_session(user_id, browser=browser, os=os)
 
@@ -52,16 +52,12 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
 
     return res
 
-
-class SignUpForm(Schema):
-    username = fields.String(validate=validate.Length(3, 32), required=True)
-    email = fields.Email(required=True)
-    password = fields.Field(required=True, validate=validate.Length(8, 128))
-
-
 class LoginForm(Schema):
     email = fields.Email(required=True)
     password = fields.Field(require=True)
+
+class SignUpForm(LoginForm):
+    username = fields.String(validate=validate.Length(3, 32), required=True)
 
 
 bp = Blueprint("/auth")

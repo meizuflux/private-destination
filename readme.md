@@ -7,16 +7,9 @@ uri is `postgres://postgres:mysecretpassword@localhost:5432/postgres`
 nginx should serve static in production
 
 # setting up admin user
-first set everything up
+first run it once to create tables
 
-then go login with your preferred account (github or discord)
-
-next run this sql command however you prefer
-
-```sql
-UPDATE users SET authorized = true, admin = True WHERE username = 'your username';
-```
-you can do it by user_id too or however you please but your user row has to have authorized and admin both be true
+then run `scripts/admin.py` and follow the prompt. this will create an admin user with the credentials you provide
 
 # http codes
 `401` is for when the user is not logged in
@@ -26,10 +19,10 @@ you can do it by user_id too or however you please but your user row has to have
 `499` is for when the user's account is pending authorization. this technically would fall under `403` but I wanted an easier way to change the error page
 
 # todo list
-rewrite auth to just be username, email, and password. use `passlib` and use `getpass` for script to create admin user
-
-rewrite app to use html forms instead of js because I hate JS with a passion
+rewrite app to use raw html forms instead of js because I hate JS with a passion
 
 maybe password reset(?)
 
 maybe a bulma dark theme since light theme burns my eyes
+
+*maybe* use `hotwire` or `htmx`

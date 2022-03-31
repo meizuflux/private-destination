@@ -41,7 +41,7 @@ async def index(request: web.Request) -> web.Response:
 @querystring_schema(ShortnerQuerystring)
 @template("dashboard/shortner.html")
 async def shortner(request: web.Request) -> web.Response:
-    current_page = request["querystring"].get("page", 1) - 1
+    current_page = abs(request["querystring"].get("page", 1) - 1) # needs to be positive
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "creation_date")
 

@@ -1,0 +1,38 @@
+{% extends 'dashboard/settings/layout.html' %}
+
+{% block title %}
+    Sessions
+{% endblock %}
+
+{% block main2 %}
+    <h1 class="title mb-3">Manage Sessions</h1>
+
+    <div class="table-container">
+        <table class="table is-striped is-hoverable is-fullwidth is-bordered is-narrow">
+            <thead>
+                <tr>
+                    <th>Token</th>
+                    <th>Created</th>
+                    <th>Browser</th>
+                    <th>OS</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for session in sessions %}
+                    <tr data-id="{{session['token']}}">
+                        <td><code>{{session["token"]}}</code></td>
+                        <td>{{session["created"].strftime("%d %B %Y at %H:%M")}}</td>
+                        <td>{{session["browser"]}}</td>
+                        <td>{{session["os"]}}</td>
+                        <td>
+                            <div class="buttons">
+                                <button class="button is-danger is-small">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock  %}

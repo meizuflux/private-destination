@@ -1,4 +1,5 @@
 import asyncio
+from io import BytesIO
 
 import aiohttp_jinja2
 from aiohttp import web
@@ -21,7 +22,6 @@ async def login(request: web.Request) -> web.Response:
         return web.HTTPFound("/dashboard")
 
     return await aiohttp_jinja2.render_template_async("index.html", request, {})
-
 
 @bp.get("/{key}")
 @match_info_schema(ShortnerMatchInfo)

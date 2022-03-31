@@ -5,8 +5,7 @@ URL Shortner
 {% endblock title %}
 
 {% block main %}
-    <h1 class="title">Manage Users</h1>
-    <h2 class="subtitle mb-2">Authorize, unauthorize, and delete users</h2>
+    <h1 class="title mb-3">Manage Users</h1>
 
     <div class="field">
         <div class="field-label mb-1" style="text-align: left;">
@@ -16,20 +15,20 @@ URL Shortner
             <form class="field is-narrow has-addons">
                 <div class="control">
                     <div class="select">
-                        <select name="sortby" title="Sort By" id="sortby">
-                            <option value="username">Username</option>
-                            <option value="email">Email</option>
-                            <option value="user_id">User ID</option>
-                            <option value="authorized" selected>Authorized</option>
-                            <option value="joined">Joined</option>
+                        <select name="sortby" title="Sort By">
+                            <option value="username" {% if sortby == "username" %}selected{% endif %}>Username</option>
+                            <option value="email" {% if sortby == "email" %}selected{% endif %}>Email</option>
+                            <option value="user_id" {% if sortby == "user_id" %}selected{% endif %}>User ID</option>
+                            <option value="authorized" {% if sortby == "authorized" %}selected{% endif %}>Authorized</option>
+                            <option value="joined" {% if sortby == "joined" or not sortby %}selected{% endif %}>Joined</option>
                         </select>
                     </div>
                 </div>
                 <div class="control">
                     <div class="select">
-                        <select name="direction" title="Direction" id="direction">
-                            <option value="desc" selected>Descending</option>
-                            <option value="asc">Ascending</option>
+                        <select name="direction" title="Direction">
+                            <option value="desc" {% if direction == "desc" or not direction %}selected{% endif %}>Descending</option>
+                            <option value="asc" {% if direction == "asc" %}selected{% endif %}>Ascending</option>
                         </select>
                     </div>
                 </div>

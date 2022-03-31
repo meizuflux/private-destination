@@ -39,6 +39,12 @@ class Database(Pool):
 
         return await self.fetch(query)
 
+    async def authorize_user(self, user_id: int):
+        return await self.execute("UPDATE users SET authorized = true WHERE id = $1", user_id)
+
+    async def unauthorize_user(self, user_id: int):
+        return await self.execute("UPDATE users SET authorized = false WHERE id = $1", user_id)
+
     async def get_hash_and_id(self, email: str):
         return await self.fetchrow("SELECT id, password FROM users WHERE email = $1", email)
 
@@ -62,10 +68,13 @@ class Database(Pool):
             uuid,
         )
 
+    async def fetch_sessions(self, user_id: int):
+        return await self.fetch("SELECT token, created, browser, os FROM sessions WHERE user_id = $1 ORDER BY created", user_id)
+
     async def validate_api_key(self, api_key: str):
         return await self.fetchval("SELECT EXISTS(SELECT 1 FROM users WHERE api_key = $1);", api_key)
 
-    async def regenerate_api_key(self, user_id: int, api_key: str):
+    async def update_api_key(self, user_id: int, api_key: str):
         return await self.execute("UPDATE users SET api_key = $2 WHERE id = $1", user_id, api_key)
 
     async def fetch_user_by_api_key(self, api_key: str, scopes: Scopes):

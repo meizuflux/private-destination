@@ -95,7 +95,7 @@ class Database(Pool):
         )
 
     async def fetch_sessions(self, user_id: int):
-        return await self.fetch("SELECT token, created, browser, os FROM sessions WHERE user_id = $1 ORDER BY created", user_id)
+        return await self.fetch("SELECT token, created, browser, os FROM sessions WHERE user_id = $1 ORDER BY created DESC", user_id)
 
     async def validate_api_key(self, api_key: str):
         return await self.fetchval("SELECT EXISTS(SELECT 1 FROM users WHERE api_key = $1);", api_key)

@@ -1,6 +1,8 @@
 {% extends 'dashboard/layout.html' %}
 
 {% block main %}
+    <div class="title">Settings</div>
+
     <div class="tabs mb-3">
         <ul>
         <li class="{{'is-active' if request.rel_url.path == '/dashboard/settings' }}"><a href="/dashboard/settings">General</a></li>

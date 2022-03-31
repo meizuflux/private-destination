@@ -48,6 +48,7 @@ async def shortner(request: web.Request) -> web.Response:
     async with request.app["db"].acquire() as conn:
         urls = await select_short_urls(
             conn,
+            sortby=sortby,
             direction=direction.upper(),
             owner=request["user"]["id"],
             offset=current_page * 50,

@@ -8,6 +8,7 @@ from marshmallow import Schema, fields
 
 from app.routing import Blueprint
 from app.utils.auth import verify_user
+from app.utils.db import add_short_url_click, select_short_url_destination
 
 bp = Blueprint()
 
@@ -27,10 +28,16 @@ async def login(request: web.Request) -> web.Response:
 @match_info_schema(ShortnerMatchInfo)
 async def shortner(request: web.Request) -> web.Response:
     key = request["match_info"]["key"]
-    destination = await request.app["db"].get_short_url_destination(key)
+    destination = await select_short_url_destination(
+        request.app["db"],
+        key=key
+    )
     if destination is None:
         return web.Response(body="No shortened URL with that key was found.")
 
-    asyncio.get_event_loop().create_task(request.app["db"].add_short_url_click(key))
+    asyncio.get_event_loop().create_task(add_short_url_click(
+        request.app["db"],
+        key=key
+    ))
 
     return web.HTTPFound(destination)

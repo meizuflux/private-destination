@@ -1,15 +1,19 @@
 from importlib.metadata import requires
 from io import BytesIO
 from json import dumps
-from aiohttp_jinja2 import template
+from aiohttp_jinja2 import render_template_async, template
 from aiohttp import web
 from aiohttp_apispec import querystring_schema
-from app.utils.db import select_short_url_count, select_short_urls
-from marshmallow import Schema, fields, validate
+from asyncpg import UniqueViolationError
+from app.blueprints.api.shortner import CreateUrlSchema, generate_url_key
+from app.utils.db import insert_short_url, select_sessions, select_short_url_count, select_short_urls, select_users
+from app.utils.forms import parser
+from marshmallow import Schema, ValidationError, fields, validate
 
 from app.routing import Blueprint
 from app.utils.auth import requires_auth
 from math import ceil
+
 
 
 class ShortnerQuerystring(Schema):
@@ -32,14 +36,17 @@ bp = Blueprint("/dashboard")
 @requires_auth(redirect=True, scopes=["id", "username", "admin"])
 @template("dashboard/index.html")
 async def index(request: web.Request) -> web.Response:
-    urls = await request.app["db"].get_short_url_count(request["user"]["id"])
-    return {"url_count": urls}
+    url_count = await select_short_url_count(
+        request.app["db"],
+        owner=request["user"]["id"]
+    )
+    return {"url_count": url_count}
 
 
 @bp.get("/shortner")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @querystring_schema(ShortnerQuerystring)
-@template("dashboard/shortner.html")
+@template("dashboard/shortner/index.html")
 async def shortner(request: web.Request) -> web.Response:
     current_page = request["querystring"].get("page", 1) - 1
     direction = request["querystring"].get("direction", "desc")
@@ -70,6 +77,51 @@ async def shortner(request: web.Request) -> web.Response:
         "direction": direction
     }
 
+@bp.get("/shortner/create")
+@bp.post("/shortner/create")
+@requires_auth(redirect=True, scopes=["id", "admin"])
+async def create_short_url_(request: web.Request) -> web.Response:
+    if request.method == "POST":
+        try:
+            args = await parser.parse(CreateUrlSchema(), request, locations=["form"])
+        except ValidationError as e:
+            return await render_template_async(
+                "dashboard/shortner/create.html",
+                request,
+                {
+                    "key_error": e.messages.get("key"),
+                    "url_error": e.messages.get("destination"),
+                },
+                status=400
+            )
+
+        key = args.get("key")
+        if key is None or key == "":
+            key = await generate_url_key(request.app["db"])
+        destination = args.get("destination")
+
+        try:
+            await insert_short_url(
+                request.app["db"],
+                owner=request["user"]["id"],
+                key=key,
+                destination=destination
+            )
+        except UniqueViolationError:
+            return await render_template_async(
+                "dashboard/shortner/create.html",
+                request,
+                {
+                    "key_error": ["A shortened URL with this key already exists"],
+                },
+                status=400
+            )
+        
+
+        return web.HTTPFound("/dashboard/shortner")
+
+    return await render_template_async("dashboard/shortner/create.html", request, {})
+
 @bp.get("/shortner/sharex")
 @requires_auth(redirect=False, scopes=["api_key"])
 async def sharex_config(request: web.Request) -> web.Response:
@@ -98,7 +150,10 @@ async def general_settings(_: web.Request) -> web.Response:
 @template("dashboard/settings/sessions.html")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def sessions_settings(request: web.Request) -> web.Response:
-    user_sessions = await request.app["db"].fetch_sessions(request["user"]["id"])
+    user_sessions = await select_sessions(
+        request.app["db"],
+        user_id=request["user"]["id"]
+    )
     return {"sessions": user_sessions}
 
 @bp.get("/settings/shortner")
@@ -115,7 +170,11 @@ async def get(request: web.Request) -> web.Response:
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "joined")
 
-    users = await request.app["db"].get_users(sortby, direction)
+    users = await select_users(
+        request.app["db"],
+        sortby=sortby,
+        direction=direction
+    )
     return {
         "users": users,
         "sortby": sortby,

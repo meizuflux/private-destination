@@ -1,0 +1,33 @@
+{% extends 'dashboard/shortner/layout.html' %}
+
+{% block title %}
+    Create a Short URL
+{% endblock title %}
+
+{% block main2 %}
+    <form action="/dashboard/shortner/create" method="POST" novalidate autocomplete="off">
+        <div class="field">
+            <label class="label">Key</label>
+            <div class="control">
+                <input class="input {{'is-danger' if key_error}}" type="text" placeholder="Something to identify the URL" name="key">
+            </div>
+            {% if key_error %}
+                <p class="help is-danger">{{key_error[0]}}</p>
+            {% else %}
+                <p class="help">Leave this field blank to generate a random key</p>
+            {% endif %}
+        </div>
+        <div class="field">
+            <label class="label">URL</label>
+            <div class="control">
+                <input class="input {{'is-danger' if url_error}}" type="url" placeholder="Your long URL" name="destination">
+                {% if url_error %}
+                    <p class="help is-danger">{{url_error[0]}}</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="control">
+            <button class="button is-info" type="submit">Shorten</button>
+        </div>
+    </form>
+{% endblock main2 %}

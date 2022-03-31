@@ -1,7 +1,7 @@
 import os
 import sys
 
-from asyncpg import UniqueViolationError
+from asyncpg import UniqueViolationError, create_pool
 
 sys.path.append(os.getcwd())  # weird python module resolution but this works so idk
 
@@ -13,7 +13,7 @@ from passlib.hash import pbkdf2_sha512
 from yaml import safe_load
 
 from app.blueprints.auth import generate_api_key
-from app.utils.db import create_pool
+from app.utils.db import insert_user
 
 
 async def main():
@@ -42,10 +42,12 @@ async def main():
 
     pw_hash = pbkdf2_sha512.hash(password)
 
-    pool = await create_pool(None, config["postgres_dsn"])
+    pool = await create_pool(config["postgres_dsn"])
     try:
-        user_id = await pool.create_user(
-            {"username": username, "email": email, "api_key": await generate_api_key(pool)}, pw_hash
+        user_id = await insert_user(
+            pool,
+            user={"username": username, "email": email, "api_key": await generate_api_key(pool)},
+            hashed_password=pw_hash
         )
     except UniqueViolationError:
         print("A user with this email already exists")

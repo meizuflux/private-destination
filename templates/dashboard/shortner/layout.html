@@ -1,0 +1,15 @@
+{% extends 'dashboard/layout.html' %}
+
+{% block main %}
+    <div class="title mb-3">URL Shortner</div>
+
+    <div class="tabs mb-3">
+        <ul>
+            <li class="{{'is-active' if request.rel_url.path == '/dashboard/shortner' }}"><a href="/dashboard/shortner">View All</a></li>
+            <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/shortner/create') }}"><a href="/dashboard/shortner/create">Create</a></li>
+        </ul>
+    </div>
+
+    {% block main2 %}   
+    {% endblock  %}
+{% endblock  %}

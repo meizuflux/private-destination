@@ -5,13 +5,12 @@
 
     <div class="tabs mb-3">
         <ul>
-        <li class="{{'is-active' if request.rel_url.path == '/dashboard/settings' }}"><a href="/dashboard/settings">General</a></li>
-        <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/sessions') }}"><a href="/dashboard/settings/sessions">Sessions</a></li>
-        <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/shortner') }}"><a href="/dashboard/settings/shortner">Shortner</a></li>
+            <li class="{{'is-active' if request.rel_url.path == '/dashboard/settings' }}"><a href="/dashboard/settings">General</a></li>
+            <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/sessions') }}"><a href="/dashboard/settings/sessions">Sessions</a></li>
+            <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/shortner') }}"><a href="/dashboard/settings/shortner">Shortner</a></li>
         </ul>
     </div>
 
     {% block main2 %}
-        
     {% endblock  %}
 {% endblock  %}

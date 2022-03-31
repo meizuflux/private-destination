@@ -1,6 +1,7 @@
 from sys import argv
 
 import aiohttp_jinja2
+from asyncpg import create_pool
 import sentry_sdk
 from aiohttp import ClientSession, web
 from aiohttp_apispec import setup_aiohttp_apispec, validation_middleware
@@ -9,7 +10,6 @@ from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from yaml import safe_load
 
 from app.utils.auth import verify_user
-from app.utils.db import create_pool
 
 sentry_sdk.init(
     dsn="https://c51ee48c5ae341ba9a16d57657fc89b0@o1007379.ingest.sentry.io/6237979",
@@ -107,7 +107,7 @@ async def app_factory():
 
     app["config"] = config
 
-    app["db"] = await create_pool(app, dsn=app["config"]["postgres_dsn"])
+    app["db"] = await create_pool(dsn=app["config"]["postgres_dsn"])
     app["session"] = ClientSession()
     with open("schema.sql") as f:
         await app["db"].execute(f.read())

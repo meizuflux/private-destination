@@ -13,7 +13,7 @@ from math import ceil
 
 
 class ShortnerQuerystring(Schema):
-    page = fields.Integer()
+    page = fields.Integer(validate=validate.Range(min=1, error="Page must be greater than or equal to 1"))
     direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
     sortby = fields.String(validate=validate.OneOf({"key", "destination", "clicks", "creation_date"}))
 
@@ -41,7 +41,7 @@ async def index(request: web.Request) -> web.Response:
 @querystring_schema(ShortnerQuerystring)
 @template("dashboard/shortner.html")
 async def shortner(request: web.Request) -> web.Response:
-    current_page = abs(request["querystring"].get("page", 1) - 1) # needs to be positive
+    current_page = request["querystring"].get("page", 1) - 1
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "creation_date")
 

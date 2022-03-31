@@ -1,13 +1,15 @@
 from importlib.metadata import requires
 from io import BytesIO
 from json import dumps
-import aiohttp_jinja2
+from aiohttp_jinja2 import template
 from aiohttp import web
 from aiohttp_apispec import querystring_schema
+from app.utils.db import select_short_url_count, select_short_urls, select_shortner_max_pages
 from marshmallow import Schema, fields, validate
 
 from app.routing import Blueprint
 from app.utils.auth import requires_auth
+from math import ceil
 
 
 class ShortnerQuerystring(Schema):
@@ -28,7 +30,7 @@ bp = Blueprint("/dashboard")
 
 @bp.get("")
 @requires_auth(redirect=True, scopes=["id", "username", "admin"])
-@aiohttp_jinja2.template("dashboard/index.html")
+@template("dashboard/index.html")
 async def index(request: web.Request) -> web.Response:
     urls = await request.app["db"].get_short_url_count(request["user"]["id"])
     return {"url_count": urls}
@@ -37,19 +39,25 @@ async def index(request: web.Request) -> web.Response:
 @bp.get("/shortner")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @querystring_schema(ShortnerQuerystring)
-@aiohttp_jinja2.template("dashboard/shortner.html")
+@template("dashboard/shortner.html")
 async def shortner(request: web.Request) -> web.Response:
     current_page = request["querystring"].get("page", 1) - 1
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "creation_date")
 
-    urls = await request.app["db"].get_short_urls(
-        sortby=sortby.lower(),
-        direction=direction.upper(),
-        owner=request["user"]["id"],
-        offset=current_page * 50,
-    )
-    max_pages = await request.app["db"].get_short_url_max_pages(request["user"]["id"])
+    async with request.app["db"].acquire() as conn:
+        urls = await select_short_urls(
+            conn,
+            direction=direction.upper(),
+            owner=request["user"]["id"],
+            offset=current_page * 50,
+        )
+        urls_count = await select_short_url_count(
+            conn,
+            owner=request["user"]["id"]
+        )
+
+    max_pages = ceil(urls_count / 50)
 
     if max_pages == 0:
         max_pages = 1
@@ -82,33 +90,26 @@ async def sharex_config(request: web.Request) -> web.Response:
 
 
 @bp.get("/settings")
-@aiohttp_jinja2.template("dashboard/settings/index.html")
+@template("dashboard/settings/index.html")
 @requires_auth(redirect=True, scopes=["api_key", "username", "admin"])
-async def settings(_: web.Request) -> web.Response:
+async def general_settings(_: web.Request) -> web.Response:
     return {}
 
 @bp.get("/settings/sessions")
-@aiohttp_jinja2.template("dashboard/settings/sessions.html")
+@template("dashboard/settings/sessions.html")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-async def sessions(request: web.Request) -> web.Response:
+async def sessions_settings(request: web.Request) -> web.Response:
     user_sessions = await request.app["db"].fetch_sessions(request["user"]["id"])
     return {"sessions": user_sessions}
 
 @bp.get("/settings/shortner")
-@aiohttp_jinja2.template("dashboard/settings/shortner.html")
+@template("dashboard/settings/shortner.html")
 @requires_auth(redirect=True, scopes="admin")
 async def shortner_settings(_: web.Request) -> web.Response:
     return {}
 
-@bp.get("/settings/sessions")
-@aiohttp_jinja2.template("dashboard/settings/sessions.html")
-@requires_auth(redirect=True, scopes=["id", "admin"])
-async def sessions(request: web.Request) -> web.Response:
-    user_sessions = await request.app["db"].fetch_sessions(request["user"]["id"])
-    return {"sessions": user_sessions}
-
 @bp.get("/users")
-@aiohttp_jinja2.template("dashboard/users.html")
+@template("dashboard/users.html")
 @querystring_schema(UsersQuerystring)
 @requires_auth(admin=True, redirect=True)
 async def get(request: web.Request) -> web.Response:

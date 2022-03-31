@@ -1,4 +1,5 @@
 from math import ceil
+from typing import List, Union
 from uuid import UUID
 
 from asyncpg import Connection, Pool, Record
@@ -10,6 +11,31 @@ def form_scopes(scopes: Scopes) -> str:
     if isinstance(scopes, str):
         return scopes
     return ", ".join(scopes)
+
+ConnOrPool = Union[Connection, Pool]
+
+async def select_short_urls(
+    conn: ConnOrPool,
+    *,
+    sortby: str,
+    direction: str,
+    owner: int,
+    offset: int
+) -> List[Record]:
+    # sort and direction weren't working as params to get passed so they have to go directly into the query
+    # this is fine as they both are sanitized with the api-spec
+    query = f"""
+        SELECT key, destination, clicks, creation_date 
+        FROM urls 
+        WHERE owner = $1
+        ORDER BY {sortby} {direction.upper()}
+        LIMIT 50
+        OFFSET $2
+    """
+    return await conn.fetch(query, owner, offset)
+
+async def select_short_url_count(conn: ConnOrPool, owner: int) -> int
+    return await conn.fetchval("SELECT count(key) FROM urls WHERE owner = $1", owner)
 
 
 class Database(Pool):

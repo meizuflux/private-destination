@@ -4,7 +4,7 @@ from json import dumps
 from aiohttp_jinja2 import template
 from aiohttp import web
 from aiohttp_apispec import querystring_schema
-from app.utils.db import select_short_url_count, select_short_urls, select_shortner_max_pages
+from app.utils.db import select_short_url_count, select_short_urls
 from marshmallow import Schema, fields, validate
 
 from app.routing import Blueprint

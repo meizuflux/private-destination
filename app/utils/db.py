@@ -34,7 +34,7 @@ async def select_short_urls(
     """
     return await conn.fetch(query, owner, offset)
 
-async def select_short_url_count(conn: ConnOrPool, owner: int) -> int
+async def select_short_url_count(conn: ConnOrPool, owner: int) -> int:
     return await conn.fetchval("SELECT count(key) FROM urls WHERE owner = $1", owner)
 
 

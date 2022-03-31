@@ -78,13 +78,11 @@ async def sharex_config(request: web.Request) -> web.Response:
         "DestinationType": "URLShortener",
         "RequestMethod": "POST",
         "RequestURL": "https://mzf.one/api/shortner",
-        "Headers": {
-            "x-api-key": request["user"]["api_key"]
-        },
+        "Headers": {"x-api-key": request["user"]["api_key"]},
         "Body": "JSON",
-        "Data": "{\n  \"destination\": \"$input$\"\n}",
+        "Data": "{\"destination\":\"$input$\"}",
         "URL": "https://mzf.one/$json:key$",
-        "ErrorMessage": "$json:key$"
+        "ErrorMessage": "$json:message$"
     }
 
     return web.Response(body=BytesIO(dumps(data).encode("utf-8")).getbuffer(), headers={"Content-Disposition": 'attachment; filename="mzf.one.sxcu"'})

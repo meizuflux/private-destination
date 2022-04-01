@@ -1,20 +1,24 @@
-from asyncpg import Pool
 import string
 from secrets import choice
 from uuid import UUID
 
 from aiohttp import web
 from aiohttp_jinja2 import render_template_async
-from asyncpg import UniqueViolationError
+from asyncpg import Pool, UniqueViolationError
 from marshmallow import Schema, ValidationError, fields, validate
 from passlib.hash import pbkdf2_sha512
 from ua_parser import user_agent_parser
 
 from app.routing import Blueprint
 from app.utils.auth import requires_auth, verify_user
-from app.utils.db import delete_session, get_hash_and_id_by_email, insert_session, insert_user, select_api_key_exists
+from app.utils.db import (
+    delete_session,
+    get_hash_and_id_by_email,
+    insert_session,
+    insert_user,
+    select_api_key_exists,
+)
 from app.utils.forms import parser
-
 
 all_chars = string.ascii_letters + string.digits + "!@%^&?<>:;+=-_~"
 
@@ -32,12 +36,7 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
     browser = metadata["user_agent"]["family"]
     os = metadata["os"]["family"]
 
-    uuid = await insert_session(
-        request.app["db"],
-        user_id=user_id,
-        browser=browser,
-        os=os
-    )
+    uuid = await insert_session(request.app["db"], user_id=user_id, browser=browser, os=os)
 
     res = web.HTTPFound("/dashboard")
     res.set_cookie(
@@ -51,9 +50,11 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
 
     return res
 
+
 class LoginForm(Schema):
     email = fields.Email(required=True)
     password = fields.Field(require=True)
+
 
 class SignUpForm(LoginForm):
     username = fields.String(validate=validate.Length(3, 32), required=True)
@@ -119,10 +120,7 @@ async def login(request: web.Request) -> web.Response:
                 {"email_error": e.messages.get("email"), "password_error": e.messages.get("password"), "type": "login"},
             )
 
-        row = await get_hash_and_id_by_email(
-            request.app["db"],
-            email=args["email"]
-        )
+        row = await get_hash_and_id_by_email(request.app["db"], email=args["email"])
         if row is not None:
             if pbkdf2_sha512.verify(args["password"], row["password"]) is True:
                 return await login_user(request, row["id"])
@@ -142,8 +140,5 @@ async def logout(request: web.Request) -> web.Response:
     token = request.cookies.get("_session")
     res = web.HTTPFound("/")
     res.del_cookie("_session")
-    await delete_session(
-        request.app["db"],
-        token=UUID(token)
-    )
+    await delete_session(request.app["db"], token=UUID(token))
     return res

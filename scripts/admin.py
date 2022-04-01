@@ -47,7 +47,7 @@ async def main():
         user_id = await insert_user(
             pool,
             user={"username": username, "email": email, "api_key": await generate_api_key(pool)},
-            hashed_password=pw_hash
+            hashed_password=pw_hash,
         )
     except UniqueViolationError:
         print("A user with this email already exists")

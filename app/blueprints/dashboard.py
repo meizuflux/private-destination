@@ -1,19 +1,25 @@
 from importlib.metadata import requires
 from io import BytesIO
 from json import dumps
-from aiohttp_jinja2 import render_template_async, template
-from aiohttp import web
-from aiohttp_apispec import querystring_schema
-from asyncpg import UniqueViolationError
-from app.blueprints.api.shortner import CreateUrlSchema, generate_url_key
-from app.utils.db import insert_short_url, select_sessions, select_short_url_count, select_short_urls, select_users
-from app.utils.forms import parser
-from marshmallow import Schema, ValidationError, fields, validate
-
-from app.routing import Blueprint
-from app.utils.auth import requires_auth
 from math import ceil
 
+from aiohttp import web
+from aiohttp_apispec import querystring_schema
+from aiohttp_jinja2 import render_template_async, template
+from asyncpg import UniqueViolationError
+from marshmallow import Schema, ValidationError, fields, validate
+
+from app.blueprints.api.shortner import CreateUrlSchema, generate_url_key
+from app.routing import Blueprint
+from app.utils.auth import requires_auth
+from app.utils.db import (
+    insert_short_url,
+    select_sessions,
+    select_short_url_count,
+    select_short_urls,
+    select_users,
+)
+from app.utils.forms import parser
 
 
 class ShortnerQuerystring(Schema):
@@ -36,10 +42,7 @@ bp = Blueprint("/dashboard")
 @requires_auth(redirect=True, scopes=["id", "username", "admin"])
 @template("dashboard/index.html")
 async def index(request: web.Request) -> web.Response:
-    url_count = await select_short_url_count(
-        request.app["db"],
-        owner=request["user"]["id"]
-    )
+    url_count = await select_short_url_count(request.app["db"], owner=request["user"]["id"])
     return {"url_count": url_count}
 
 
@@ -60,10 +63,7 @@ async def shortner(request: web.Request) -> web.Response:
             owner=request["user"]["id"],
             offset=current_page * 50,
         )
-        urls_count = await select_short_url_count(
-            conn,
-            owner=request["user"]["id"]
-        )
+        urls_count = await select_short_url_count(conn, owner=request["user"]["id"])
 
     max_pages = ceil(urls_count / 50)
 
@@ -74,8 +74,9 @@ async def shortner(request: web.Request) -> web.Response:
         "max_pages": max_pages,
         "values": urls,
         "sortby": sortby,
-        "direction": direction
+        "direction": direction,
     }
+
 
 @bp.get("/shortner/create")
 @bp.post("/shortner/create")
@@ -92,7 +93,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
                     "key_error": e.messages.get("key"),
                     "url_error": e.messages.get("destination"),
                 },
-                status=400
+                status=400,
             )
 
         key = args.get("key")
@@ -101,12 +102,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
         destination = args.get("destination")
 
         try:
-            await insert_short_url(
-                request.app["db"],
-                owner=request["user"]["id"],
-                key=key,
-                destination=destination
-            )
+            await insert_short_url(request.app["db"], owner=request["user"]["id"], key=key, destination=destination)
         except UniqueViolationError:
             return await render_template_async(
                 "dashboard/shortner/create.html",
@@ -114,13 +110,13 @@ async def create_short_url_(request: web.Request) -> web.Response:
                 {
                     "key_error": ["A shortened URL with this key already exists"],
                 },
-                status=400
+                status=400,
             )
-        
 
         return web.HTTPFound("/dashboard/shortner")
 
     return await render_template_async("dashboard/shortner/create.html", request, {})
+
 
 @bp.get("/shortner/sharex")
 @requires_auth(redirect=False, scopes=["api_key"])
@@ -132,12 +128,15 @@ async def sharex_config(request: web.Request) -> web.Response:
         "RequestURL": "https://mzf.one/api/shortner",
         "Headers": {"x-api-key": request["user"]["api_key"]},
         "Body": "JSON",
-        "Data": "{\"destination\":\"$input$\"}",
+        "Data": '{"destination":"$input$"}',
         "URL": "https://mzf.one/$json:key$",
-        "ErrorMessage": "$json:message$"
+        "ErrorMessage": "$json:message$",
     }
 
-    return web.Response(body=BytesIO(dumps(data).encode("utf-8")).getbuffer(), headers={"Content-Disposition": 'attachment; filename="mzf.one.sxcu"'})
+    return web.Response(
+        body=BytesIO(dumps(data).encode("utf-8")).getbuffer(),
+        headers={"Content-Disposition": 'attachment; filename="mzf.one.sxcu"'},
+    )
 
 
 @bp.get("/settings")
@@ -146,21 +145,21 @@ async def sharex_config(request: web.Request) -> web.Response:
 async def general_settings(_: web.Request) -> web.Response:
     return {}
 
+
 @bp.get("/settings/sessions")
 @template("dashboard/settings/sessions.html")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def sessions_settings(request: web.Request) -> web.Response:
-    user_sessions = await select_sessions(
-        request.app["db"],
-        user_id=request["user"]["id"]
-    )
+    user_sessions = await select_sessions(request.app["db"], user_id=request["user"]["id"])
     return {"sessions": user_sessions}
+
 
 @bp.get("/settings/shortner")
 @template("dashboard/settings/shortner.html")
 @requires_auth(redirect=True, scopes="admin")
 async def shortner_settings(_: web.Request) -> web.Response:
     return {}
+
 
 @bp.get("/users")
 @template("dashboard/users.html")
@@ -170,13 +169,5 @@ async def get(request: web.Request) -> web.Response:
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "joined")
 
-    users = await select_users(
-        request.app["db"],
-        sortby=sortby,
-        direction=direction
-    )
-    return {
-        "users": users,
-        "sortby": sortby,
-        "direction": direction
-    }
+    users = await select_users(request.app["db"], sortby=sortby, direction=direction)
+    return {"users": users, "sortby": sortby, "direction": direction}

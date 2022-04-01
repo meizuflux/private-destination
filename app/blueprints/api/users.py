@@ -37,11 +37,7 @@ async def me(request: web.Request) -> web.Response:
 @requires_auth(scopes="id")
 async def regen_api_key(request: web.Request) -> web.Response:
     new_api_key = await generate_api_key(request.app["db"])
-    await update_api_key(
-        request.app["db"],
-        user_id=request["user"]["id"],
-        api_key=new_api_key
-    )
+    await update_api_key(request.app["db"], user_id=request["user"]["id"], api_key=new_api_key)
     return web.json_response({"api_key": new_api_key})
 
 
@@ -51,11 +47,7 @@ async def regen_api_key(request: web.Request) -> web.Response:
 async def authorize_user_(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
 
-    await authorize_user(
-        request.app["db"],
-        user_id=user_id
-    )
-    
+    await authorize_user(request.app["db"], user_id=user_id)
 
     return web.json_response({"message": "user authorized"})
 
@@ -66,10 +58,7 @@ async def authorize_user_(request: web.Request) -> web.Response:
 async def unauthorize_user_(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
 
-    await unauthorize_user(
-        request.app["db"],
-        user_id=user_id
-    )
+    await unauthorize_user(request.app["db"], user_id=user_id)
 
     return web.json_response({"message": "user unauthorized"})
 
@@ -80,9 +69,6 @@ async def unauthorize_user_(request: web.Request) -> web.Response:
 async def delete_user_(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
 
-    await delete_user(
-        request.app["db"],
-        user_id=user_id
-    )
+    await delete_user(request.app["db"], user_id=user_id)
 
     return web.json_response({"message": "user deleted"})

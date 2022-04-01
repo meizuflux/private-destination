@@ -8,7 +8,7 @@ from marshmallow import Schema, fields
 
 from app.routing import Blueprint
 from app.utils.auth import requires_auth
-from app.utils.db import ConnOrPool, insert_short_url, delete_short_url
+from app.utils.db import ConnOrPool, delete_short_url, insert_short_url
 
 
 class CreateUrlSchema(Schema):
@@ -44,12 +44,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
         key = await generate_url_key(request.app["db"])
 
     try:
-        await insert_short_url(
-            request.app["db"],
-            owner=request["user"]["id"],
-            key=key,
-            destination=json["destination"]
-        )
+        await insert_short_url(request.app["db"], owner=request["user"]["id"], key=key, destination=json["destination"])
     except UniqueViolationError:
         return web.json_response({"message": "A shortened url with this key already exists"}, status=409)
     return web.json_response({"key": key, "destination": json["destination"]})
@@ -61,8 +56,5 @@ async def create_short_url_(request: web.Request) -> web.Response:
 async def delete_short_url_(request: web.Request) -> web.Response:
     key = request["match_info"]["key"]
 
-    await delete_short_url(
-        request.app["db"],
-        key=key
-    )
+    await delete_short_url(request.app["db"], key=key)
     return web.json_response({"key": key})

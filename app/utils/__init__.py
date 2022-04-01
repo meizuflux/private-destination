@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import List, TypedDict, Union
 
-
 Scopes = Union[List[str], None, str]
 
 

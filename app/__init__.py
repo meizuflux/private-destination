@@ -1,10 +1,10 @@
 from sys import argv
 
 import aiohttp_jinja2
-from asyncpg import create_pool
 import sentry_sdk
 from aiohttp import ClientSession, web
 from aiohttp_apispec import setup_aiohttp_apispec, validation_middleware
+from asyncpg import create_pool
 from jinja2 import FileSystemLoader
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from yaml import safe_load

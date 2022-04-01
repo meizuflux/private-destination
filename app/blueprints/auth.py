@@ -34,6 +34,7 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
 
     uuid = await insert_session(
         request.app["db"],
+        user_id=user_id,
         browser=browser,
         os=os
     )

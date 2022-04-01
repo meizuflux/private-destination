@@ -38,6 +38,20 @@ async def insert_short_url(conn: ConnOrPool, *, owner: int, key: str, destinatio
         "INSERT INTO urls (owner, key, destination) VALUES ($1, $2, $3)", owner, key, destination
     )
 
+async def update_short_url(
+    conn: ConnOrPool,
+    *,
+    key: str,
+    new_key: str,
+    destination: str,
+    reset_clicks: bool
+):
+    query = f"UPDATE urls SET key = $1, destination = $2"
+    if reset_clicks is True:
+        query += ", clicks = 0"
+    query += " WHERE key = $3"
+    return await conn.execute(query, new_key, destination, key)
+
 
 async def delete_short_url(conn: ConnOrPool, *, key: str):
     return await conn.execute("DELETE FROM urls WHERE key = $1", key)
@@ -50,6 +64,8 @@ async def select_short_url_exists(conn: ConnOrPool, *, key: str):
 async def select_short_url_destination(conn: ConnOrPool, *, key: str):
     return await conn.fetchval("SELECT destination FROM urls WHERE key = $1", key)
 
+async def select_short_url(conn: ConnOrPool, *, key: str):
+    return await conn.fetchrow("SELECT owner, key, destination, clicks FROM urls WHERE key = $1", key)
 
 async def add_short_url_click(conn: ConnOrPool, *, key: str):
     return await conn.execute("UPDATE urls SET clicks = clicks + 1 WHERE key = $1", key)

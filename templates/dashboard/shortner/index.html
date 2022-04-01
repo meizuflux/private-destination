@@ -48,17 +48,16 @@
                 </tr>
             </thead>
             <tbody>
-                {% for i, url in enumerate(values, start=1) %}
-                    <tr class="shortner-table-row" id="{{url['key']}}">
-                        <td><a href="/{{url['key']}}">{{truncate(url["key"], 15)}}</a></td>
-                        <td><a href="{{url['destination']}}">{{truncate(url['destination'], 64)}}</a></td>
+                {% for url in values %}
+                    <tr>
+                        <td><a href="/{{url['key']}}" id="{{url['key']}}-key">{{truncate(url["key"], 15)}}</a></td>
+                        <td><a href="{{url['destination']}}">{{truncate(url['destination'], 43)}}</a></td>
                         <td><code>{{url['clicks']}}</code></td>
                         <td>{{url["creation_date"].strftime("%d %B %Y at %H:%M")}}</td>
                         <td>
                             <div class="buttons">
-                                <button class="button is-info is-small">Copy</button>
-                                <button class="button is-warning is-small">Edit</button>
-                                <button class="button is-danger is-small js-modal-trigger" data-target="delete-modal">Delete</button>
+                                <button class="button is-info is-small copy-btn" data-target="{{url['key']}}-key">Copy</button>
+                                <button class="button is-warning is-small"><a href="/dashboard/shortner/{{url['key']}}/edit" class="has-text-dark">Edit</a></button>
                             </div>
                         </td>
                     </tr>

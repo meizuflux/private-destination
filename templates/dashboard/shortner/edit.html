@@ -1,0 +1,53 @@
+{% extends 'dashboard/shortner/layout.html' %}
+
+{% block title %}
+    Edit Short Url {{key}}
+{% endblock title %}
+
+{% block main2 %}
+    {% if error %}
+        <article class="message is-warning">
+            <div class="message-header">
+                <p>{{error["title"]}}</p>
+            </div>
+            <div class="message-body">
+                {{error["message"]}}
+            </div>
+        </article>
+    {% else %}
+        <form method="POST" novalidate>
+            <div class="field">
+                <label class="label">Key</label>
+                <input type="text" class="input" value="{{key}}" name="key" placeholder="Enter a unique identifier for the destination">
+                {% if key_error %}
+                    <p class="help is-danger">{{key_error[0]}}</p>
+                {% else %}
+                    <p class="help">Leave this field blank to generate a random key</p>
+                {% endif %}
+            </div>
+
+            <div class="field">
+                <label class="label">Destination</label>
+                <input type="url" class="input" value="{{destination}}" name="destination" placeholder="Enter a long URL">
+                {% if destination_error %}
+                    <p class="help is-danger">{{destination_error[0]}}</p>
+                {% endif %}
+            </div>
+
+            <div class="field">
+                <label class="checkbox">
+                    <input type="checkbox" name="reset_clicks" />
+                    Reset clicks {% if clicks is not none %}(Current count <code>{{clicks}}</code>){% endif %}
+                </label>
+            </div>
+
+
+            <div class="field">
+                <div class="buttons">
+                    <button class="button is-info" type="submit">Save</button>
+                    <button class="button is-danger"><a href="/dashboard/shortner/{{key}}/delete" class="has-text-light">Delete</a></button>
+                </div>
+            </div>
+        </form>
+    {% endif %}
+{% endblock main2 %}

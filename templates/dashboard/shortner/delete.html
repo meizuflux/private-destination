@@ -1,0 +1,26 @@
+{% extends 'dashboard/shortner/layout.html' %}
+
+{% block title %}
+    Delete Short Url {{key}}
+{% endblock title %}
+
+{% block main2 %}
+    {% if error %}
+        <article class="message is-warning">
+            <div class="message-header">
+                <p>{{error["title"]}}</p>
+            </div>
+            <div class="message-body">
+                {{error["message"]}}
+            </div>
+        </article>
+    {% else %}
+        <p class="mb-3">Are you sure that you want to delete short URL with key <code>{{key}}</code> pointing to <code>{{destination}}</code> with <code>{{clicks}}</code> clicks?</p>
+
+        <form method="POST">
+            <div class="field">
+                <button class="button is-danger" type="submit">Yes, I want to delete this short URL</button>
+            </div>
+        </form>
+    {% endif %}
+{% endblock main2 %}

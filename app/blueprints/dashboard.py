@@ -35,8 +35,10 @@ class UsersQuerystring(Schema):
     direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
     sortby = fields.String(validate=validate.OneOf({"username", "id", "authorized", "email", "joined"}))
 
+
 class KeySchema(Schema):
     key = fields.String(required=True)
+
 
 class EditUrlSchema(Schema):
     key = fields.String()
@@ -128,6 +130,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
 
     return await render_template_async("dashboard/shortner/create.html", request, {})
 
+
 @bp.get("/shortner/{key}/edit")
 @bp.post("/shortner/{key}/edit")
 @requires_auth(redirect=True, scopes=["id", "admin"])
@@ -135,30 +138,21 @@ async def create_short_url_(request: web.Request) -> web.Response:
 async def edit_short_url_(request: web.Request) -> web.Response:
     key = request["match_info"]["key"]
 
-    short_url = await select_short_url(
-        request.app["db"],
-        key=key
-    )
+    short_url = await select_short_url(request.app["db"], key=key)
     if short_url is None:
         return await render_template_async(
             "dashboard/shortner/edit.html",
             request,
-            {"error": {
-                "title": "Unknown Short URL",
-                "message": f"Could not locate short URL" 
-            }}
+            {"error": {"title": "Unknown Short URL", "message": f"Could not locate short URL"}},
         )
 
     if short_url["owner"] != request["user"]["id"]:
         return await render_template_async(
             "dashboard/shortner/edit.html",
             request,
-            {"error": {
-                "title": "Missing Permissions",
-                "message": f"You aren't the owner of this short URL" 
-            }}
+            {"error": {"title": "Missing Permissions", "message": f"You aren't the owner of this short URL"}},
         )
-    
+
     if request.method == "POST":
         try:
             args = await parser.parse(EditUrlSchema(), request, locations=["form"])
@@ -184,7 +178,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
                 key=key,
                 new_key=new_key,
                 destination=destination,
-                reset_clicks=args.get("reset_clicks", False)
+                reset_clicks=args.get("reset_clicks", False),
             )
         except UniqueViolationError as e:
             return await render_template_async(
@@ -194,18 +188,19 @@ async def edit_short_url_(request: web.Request) -> web.Response:
                     "key_error": ["A shortened URL with this key already exists"],
                     "key": new_key,
                     "destination": destination,
-                    "clicks": None
+                    "clicks": None,
                 },
-                status=400
+                status=400,
             )
 
         return web.HTTPFound("/dashboard/shortner")
 
-    return await render_template_async("dashboard/shortner/edit.html", request, {
-        "key": short_url["key"],
-        "destination": short_url["destination"],
-        "clicks": short_url["clicks"]
-    })
+    return await render_template_async(
+        "dashboard/shortner/edit.html",
+        request,
+        {"key": short_url["key"], "destination": short_url["destination"], "clicks": short_url["clicks"]},
+    )
+
 
 @bp.get("/shortner/{key}/delete")
 @bp.post("/shortner/{key}/delete")
@@ -214,44 +209,31 @@ async def edit_short_url_(request: web.Request) -> web.Response:
 async def edit_short_url_(request: web.Request) -> web.Response:
     key = request["match_info"]["key"]
 
-    short_url = await select_short_url(
-        request.app["db"],
-        key=key
-    )
+    short_url = await select_short_url(request.app["db"], key=key)
     if short_url is None:
         return await render_template_async(
             "dashboard/shortner/delete.html",
             request,
-            {"error": {
-                "title": "Unknown Short URL",
-                "message": f"Could not locate short URL" 
-            }}
+            {"error": {"title": "Unknown Short URL", "message": f"Could not locate short URL"}},
         )
 
     if short_url["owner"] != request["user"]["id"]:
         return await render_template_async(
             "dashboard/shortner/delete.html",
             request,
-            {"error": {
-                "title": "Missing Permissions",
-                "message": f"You aren't the owner of this short URL" 
-            }}
+            {"error": {"title": "Missing Permissions", "message": f"You aren't the owner of this short URL"}},
         )
 
     if request.method == "POST":
-        await delete_short_url(
-            request.app["db"],
-            key=key
-        )
+        await delete_short_url(request.app["db"], key=key)
 
         return web.HTTPFound("/dashboard/shortner")
 
-
-    return await render_template_async("dashboard/shortner/delete.html", request, {
-        "key": short_url["key"],
-        "destination": short_url["destination"],
-        "clicks": short_url["clicks"]
-    })
+    return await render_template_async(
+        "dashboard/shortner/delete.html",
+        request,
+        {"key": short_url["key"], "destination": short_url["destination"], "clicks": short_url["clicks"]},
+    )
 
 
 @bp.get("/shortner/sharex")

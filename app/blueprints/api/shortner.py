@@ -8,7 +8,12 @@ from marshmallow import Schema, fields
 
 from app.routing import Blueprint
 from app.utils.auth import requires_auth
-from app.utils.db import ConnOrPool, delete_short_url, insert_short_url, select_short_url_exists
+from app.utils.db import (
+    ConnOrPool,
+    delete_short_url,
+    insert_short_url,
+    select_short_url_exists,
+)
 
 
 class CreateUrlSchema(Schema):

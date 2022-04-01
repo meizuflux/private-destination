@@ -8,7 +8,7 @@ from marshmallow import Schema, fields
 
 from app.routing import Blueprint
 from app.utils.auth import requires_auth
-from app.utils.db import ConnOrPool, delete_short_url, insert_short_url
+from app.utils.db import ConnOrPool, delete_short_url, insert_short_url, select_short_url_exists
 
 
 class CreateUrlSchema(Schema):
@@ -26,7 +26,7 @@ all_chars = string.ascii_letters + string.digits
 async def generate_url_key(conn: ConnOrPool):
     while True:
         key = "".join(choice(all_chars) for _ in range(7))
-        if await conn.check_short_url_exists(key) is False:
+        if await select_short_url_exists(conn, key=key) is False:
             break
     return key
 

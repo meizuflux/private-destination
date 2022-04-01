@@ -5,8 +5,8 @@
 {% endblock %}
 
 {% block body%}
-    <div class="container ml-3 mr-3">
-        <div class="columns is-centered mt-3">
+    <div class="container px-3 pt-3">
+        <div class="columns is-centered">
             <div class="column is-5">
                 <form action="/auth/{{'signup' if type == 'signup' else 'login'}}" method="POST">
                     <h1 class="title">{{"Sign Up" if type == "signup" else "Login"}}</h1>

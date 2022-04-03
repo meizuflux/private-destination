@@ -9,6 +9,7 @@ from asyncpg import UniqueViolationError
 from marshmallow import Schema, ValidationError, fields, validate
 
 from app.blueprints.api.shortner import CreateUrlSchema, generate_url_key
+from app.blueprints.auth import SignUpForm, generate_api_key
 from app.routing import Blueprint
 from app.utils.auth import requires_auth
 from app.utils.db import (
@@ -16,6 +17,7 @@ from app.utils.db import (
     delete_short_url,
     delete_user,
     insert_short_url,
+    insert_user,
     select_sessions,
     select_short_url,
     select_short_url_count,
@@ -26,6 +28,8 @@ from app.utils.db import (
     update_user,
 )
 from app.utils.forms import parser
+from passlib.hash import pbkdf2_sha512
+
 
 
 class ShortnerQuerystring(Schema):
@@ -455,4 +459,46 @@ async def edit_short_url_(request: web.Request) -> web.Response:
         "dashboard/users/delete.html",
         request,
         {"id": user["id"], "username": user["username"], "email": user["email"], "is_self": is_self},
+    )
+
+@bp.get("/users/create")
+@bp.post("/users/create")
+@requires_auth(admin=True, redirect=True)
+async def create_user(request: web.Request) -> web.Response:
+    if request.method == "POST":
+        try:
+            args = await parser.parse(SignUpForm(), request, locations=["form"])
+        except ValidationError as e:
+            return await render_template_async(
+                "dashboard/users/create.html",
+                request,
+                {
+                    "username_error": e.messages.get("username"),
+                    "email_error": e.messages.get("email"),
+                    "password_error": e.messages.get("password"),
+                    "type": "signup",
+                },
+            )
+
+        try:
+            await insert_user(
+                request.app["db"],
+                user={
+                    "username": args["username"],
+                    "email": args["email"],
+                    "api_key": await generate_api_key(request.app["db"]),
+                },
+                hashed_password=pbkdf2_sha512.hash(args["password"]),
+            )
+        except UniqueViolationError:
+            return await render_template_async(
+                "dashboard/users/create.html", request, {"type": "signup", "email_error": ["A user with this email already exists"]}
+            )
+
+        return web.HTTPFound("/dashboard/users")
+
+    return await render_template_async(
+        "dashboard/users/create.html",
+        request,
+        {}
     )

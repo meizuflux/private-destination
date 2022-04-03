@@ -18,7 +18,7 @@
         <form method="POST" novalidate>
             <div class="field">
                 <label class="label">Key</label>
-                <input type="text" class="input" value="{{key}}" name="key" placeholder="Enter a unique identifier for the destination">
+                <input type="text" class="input {{'is-danger' if key_error else ''}}" value="{{key}}" name="key" placeholder="Enter a unique identifier for the destination">
                 {% if key_error %}
                     <p class="help is-danger">{{key_error[0]}}</p>
                 {% else %}

@@ -44,6 +44,9 @@
 
             <div class="field">
                 <label class="label">Authorized</label>
+                {% if is_self == True %}
+                    <input name="authorized" value="{{user['authorized']}}" type="hidden">
+                {% endif %}
                 <label class="radio" {% if is_self == True %}disabled{% endif%}>
                     <input type="radio" name="authorized" value="True" {% if authorized == True %}checked{% endif%} {% if is_self == True %}disabled{% endif%}>
                     True

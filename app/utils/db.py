@@ -9,9 +9,7 @@ ConnOrPool = Union[Connection, Pool]
 
 
 def form_scopes(scopes: Scopes) -> str:
-    if isinstance(scopes, str):
-        return scopes
-    return ", ".join(scopes)
+    return scopes if isinstance(scopes, str) else ", ".join(scopes)
 
 
 async def select_short_urls(conn: ConnOrPool, *, sortby: str, direction: str, owner: int, offset: int) -> List[Record]:
@@ -39,8 +37,8 @@ async def insert_short_url(conn: ConnOrPool, *, owner: int, key: str, destinatio
 
 
 async def update_short_url(conn: ConnOrPool, *, key: str, new_key: str, destination: str, reset_clicks: bool):
-    query = f"UPDATE urls SET key = $1, destination = $2"
-    if reset_clicks is True:
+    query = "UPDATE urls SET key = $1, destination = $2"
+    if reset_clicks:
         query += ", clicks = 0"
     query += " WHERE key = $3"
     return await conn.execute(query, new_key, destination, key)

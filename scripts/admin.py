@@ -21,7 +21,7 @@ async def main():
     with open("config.yml") as f:
         loaded = safe_load(f)
 
-    if any([i in argv for i in ("-d", "--dev")]):
+    if any(i in argv for i in ("-d", "--dev")):
         config = loaded["dev"]
     else:
         config = loaded["prod"]

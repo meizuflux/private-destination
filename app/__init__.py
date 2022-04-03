@@ -21,9 +21,7 @@ from app import blueprints
 
 
 def truncate(text: str, limit: int):
-    if len(text) > limit:
-        return text[0 : limit - 3] + "..."
-    return text
+    return text[:limit - 3] + "..." if len(text) > limit else text
 
 
 @web.middleware
@@ -47,11 +45,15 @@ async def authentication_middleware(request, handler):
 
 
 async def handle_errors(request: web.Request, error: web.HTTPException):
-    if not str(request.rel_url).startswith("/api"):
-        if error.status in {403, 404, 499, 500}:
-            return await aiohttp_jinja2.render_template_async(
-                f"errors/{error.status}.html", request, {}, status=error.status
-            )
+    if not str(request.rel_url).startswith("/api") and error.status in {
+        403,
+        404,
+        499,
+        500,
+    }:
+        return await aiohttp_jinja2.render_template_async(
+            f"errors/{error.status}.html", request, {}, status=error.status
+        )
 
     raise error
 

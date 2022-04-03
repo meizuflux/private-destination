@@ -69,12 +69,19 @@ async def add_short_url_click(conn: ConnOrPool, *, key: str):
 
 async def insert_user(conn: ConnOrPool, *, user: User, hashed_password: str):
     query = """
-            INSERT INTO users (username, email, password, api_key)
-            VALUES ($1, $2, $3, $4)
-            RETURNING id
-        """
+        INSERT INTO users (username, email, password, api_key)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id
+    """
     return await conn.fetchval(query, user["username"], user["email"], hashed_password, user["api_key"])
 
+async def update_user(conn: ConnOrPool, *, user_id: int, username: str, email: str, authorized: bool):
+    query = """
+        UPDATE users
+        SET username = $1, email = $2, authorized = $3
+        WHERE id = $4
+    """
+    return await conn.execute(query, username, email, authorized, user_id)
 
 async def delete_user(conn: ConnOrPool, *, user_id: int):
     return await conn.execute("DELETE FROM users WHERE id = $1", user_id)
@@ -90,6 +97,9 @@ async def select_users(conn: ConnOrPool, *, sortby: str, direction: str):
         """
 
     return await conn.fetch(query)
+
+async def select_user(conn: ConnOrPool, *, user_id: int):
+    return await conn.fetchrow("SELECT * FROM users WHERE id = $1", user_id)
 
 
 async def authorize_user(conn: ConnOrPool, *, user_id: int):

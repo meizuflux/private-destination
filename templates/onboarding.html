@@ -16,9 +16,7 @@
                             <div class="control">
                                 <input id="username" name="username" class="input {{'is-danger' if username_error else ''}}" type="text" placeholder="A unique username">
                                 {% if username_error %}
-                                    {% for error in username_error %}
-                                        <p class="help is-danger">{{error}}</p>
-                                    {% endfor %}
+                                    <p class="help is-danger">{{username_error[0]}}</p>
                                 {% endif %}
                             </div>
                         </div>
@@ -28,9 +26,7 @@
                         <div class="control">
                             <input id="email" name="email" class="input {{'is-danger' if email_error else ''}}" type="text" placeholder="Your email">
                             {% if email_error %}
-                                {% for error in email_error %}
-                                    <p class="help is-danger">{{error}}</p>
-                                {% endfor %}
+                                <p class="help is-danger">{{email_error[0]}}</p>
                             {% endif %}
                         </div>
                     </div>
@@ -40,9 +36,7 @@
                         <div class="control">
                             <input id="password" name="password" class="input {{'is-danger' if password_error else ''}}" type="password" placeholder="A secure password">
                             {% if password_error %}
-                                {% for error in password_error %}
-                                    <p class="help is-danger">{{error}}</p>
-                                {% endfor %}
+                                <p class="help is-danger">{{email_error[0]}}</p>
                             {% endif %}
                         </div>
                     </div>

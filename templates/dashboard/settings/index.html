@@ -19,13 +19,6 @@ Settings
         </div>
     </div>
 
-    <div class="box">
-        <h2 class="title is-2">Account Management</h2>
-        <div class="buttons has-addons">
-            <button class="button is-danger js-modal-trigger" data-target="delete-modal">Delete Account</button>
-        </div>
-    </div>
-
     <div id="regen-modal" class="modal">
         <div class="modal-background"></div>
       
@@ -42,25 +35,11 @@ Settings
         </div>
     </div>
 
-    <div id="delete-modal" class="modal">
-        <div class="modal-background"></div>
-      
-        <div class="modal-content">
-          <div class="box">
-            <div>
-                <h2 class="is-size-2">Danger</h2>
-                <p class="mb-2">Clicking this button will delete your account, including all items you have created.</p>
-                <form class="field" id="delete-form">
-                    <label class="label">Enter your username</label>
-                    <div class="control">
-                      <input class="input" type="text" placeholder="{{user['username']}}" autocomplete="off" id="delete-username-input">
-                      <a href="/api/auth/delete?redirect=True" class="button is-danger block mt-2" id="delete-btn" disabled>I understand the consequences</a>
-                    </div>
-                </form>
-                
-            </div>
-            <footer class="is-size-7 mt-3">Click anywhere to exit</footer>
-          </div>
+    <div class="box">
+        <h2 class="title is-2">Account Management</h2>
+        <div class="buttons has-addons">
+            <button class="button is-warning"><a href="/dashboard/users/{{user['id']}}/edit" class="has-text-dark">Edit Account</a></button>
+            <button class="button is-danger"><a href="/dashboard/users/{{user['id']}}/delete" class="has-text-light">Delete Account</a></button>
         </div>
     </div>
 

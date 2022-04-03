@@ -1,12 +1,10 @@
-{% extends "dashboard/layout.html" %}
+{% extends "dashboard/users/layout.html" %}
 
 {% block title %}
-URL Shortner
+Manage Users
 {% endblock title %}
 
-{% block main %}
-    <h1 class="title mb-3">Manage Users</h1>
-
+{% block main2 %}
     <div class="field">
         <div class="field-label mb-1" style="text-align: left;">
             <label class="label">Sort By</label>
@@ -54,7 +52,7 @@ URL Shortner
             </thead>
             <tbody>
                 {% for i, u in enumerate(users, start=1) %}
-                    <tr class="users-table-row" data-id="{{u['id']}}">
+                    <tr>
                         <td>{{truncate(u["username"], 15)}}</td>
                         <td>{{u["email"]}}</td>
                         <td><code>{{u["id"]}}</code></a></td>
@@ -62,12 +60,7 @@ URL Shortner
                         <td>{{u["joined"].strftime("%d %B %Y at %H:%M")}}</td>
                         <td>
                             <div class="buttons">
-                                {% if u["authorized"]%}
-                                    <button class="button is-warning is-small">Unauthorize</button>
-                                {% else %}
-                                    <button class="button is-info is-small">Authorize</button>
-                                {% endif %}
-                                <button class="button is-danger is-small">Delete</button>
+                                <button class="button is-warning is-small"><a href="/dashboard/users/{{u['id']}}/edit" class="has-text-dark">Edit</a></button>
                             </div>
                         </td>
                     </tr>
@@ -77,4 +70,4 @@ URL Shortner
     </div>
     <script src="/static/js/users.js" type="module"></script>
     
-{% endblock main %}
+{% endblock %}

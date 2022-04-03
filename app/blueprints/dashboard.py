@@ -14,13 +14,16 @@ from app.routing import Blueprint
 from app.utils.auth import requires_auth
 from app.utils.db import (
     delete_short_url,
+    delete_user,
     insert_short_url,
     select_sessions,
     select_short_url,
     select_short_url_count,
     select_short_urls,
+    select_user,
     select_users,
     update_short_url,
+    update_user,
 )
 from app.utils.forms import parser
 
@@ -39,11 +42,19 @@ class UsersQuerystring(Schema):
 class KeySchema(Schema):
     key = fields.String(required=True)
 
+class UserIDSchema(Schema):
+    user_id = fields.Integer(require=True)
+
 
 class EditUrlSchema(Schema):
     key = fields.String()
     destination = fields.URL(required=True)
     reset_clicks = fields.Boolean()
+
+class EditUserSchema(Schema):
+    username = fields.String(required=True)
+    email = fields.Email(required=True)
+    authorized = fields.Boolean(required=True)
 
 
 bp = Blueprint("/dashboard")
@@ -215,6 +226,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
             "dashboard/shortner/delete.html",
             request,
             {"error": {"title": "Unknown Short URL", "message": f"Could not locate short URL"}},
+            status=404
         )
 
     if short_url["owner"] != request["user"]["id"]:
@@ -222,6 +234,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
             "dashboard/shortner/delete.html",
             request,
             {"error": {"title": "Missing Permissions", "message": f"You aren't the owner of this short URL"}},
+            status=409
         )
 
     if request.method == "POST":
@@ -259,7 +272,7 @@ async def sharex_config(request: web.Request) -> web.Response:
 
 @bp.get("/settings")
 @template("dashboard/settings/index.html")
-@requires_auth(redirect=True, scopes=["api_key", "username", "admin"])
+@requires_auth(redirect=True, scopes=["id", "api_key", "username", "admin"])
 async def general_settings(_: web.Request) -> web.Response:
     return {}
 
@@ -280,7 +293,7 @@ async def shortner_settings(_: web.Request) -> web.Response:
 
 
 @bp.get("/users")
-@template("dashboard/users.html")
+@template("dashboard/users/index.html")
 @querystring_schema(UsersQuerystring)
 @requires_auth(admin=True, redirect=True)
 async def get(request: web.Request) -> web.Response:
@@ -289,3 +302,134 @@ async def get(request: web.Request) -> web.Response:
 
     users = await select_users(request.app["db"], sortby=sortby, direction=direction)
     return {"users": users, "sortby": sortby, "direction": direction}
+
+@bp.get("/users/{user_id}/edit")
+@bp.post("/users/{user_id}/edit")
+@match_info_schema(UserIDSchema)
+@requires_auth(redirect=True, scopes=["id", "admin"])
+async def edit_user(request: web.Request) -> web.Response:
+    user_id = request["match_info"]["user_id"]
+    user = await select_user(request.app["db"], user_id=user_id)
+    is_self = user_id == request["user"]["id"]
+
+    if is_self is False and request["user"]["admin"] is False:
+        return await render_template_async("dashboard/users/edit.html", request,
+            {
+                "error": {
+                    "title": "Missing Permissions",
+                    "message": "You need admin permissions to edit users other than yourself"
+                },
+            },
+            status=409
+        )
+
+    # this goes after the previous check since we don't want to reveal if the user id exists without checking first their admin perms
+    if user is None:
+        return await render_template_async(
+            "dashboard/users/edit.html",
+            request,
+            {"error": {"title": "Unknown User", "message": f"Could not locate user"}},
+            status=404
+        )
+
+    if request.method == "POST":
+        try:
+            args = await parser.parse(EditUserSchema(), request, locations=["form"])
+        except ValidationError as e:
+            return await render_template_async(
+                "dashboard/users/edit.html",
+                request,
+                {
+                    "username_error": e.messages.get("username"),
+                    "email_error": e.messages.get("email"),
+                    "id": user["id"],
+                    "username": user["username"],
+                    "email": user["email"],
+                    "authorized": user["authorized"],
+                    "admin": user["admin"],
+                    "joined": user["joined"],
+                    "is_self": is_self
+                },
+                status=400,
+            )
+
+        try:
+            await update_user(
+                request.app["db"],
+                user_id=user_id,
+                username=args["username"],
+                email=args["email"],
+                authorized=args["authorized"]
+            )
+        except UniqueViolationError as e:
+            return await render_template_async(
+                "dashboard/users/edit.html",
+                request,
+                {
+                    "email_error": ["A user with this email already exists"],
+                    "id": user["id"],
+                    "username": user["username"],
+                    "email": user["email"],
+                    "authorized": user["authorized"],
+                    "admin": user["admin"],
+                    "joined": user["joined"],
+                    "is_self": is_self
+                },
+                status=400,
+            )
+
+
+        return web.HTTPFound("/dashboard/users" if is_self is False else "/dashboard/settings")
+
+    return await render_template_async("dashboard/users/edit.html", request, {
+        "id": user["id"],
+        "username": user["username"],
+        "email": user["email"],
+        "authorized": user["authorized"],
+        "admin": user["admin"],
+        "joined": user["joined"],
+        "is_self": is_self
+    })
+
+@bp.get("/users/{user_id}/delete")
+@bp.post("/users/{user_id}/delete")
+@requires_auth(redirect=True, scopes=["id", "admin"])
+@match_info_schema(UserIDSchema)
+async def edit_short_url_(request: web.Request) -> web.Response:
+    user_id = request["match_info"]["user_id"]
+    user = await select_user(request.app["db"], user_id=user_id)
+    is_self = user_id == request["user"]["id"]
+
+    if is_self is False and request["user"]["admin"] is False:
+        return await render_template_async("dashboard/users/delete.html", request,
+            {
+                "error": {
+                    "title": "Missing Permissions",
+                    "message": "You need admin permissions to edit users other than yourself"
+                },
+            },
+            status=409
+        )
+
+    # this goes after the previous check since we don't want to reveal if the user id exists without checking first their admin perms
+    if user is None:
+        return await render_template_async(
+            "dashboard/users/delete.html",
+            request,
+            {"error": {"title": "Unknown User", "message": f"Could not locate user"}},
+            status=404
+        )
+
+    if request.method == "POST":
+        await delete_user(request.app["db"], user_id=user_id)
+
+        res = web.HTTPFound("/")
+        res.del_cookie("_session")
+        return res
+
+    return await render_template_async("dashboard/users/delete.html", request, {
+        "id": user["id"],
+        "username": user["username"],
+        "email": user["email"],
+        "is_self": is_self
+    })

@@ -30,8 +30,6 @@ copyBtn.addEventListener("click", async () => {
         },
         (r) => alert('Could not copy codeblock:\n' + r.toString())
         )
-
-    
 })
 
 // Modal open
@@ -73,18 +71,5 @@ regenBtn.addEventListener("click", async () => {
     regenBtn.classList.remove("is-loading")
 
     setTimeout(() => regenBtn.innerText = "Regenerate", 1000)
-})
-
-const deleteBtn = getById("delete-btn")
-const deleteInput = getById("delete-username-input") as HTMLInputElement
-const deleteForm = getById("delete-form")
-
-deleteInput.addEventListener("input", (e) => {
-    if (e.target.value === deleteInput.placeholder) {
-        deleteBtn.removeAttribute("disabled")
-    }
-    else {
-        deleteBtn.setAttribute("disabled", "true")
-    }
 })
 

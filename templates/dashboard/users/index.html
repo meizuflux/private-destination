@@ -16,7 +16,7 @@ Manage Users
                         <select name="sortby" title="Sort By">
                             <option value="username" {% if sortby == "username" %}selected{% endif %}>Username</option>
                             <option value="email" {% if sortby == "email" %}selected{% endif %}>Email</option>
-                            <option value="user_id" {% if sortby == "user_id" %}selected{% endif %}>User ID</option>
+                            <option value="id" {% if sortby == "id" %}selected{% endif %}>User ID</option>
                             <option value="authorized" {% if sortby == "authorized" %}selected{% endif %}>Authorized</option>
                             <option value="joined" {% if sortby == "joined" or not sortby %}selected{% endif %}>Joined</option>
                         </select>

@@ -4,17 +4,19 @@
         <div class="columns">
             <div class="column is-narrow">
                 <aside class="menu">
-                    <p class="menu-label">
-                        Services
-                    </p>
-                    <ul class="menu-list">
-                        <li><a href="/dashboard" class="{{'is-active' if request.rel_url.path == '/dashboard' else ''}}">Home</a></li>
-                        <li><a href="/dashboard/shortner" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/shortner') else ''}}">URL Shortner</a></li>
-                        <li><a href="/dashboard/cdn" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/cdn') else ''}}">Image CDN</a></li>
-                        {% if user["admin"] %}
-                            <li><a href="/dashboard/users" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/users') else ''}}">Manage Users</a></li>
-                        {% endif %}
-                    </ul>
+                    <ul class="menu-list"><li><a href="/dashboard" class="{{'is-active' if request.rel_url.path == '/dashboard' else ''}}">Home</a></li></ul>
+                    {% if user["authorized"] is true %}
+                        <p class="menu-label">
+                            Services
+                        </p>
+                        <ul class="menu-list">
+                            <li><a href="/dashboard/shortner" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/shortner') else ''}}">URL Shortner</a></li>
+                            <li><a href="/dashboard/cdn" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/cdn') else ''}}">Image CDN</a></li>
+                            {% if user["admin"] %}
+                                <li><a href="/dashboard/users" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/users') else ''}}">Manage Users</a></li>
+                            {% endif %}
+                        </ul>
+                    {% endif %}
                     <p class="menu-label">
                         User
                     </p>

@@ -5,25 +5,36 @@
 {% endblock title %}
 
 {% block main %}
-    <h1 class="title">Hello, {{request["user"]["username"]}}</h1>
+    <h1 class="title">Hello, {{user["username"]}}</h1>
     <h2 class="subtitle mb-3">Welcome to the <code>mzf.one</code> dashboard</h2>
 
-    <div class="tile is-ancestor">
-        <div class="tile is-parent">
-        <article class="tile is-child box">
-            <p class="title">Images</p>
-            <p class="subtitle">This feature is a work in progress</p>
-        </article>
+    {% if user["authorized"] %}
+        <div class="tile is-ancestor">
+            <div class="tile is-parent">
+            <article class="tile is-child box">
+                <p class="title">Images</p>
+                <p class="subtitle">This feature is a work in progress</p>
+            </article>
+            </div>
+            <div class="tile is-parent">
+            <article class="tile is-child box">
+                <p class="title"><a href="/dashboard/shortner">URL Shortner</a></p>
+                {% if url_count > 0 %}
+                    <p class="subtitle">You have {{url_count}} shortened URLs</p>
+                {% else %}
+                    <p class="subtitle">You haven't shortened any URLs</p>
+                {% endif %}
+            </article>
+            </div>
         </div>
-        <div class="tile is-parent">
-        <article class="tile is-child box">
-            <p class="title"><a href="/dashboard/shortner">URL Shortner</a></p>
-            {% if url_count > 0 %}
-                <p class="subtitle">You have {{url_count}} shortened URLs</p>
-            {% else %}
-                <p class="subtitle">You haven't shortened any URLs</p>
-            {% endif %}
+    {% else %}
+        <article class="message is-danger is-medium">
+            <div class="message-header">
+                Pending Authorization
+            </div>
+            <div class="message-body">
+                Your account is pending authorization. You cannot use <code>mzf.one</code> until your account is authorized by an admin.
+            </div>
         </article>
-        </div>
-    </div>
+    {% endif %}
 {% endblock %}

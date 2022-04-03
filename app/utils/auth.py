@@ -1,5 +1,3 @@
-from datetime import datetime
-from typing import List, TypedDict, Union
 from uuid import UUID
 
 from aiohttp import web
@@ -18,6 +16,7 @@ def requires_auth(
     admin: bool = False,
     redirect: bool = False,
     scopes: Scopes = None,  # a tuple represents the columns, a false means don't fetch the user, and true means to get all columns (*)
+    needs_authorization: bool = True,
 ):
     if scopes is not None:
         if isinstance(scopes, str):
@@ -31,7 +30,11 @@ def requires_auth(
 
     def deco(fn):
         setattr(fn, "requires_auth", True)
-        setattr(fn, "auth", {"admin": admin, "redirect": redirect, "scopes": scopes})
+        setattr(
+            fn,
+            "auth",
+            {"admin": admin, "redirect": redirect, "scopes": scopes, "needs_authorization": needs_authorization},
+        )
         return fn
 
     return deco
@@ -42,7 +45,7 @@ class HTTPPendingAuthorization(web.HTTPClientError):
     reason = "Pending Authorization"
 
 
-async def verify_user(request: web.Request, *, admin: bool, redirect: bool, scopes: Scopes):
+async def verify_user(request: web.Request, *, admin: bool, redirect: bool, scopes: Scopes, needs_authorization: bool):
     async def by_session():
         session = request.cookies.get("_session")
         if session is not None:
@@ -68,8 +71,9 @@ async def verify_user(request: web.Request, *, admin: bool, redirect: bool, scop
             return web.HTTPFound("/auth/login")
         return web.HTTPUnauthorized()
     if scopes is not None:
-        if user["authorized"] is False:
-            return HTTPPendingAuthorization()
+        if needs_authorization is True:
+            if user["authorized"] is False:
+                return HTTPPendingAuthorization()
 
         if admin is True and user["admin"] is False:
             return web.HTTPForbidden()

@@ -1,5 +1,4 @@
 import asyncio
-from io import BytesIO
 
 import aiohttp_jinja2
 from aiohttp import web
@@ -19,7 +18,7 @@ class ShortnerMatchInfo(Schema):
 
 @bp.get("/")
 async def login(request: web.Request) -> web.Response:
-    if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
+    if await verify_user(request, admin=False, redirect=False, scopes=None, needs_authorization=True) is True:
         return web.HTTPFound("/dashboard")
 
     return await aiohttp_jinja2.render_template_async("index.html", request, {})

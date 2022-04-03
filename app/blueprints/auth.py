@@ -66,7 +66,7 @@ bp = Blueprint("/auth")
 @bp.get("/signup")
 @bp.post("/signup")
 async def signup(request: web.Request) -> web.Response:
-    if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
+    if await verify_user(request, admin=False, redirect=False, scopes=None, needs_authorization=True) is True:
         return web.HTTPFound("/dashboard")
 
     if request.method == "POST":
@@ -107,7 +107,7 @@ async def signup(request: web.Request) -> web.Response:
 @bp.get("/login")
 @bp.post("/login")
 async def login(request: web.Request) -> web.Response:
-    if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
+    if await verify_user(request, admin=False, redirect=False, scopes=None, needs_authorization=True) is True:
         return web.HTTPFound("/dashboard")
 
     if request.method == "POST":
@@ -135,7 +135,7 @@ async def login(request: web.Request) -> web.Response:
 
 
 @bp.get("/logout")
-@requires_auth(redirect=True)
+@requires_auth(redirect=True, needs_authorization=False)
 async def logout(request: web.Request) -> web.Response:
     token = request.cookies.get("_session")
     res = web.HTTPFound("/")

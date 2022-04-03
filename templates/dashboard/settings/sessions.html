@@ -18,15 +18,15 @@
             </thead>
             <tbody>
                 {% for session in sessions %}
-                    <tr data-id="{{session['token']}}">
+                    <tr>
                         <td><code>{{session["token"]}}</code></td>
                         <td>{{session["created"].strftime("%d %B %Y at %H:%M")}}</td>
                         <td>{{session["browser"]}}</td>
                         <td>{{session["os"]}}</td>
                         <td>
-                            <div class="buttons">
-                                <button class="button is-danger is-small">Delete</button>
-                            </div>
+                            <form method="POST" action="/dashboard/settings/sessions/{{session['token']}}/delete">
+                                <button class="button is-danger is-small" type="submit" {% if current_session == session["token"]|string() %}disabled title="This is your current session, if you want to delete it, simply logout."{% endif %}>Delete</button>
+                            </form>
                         </td>
                     </tr>
                 {% endfor %}

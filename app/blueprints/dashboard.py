@@ -1,4 +1,3 @@
-from importlib.metadata import requires
 from io import BytesIO
 from json import dumps
 from math import ceil
@@ -13,6 +12,7 @@ from app.blueprints.api.shortner import CreateUrlSchema, generate_url_key
 from app.routing import Blueprint
 from app.utils.auth import requires_auth
 from app.utils.db import (
+    delete_session,
     delete_short_url,
     delete_user,
     insert_short_url,
@@ -42,6 +42,7 @@ class UsersQuerystring(Schema):
 class KeySchema(Schema):
     key = fields.String(required=True)
 
+
 class UserIDSchema(Schema):
     user_id = fields.Integer(require=True)
 
@@ -51,10 +52,15 @@ class EditUrlSchema(Schema):
     destination = fields.URL(required=True)
     reset_clicks = fields.Boolean()
 
+
 class EditUserSchema(Schema):
     username = fields.String(required=True)
     email = fields.Email(required=True)
     authorized = fields.Boolean(required=True)
+
+
+class SessionSchema(Schema):
+    token = fields.UUID(required=True)
 
 
 bp = Blueprint("/dashboard")
@@ -63,7 +69,7 @@ bp = Blueprint("/dashboard")
 
 
 @bp.get("")
-@requires_auth(redirect=True, scopes=["id", "username", "admin"])
+@requires_auth(redirect=True, scopes=["id", "username", "admin"], needs_authorization=False)
 @template("dashboard/index.html")
 async def index(request: web.Request) -> web.Response:
     url_count = await select_short_url_count(request.app["db"], owner=request["user"]["id"])
@@ -226,7 +232,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
             "dashboard/shortner/delete.html",
             request,
             {"error": {"title": "Unknown Short URL", "message": f"Could not locate short URL"}},
-            status=404
+            status=404,
         )
 
     if short_url["owner"] != request["user"]["id"]:
@@ -234,7 +240,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
             "dashboard/shortner/delete.html",
             request,
             {"error": {"title": "Missing Permissions", "message": f"You aren't the owner of this short URL"}},
-            status=409
+            status=409,
         )
 
     if request.method == "POST":
@@ -272,17 +278,26 @@ async def sharex_config(request: web.Request) -> web.Response:
 
 @bp.get("/settings")
 @template("dashboard/settings/index.html")
-@requires_auth(redirect=True, scopes=["id", "api_key", "username", "admin"])
+@requires_auth(redirect=True, scopes=["id", "api_key", "username", "admin"], needs_authorization=False)
 async def general_settings(_: web.Request) -> web.Response:
     return {}
 
 
 @bp.get("/settings/sessions")
 @template("dashboard/settings/sessions.html")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(redirect=True, scopes=["id", "admin"], needs_authorization=False)
 async def sessions_settings(request: web.Request) -> web.Response:
     user_sessions = await select_sessions(request.app["db"], user_id=request["user"]["id"])
-    return {"sessions": user_sessions}
+    return {"sessions": user_sessions, "current_session": request.cookies.get("_session")}
+
+
+@bp.post("/settings/sessions/{token}/delete")
+@requires_auth(redirect=True, scopes=["id"], needs_authorization=False)
+@match_info_schema(SessionSchema())
+async def delete_session_(request: web.Request) -> web.Response:
+    # we don't need to check ownership since there is an extremely low chance of two uuids ever being the same (ie can't be guessed)
+    await delete_session(request.app["db"], token=request["match_info"]["token"])
+    return web.HTTPFound("/dashboard/settings/sessions")
 
 
 @bp.get("/settings/shortner")
@@ -303,6 +318,7 @@ async def get(request: web.Request) -> web.Response:
     users = await select_users(request.app["db"], sortby=sortby, direction=direction)
     return {"users": users, "sortby": sortby, "direction": direction}
 
+
 @bp.get("/users/{user_id}/edit")
 @bp.post("/users/{user_id}/edit")
 @match_info_schema(UserIDSchema)
@@ -313,14 +329,16 @@ async def edit_user(request: web.Request) -> web.Response:
     is_self = user_id == request["user"]["id"]
 
     if is_self is False and request["user"]["admin"] is False:
-        return await render_template_async("dashboard/users/edit.html", request,
+        return await render_template_async(
+            "dashboard/users/edit.html",
+            request,
             {
                 "error": {
                     "title": "Missing Permissions",
-                    "message": "You need admin permissions to edit users other than yourself"
+                    "message": "You need admin permissions to edit users other than yourself",
                 },
             },
-            status=409
+            status=409,
         )
 
     # this goes after the previous check since we don't want to reveal if the user id exists without checking first their admin perms
@@ -329,7 +347,7 @@ async def edit_user(request: web.Request) -> web.Response:
             "dashboard/users/edit.html",
             request,
             {"error": {"title": "Unknown User", "message": f"Could not locate user"}},
-            status=404
+            status=404,
         )
 
     if request.method == "POST":
@@ -348,7 +366,7 @@ async def edit_user(request: web.Request) -> web.Response:
                     "authorized": user["authorized"],
                     "admin": user["admin"],
                     "joined": user["joined"],
-                    "is_self": is_self
+                    "is_self": is_self,
                 },
                 status=400,
             )
@@ -359,7 +377,7 @@ async def edit_user(request: web.Request) -> web.Response:
                 user_id=user_id,
                 username=args["username"],
                 email=args["email"],
-                authorized=args["authorized"]
+                authorized=args["authorized"],
             )
         except UniqueViolationError as e:
             return await render_template_async(
@@ -373,23 +391,27 @@ async def edit_user(request: web.Request) -> web.Response:
                     "authorized": user["authorized"],
                     "admin": user["admin"],
                     "joined": user["joined"],
-                    "is_self": is_self
+                    "is_self": is_self,
                 },
                 status=400,
             )
 
-
         return web.HTTPFound("/dashboard/users" if is_self is False else "/dashboard/settings")
 
-    return await render_template_async("dashboard/users/edit.html", request, {
-        "id": user["id"],
-        "username": user["username"],
-        "email": user["email"],
-        "authorized": user["authorized"],
-        "admin": user["admin"],
-        "joined": user["joined"],
-        "is_self": is_self
-    })
+    return await render_template_async(
+        "dashboard/users/edit.html",
+        request,
+        {
+            "id": user["id"],
+            "username": user["username"],
+            "email": user["email"],
+            "authorized": user["authorized"],
+            "admin": user["admin"],
+            "joined": user["joined"],
+            "is_self": is_self,
+        },
+    )
+
 
 @bp.get("/users/{user_id}/delete")
 @bp.post("/users/{user_id}/delete")
@@ -401,14 +423,16 @@ async def edit_short_url_(request: web.Request) -> web.Response:
     is_self = user_id == request["user"]["id"]
 
     if is_self is False and request["user"]["admin"] is False:
-        return await render_template_async("dashboard/users/delete.html", request,
+        return await render_template_async(
+            "dashboard/users/delete.html",
+            request,
             {
                 "error": {
                     "title": "Missing Permissions",
-                    "message": "You need admin permissions to edit users other than yourself"
+                    "message": "You need admin permissions to edit users other than yourself",
                 },
             },
-            status=409
+            status=409,
         )
 
     # this goes after the previous check since we don't want to reveal if the user id exists without checking first their admin perms
@@ -417,7 +441,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
             "dashboard/users/delete.html",
             request,
             {"error": {"title": "Unknown User", "message": f"Could not locate user"}},
-            status=404
+            status=404,
         )
 
     if request.method == "POST":
@@ -427,9 +451,8 @@ async def edit_short_url_(request: web.Request) -> web.Response:
         res.del_cookie("_session")
         return res
 
-    return await render_template_async("dashboard/users/delete.html", request, {
-        "id": user["id"],
-        "username": user["username"],
-        "email": user["email"],
-        "is_self": is_self
-    })
+    return await render_template_async(
+        "dashboard/users/delete.html",
+        request,
+        {"id": user["id"], "username": user["username"], "email": user["email"], "is_self": is_self},
+    )

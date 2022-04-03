@@ -1,4 +1,3 @@
-from math import ceil
 from typing import List, Union
 from uuid import UUID
 
@@ -75,6 +74,7 @@ async def insert_user(conn: ConnOrPool, *, user: User, hashed_password: str):
     """
     return await conn.fetchval(query, user["username"], user["email"], hashed_password, user["api_key"])
 
+
 async def update_user(conn: ConnOrPool, *, user_id: int, username: str, email: str, authorized: bool):
     query = """
         UPDATE users
@@ -82,6 +82,7 @@ async def update_user(conn: ConnOrPool, *, user_id: int, username: str, email: s
         WHERE id = $4
     """
     return await conn.execute(query, username, email, authorized, user_id)
+
 
 async def delete_user(conn: ConnOrPool, *, user_id: int):
     return await conn.execute("DELETE FROM users WHERE id = $1", user_id)
@@ -97,6 +98,7 @@ async def select_users(conn: ConnOrPool, *, sortby: str, direction: str):
         """
 
     return await conn.fetch(query)
+
 
 async def select_user(conn: ConnOrPool, *, user_id: int):
     return await conn.fetchrow("SELECT * FROM users WHERE id = $1", user_id)

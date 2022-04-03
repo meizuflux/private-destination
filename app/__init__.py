@@ -34,7 +34,11 @@ async def authentication_middleware(request, handler):
 
     if hasattr(fn, "requires_auth"):
         error = await verify_user(
-            request, admin=fn.auth["admin"], redirect=fn.auth["redirect"], scopes=fn.auth["scopes"]
+            request,
+            admin=fn.auth["admin"],
+            redirect=fn.auth["redirect"],
+            scopes=fn.auth["scopes"],
+            needs_authorization=fn.auth["needs_authorization"],
         )
         if isinstance(error, web.HTTPException):
             return await handle_errors(request, error)

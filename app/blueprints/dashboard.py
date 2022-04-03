@@ -322,7 +322,7 @@ async def get(request: web.Request) -> web.Response:
 @bp.get("/users/{user_id}/edit")
 @bp.post("/users/{user_id}/edit")
 @match_info_schema(UserIDSchema)
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(redirect=True, scopes=["id", "admin"], needs_authorization=False)
 async def edit_user(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
     user = await select_user(request.app["db"], user_id=user_id)
@@ -415,7 +415,7 @@ async def edit_user(request: web.Request) -> web.Response:
 
 @bp.get("/users/{user_id}/delete")
 @bp.post("/users/{user_id}/delete")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(redirect=True, scopes=["id", "admin"], needs_authorization=False)
 @match_info_schema(UserIDSchema)
 async def edit_short_url_(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]

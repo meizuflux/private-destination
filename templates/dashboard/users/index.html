@@ -59,9 +59,7 @@ Manage Users
                         <td><code>{{u["authorized"]}}</code></td>
                         <td>{{u["joined"].strftime("%d %B %Y at %H:%M")}}</td>
                         <td>
-                            <div class="buttons">
-                                <button class="button is-warning is-small"><a href="/dashboard/users/{{u['id']}}/edit" class="has-text-dark">Edit</a></button>
-                            </div>
+                            <a href="/dashboard/users/{{u['id']}}/edit" class="button is-warning is-small">Edit</a>
                         </td>
                     </tr>
                 {% endfor %}

@@ -112,40 +112,39 @@ async def shortner(request: web.Request) -> web.Response:
 @bp.post("/shortner/create")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def create_short_url_(request: web.Request) -> web.Response:
-    if request.method == "POST":
-        try:
-            args = await parser.parse(CreateUrlSchema(), request, locations=["form"])
-        except ValidationError as e:
-            return await render_template_async(
-                "dashboard/shortner/create.html",
-                request,
-                {
-                    "key_error": e.messages.get("key"),
-                    "url_error": e.messages.get("destination"),
-                },
-                status=400,
-            )
+    if request.method != "POST":
+        return await render_template_async("dashboard/shortner/create.html", request, {})
+    try:
+        args = await parser.parse(CreateUrlSchema(), request, locations=["form"])
+    except ValidationError as e:
+        return await render_template_async(
+            "dashboard/shortner/create.html",
+            request,
+            {
+                "key_error": e.messages.get("key"),
+                "url_error": e.messages.get("destination"),
+            },
+            status=400,
+        )
 
-        key = args.get("key")
-        if key is None or key == "":
-            key = await generate_url_key(request.app["db"])
-        destination = args.get("destination")
+    key = args.get("key")
+    if key is None or key == "":
+        key = await generate_url_key(request.app["db"])
+    destination = args.get("destination")
 
-        try:
-            await insert_short_url(request.app["db"], owner=request["user"]["id"], key=key, destination=destination)
-        except UniqueViolationError:
-            return await render_template_async(
-                "dashboard/shortner/create.html",
-                request,
-                {
-                    "key_error": ["A shortened URL with this key already exists"],
-                },
-                status=400,
-            )
+    try:
+        await insert_short_url(request.app["db"], owner=request["user"]["id"], key=key, destination=destination)
+    except UniqueViolationError:
+        return await render_template_async(
+            "dashboard/shortner/create.html",
+            request,
+            {
+                "key_error": ["A shortened URL with this key already exists"],
+            },
+            status=400,
+        )
 
-        return web.HTTPFound("/dashboard/shortner")
-
-    return await render_template_async("dashboard/shortner/create.html", request, {})
+    return web.HTTPFound("/dashboard/shortner")
 
 
 @bp.get("/shortner/{key}/edit")
@@ -160,15 +159,27 @@ async def edit_short_url_(request: web.Request) -> web.Response:
         return await render_template_async(
             "dashboard/shortner/edit.html",
             request,
-            {"error": {"title": "Unknown Short URL", "message": f"Could not locate short URL"}},
+            {
+                "error": {
+                    "title": "Unknown Short URL",
+                    "message": "Could not locate short URL",
+                }
+            },
         )
+
 
     if short_url["owner"] != request["user"]["id"]:
         return await render_template_async(
             "dashboard/shortner/edit.html",
             request,
-            {"error": {"title": "Missing Permissions", "message": f"You aren't the owner of this short URL"}},
+            {
+                "error": {
+                    "title": "Missing Permissions",
+                    "message": "You aren't the owner of this short URL",
+                }
+            },
         )
+
 
     if request.method == "POST":
         try:
@@ -231,17 +242,29 @@ async def edit_short_url_(request: web.Request) -> web.Response:
         return await render_template_async(
             "dashboard/shortner/delete.html",
             request,
-            {"error": {"title": "Unknown Short URL", "message": f"Could not locate short URL"}},
+            {
+                "error": {
+                    "title": "Unknown Short URL",
+                    "message": "Could not locate short URL",
+                }
+            },
             status=404,
         )
+
 
     if short_url["owner"] != request["user"]["id"]:
         return await render_template_async(
             "dashboard/shortner/delete.html",
             request,
-            {"error": {"title": "Missing Permissions", "message": f"You aren't the owner of this short URL"}},
+            {
+                "error": {
+                    "title": "Missing Permissions",
+                    "message": "You aren't the owner of this short URL",
+                }
+            },
             status=409,
         )
+
 
     if request.method == "POST":
         await delete_short_url(request.app["db"], key=key)
@@ -328,7 +351,7 @@ async def edit_user(request: web.Request) -> web.Response:
     user = await select_user(request.app["db"], user_id=user_id)
     is_self = user_id == request["user"]["id"]
 
-    if is_self is False and request["user"]["admin"] is False:
+    if not is_self and request["user"]["admin"] is False:
         return await render_template_async(
             "dashboard/users/edit.html",
             request,
@@ -346,9 +369,15 @@ async def edit_user(request: web.Request) -> web.Response:
         return await render_template_async(
             "dashboard/users/edit.html",
             request,
-            {"error": {"title": "Unknown User", "message": f"Could not locate user"}},
+            {
+                "error": {
+                    "title": "Unknown User",
+                    "message": "Could not locate user",
+                }
+            },
             status=404,
         )
+
 
     if request.method == "POST":
         try:
@@ -396,7 +425,7 @@ async def edit_user(request: web.Request) -> web.Response:
                 status=400,
             )
 
-        return web.HTTPFound("/dashboard/users" if is_self is False else "/dashboard/settings")
+        return web.HTTPFound("/dashboard/settings" if is_self else "/dashboard/users")
 
     return await render_template_async(
         "dashboard/users/edit.html",
@@ -422,7 +451,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
     user = await select_user(request.app["db"], user_id=user_id)
     is_self = user_id == request["user"]["id"]
 
-    if is_self is False and request["user"]["admin"] is False:
+    if not is_self and request["user"]["admin"] is False:
         return await render_template_async(
             "dashboard/users/delete.html",
             request,
@@ -440,9 +469,15 @@ async def edit_short_url_(request: web.Request) -> web.Response:
         return await render_template_async(
             "dashboard/users/delete.html",
             request,
-            {"error": {"title": "Unknown User", "message": f"Could not locate user"}},
+            {
+                "error": {
+                    "title": "Unknown User",
+                    "message": "Could not locate user",
+                }
+            },
             status=404,
         )
+
 
     if request.method == "POST":
         await delete_user(request.app["db"], user_id=user_id)

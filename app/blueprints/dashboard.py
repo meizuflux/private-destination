@@ -451,9 +451,11 @@ async def edit_short_url_(request: web.Request) -> web.Response:
     if request.method == "POST":
         await delete_user(request.app["db"], user_id=user_id)
 
-        res = web.HTTPFound("/")
-        res.del_cookie("_session")
-        return res
+        if is_self is True:
+            res = web.HTTPFound("/")
+            res.del_cookie("_session")
+            return res
+        return web.HTTPFound("/dashboard/users")
 
     return await render_template_async(
         "dashboard/users/delete.html",

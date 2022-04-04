@@ -7,6 +7,7 @@ from aiohttp_apispec import match_info_schema, querystring_schema
 from aiohttp_jinja2 import render_template_async, template
 from asyncpg import UniqueViolationError
 from marshmallow import Schema, ValidationError, fields, validate
+from passlib.hash import pbkdf2_sha512
 
 from app.blueprints.api.shortner import CreateUrlSchema, generate_url_key
 from app.blueprints.auth import SignUpForm, generate_api_key
@@ -28,8 +29,6 @@ from app.utils.db import (
     update_user,
 )
 from app.utils.forms import parser
-from passlib.hash import pbkdf2_sha512
-
 
 
 class ShortnerQuerystring(Schema):
@@ -463,6 +462,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
         {"id": user["id"], "username": user["username"], "email": user["email"], "is_self": is_self},
     )
 
+
 @bp.get("/users/create")
 @bp.post("/users/create")
 @requires_auth(admin=True, redirect=True)
@@ -494,13 +494,11 @@ async def create_user(request: web.Request) -> web.Response:
             )
         except UniqueViolationError:
             return await render_template_async(
-                "dashboard/users/create.html", request, {"type": "signup", "email_error": ["A user with this email already exists"]}
+                "dashboard/users/create.html",
+                request,
+                {"type": "signup", "email_error": ["A user with this email already exists"]},
             )
 
         return web.HTTPFound("/dashboard/users")
 
-    return await render_template_async(
-        "dashboard/users/create.html",
-        request,
-        {}
-    )
+    return await render_template_async("dashboard/users/create.html", request, {})

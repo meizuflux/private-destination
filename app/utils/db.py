@@ -66,13 +66,13 @@ async def add_short_url_click(conn: ConnOrPool, *, key: str):
     return await conn.execute("UPDATE urls SET clicks = clicks + 1 WHERE key = $1", key)
 
 
-async def insert_user(conn: ConnOrPool, *, user: User, hashed_password: str):
+async def insert_user(conn: ConnOrPool, *, username: str, email: str, api_key: str, hashed_password: str):
     query = """
         INSERT INTO users (username, email, password, api_key)
         VALUES ($1, $2, $3, $4)
         RETURNING id
     """
-    return await conn.fetchval(query, user["username"], user["email"], hashed_password, user["api_key"])
+    return await conn.fetchval(query, username, email, hashed_password, api_key)
 
 
 async def update_user(conn: ConnOrPool, *, user_id: int, username: str, email: str, authorized: bool):

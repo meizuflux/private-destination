@@ -81,22 +81,30 @@ async def signup(request: web.Request) -> web.Response:
                     "email_error": e.messages.get("email"),
                     "password_error": e.messages.get("password"),
                     "type": "signup",
+                    "username": e.data.get("username"),
+                    "email": e.data.get("email"),
+                    "password": e.data.get("password"),
                 },
             )
 
         try:
             user_id = await insert_user(
                 request.app["db"],
-                user={
-                    "username": args["username"],
-                    "email": args["email"],
-                    "api_key": await generate_api_key(request.app["db"]),
-                },
+                username=args["username"],
+                email=args["email"],
+                api_key=await generate_api_key(request.app["db"]),
                 hashed_password=pbkdf2_sha512.hash(args["password"]),
             )
         except UniqueViolationError:
             return await render_template_async(
-                "onboarding.html", request, {"type": "signup", "email_error": ["A user with this email already exists"]}
+                "onboarding.html",
+                request,
+                {
+                    "type": "signup",
+                    "email_error": ["A user with this email already exists"],
+                    "email": args["email"],
+                    "password": args["password"],
+                },
             )
 
         return await login_user(request, user_id)
@@ -122,9 +130,9 @@ async def login(request: web.Request) -> web.Response:
                     "password_error": e.messages.get("password"),
                     "type": "login",
                     "email": e.data.get("email"),
-                    "password": e.data.get("password")
+                    "password": e.data.get("password"),
                 },
-                status=400
+                status=400,
             )
 
         row = await get_hash_and_id_by_email(request.app["db"], email=args["email"])
@@ -132,10 +140,18 @@ async def login(request: web.Request) -> web.Response:
             if pbkdf2_sha512.verify(args["password"], row["password"]) is True:
                 return await login_user(request, row["id"])
 
-            return await render_template_async("onboarding.html", request, {"password_error": ["Invalid password"], "email": args["email"]})
+            return await render_template_async(
+                "onboarding.html", request, {"password_error": ["Invalid password"], "email": args["email"]}
+            )
 
         return await render_template_async(
-            "onboarding.html", request, {"email_error": ["We could not find a user with that email"], "email": args["email"], "password": args["password"]}
+            "onboarding.html",
+            request,
+            {
+                "email_error": ["We could not find a user with that email"],
+                "email": args["email"],
+                "password": args["password"],
+            },
         )
 
     return await render_template_async("onboarding.html", request, {"type": "login"})

@@ -46,7 +46,9 @@ async def main():
     try:
         user_id = await insert_user(
             pool,
-            user={"username": username, "email": email, "api_key": await generate_api_key(pool)},
+            username=username,
+            email=email,
+            api_key=await generate_api_key(pool),
             hashed_password=pw_hash,
         )
     except UniqueViolationError:

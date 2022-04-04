@@ -3,7 +3,7 @@ from uuid import UUID
 
 from asyncpg import Connection, Pool, Record
 
-from app.utils import Scopes, User
+from app.utils import Scopes
 
 ConnOrPool = Union[Connection, Pool]
 

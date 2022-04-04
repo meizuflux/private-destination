@@ -74,7 +74,7 @@ bp = Blueprint("/dashboard")
 @bp.get("")
 @requires_auth(redirect=True, scopes=["id", "username", "admin"], needs_authorization=False)
 @template("dashboard/index.html")
-async def index(request: web.Request) -> web.Response:
+async def index(request: web.Request):
     url_count = await select_short_url_count(request.app["db"], owner=request["user"]["id"])
     return {"url_count": url_count}
 
@@ -83,7 +83,7 @@ async def index(request: web.Request) -> web.Response:
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @querystring_schema(ShortnerQuerystring)
 @template("dashboard/shortner/index.html")
-async def shortner(request: web.Request) -> web.Response:
+async def shortner(request: web.Request):
     current_page = request["querystring"].get("page", 1) - 1
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "creation_date")

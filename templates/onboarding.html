@@ -14,7 +14,7 @@
                         <div class="field">
                             <label class="label">Username</label>
                             <div class="control">
-                                <input id="username" name="username" class="input {{'is-danger' if username_error else ''}}" type="text" placeholder="A unique username">
+                                <input id="username" name="username" class="input {{'is-danger' if username_error else ''}}" type="text" placeholder="A unique username"  value="{{username|d('')}}">
                                 {% if username_error %}
                                     <p class="help is-danger">{{username_error[0]}}</p>
                                 {% endif %}
@@ -24,7 +24,7 @@
                     <div class="field">
                         <label class="label">Email</label>
                         <div class="control">
-                            <input id="email" name="email" class="input {{'is-danger' if email_error else ''}}" type="text" placeholder="Your email">
+                            <input id="email" name="email" class="input {{'is-danger' if email_error else ''}}" type="text" placeholder="Your email" value="{{email|d('')}}">
                             {% if email_error %}
                                 <p class="help is-danger">{{email_error[0]}}</p>
                             {% endif %}
@@ -34,7 +34,7 @@
                     <div class="field">
                         <label class="label">Password</label>
                         <div class="control">
-                            <input id="password" name="password" class="input {{'is-danger' if password_error else ''}}" type="password" placeholder="A secure password">
+                            <input id="password" name="password" class="input {{'is-danger' if password_error else ''}}" type="password" placeholder="A secure password" value="{{password|d('')}}">
                             {% if password_error %}
                                 <p class="help is-danger">{{password_error[0]}}</p>
                             {% endif %}

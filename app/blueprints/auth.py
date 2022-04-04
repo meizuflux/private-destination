@@ -117,7 +117,14 @@ async def login(request: web.Request) -> web.Response:
             return await render_template_async(
                 "onboarding.html",
                 request,
-                {"email_error": e.messages.get("email"), "password_error": e.messages.get("password"), "type": "login"},
+                {
+                    "email_error": e.messages.get("email"),
+                    "password_error": e.messages.get("password"),
+                    "type": "login",
+                    "email": e.data.get("email"),
+                    "password": e.data.get("password")
+                },
+                status=400
             )
 
         row = await get_hash_and_id_by_email(request.app["db"], email=args["email"])
@@ -125,10 +132,10 @@ async def login(request: web.Request) -> web.Response:
             if pbkdf2_sha512.verify(args["password"], row["password"]) is True:
                 return await login_user(request, row["id"])
 
-            return await render_template_async("onboarding.html", request, {"password_error": ["Invalid password"]})
+            return await render_template_async("onboarding.html", request, {"password_error": ["Invalid password"], "email": args["email"]})
 
         return await render_template_async(
-            "onboarding.html", request, {"email_error": ["We could not find a user with that email"]}
+            "onboarding.html", request, {"email_error": ["We could not find a user with that email"], "email": args["email"], "password": args["password"]}
         )
 
     return await render_template_async("onboarding.html", request, {"type": "login"})

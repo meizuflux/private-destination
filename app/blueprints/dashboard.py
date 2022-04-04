@@ -7,12 +7,11 @@ from aiohttp_apispec import match_info_schema, querystring_schema
 from aiohttp_jinja2 import render_template_async, template
 from asyncpg import UniqueViolationError
 from marshmallow import Schema, ValidationError, fields, validate
-from passlib.hash import pbkdf2_sha512
 
 from app.blueprints.api.shortner import CreateUrlSchema, generate_url_key
-from app.blueprints.auth import SignUpForm, generate_api_key
 from app.routing import Blueprint
-from app.utils.auth import requires_auth
+from app.utils import Status
+from app.utils.auth import create_user, requires_auth
 from app.utils.db import (
     delete_session,
     delete_short_url,
@@ -466,36 +465,11 @@ async def delete_user_(request: web.Request) -> web.Response:
 @bp.get("/users/create")
 @bp.post("/users/create")
 @requires_auth(admin=True, redirect=True)
-async def create_user(request: web.Request) -> web.Response:
+async def create_user_(request: web.Request) -> web.Response:
     if request.method == "POST":
-        try:
-            args = await parser.parse(SignUpForm(), request, locations=["form"])
-        except ValidationError as e:
-            return await render_template_async(
-                "dashboard/users/create.html",
-                request,
-                {
-                    "username_error": e.messages.get("username"),
-                    "email_error": e.messages.get("email"),
-                    "password_error": e.messages.get("password"),
-                    "type": "signup",
-                },
-            )
-
-        try:
-            await insert_user(
-                request.app["db"],
-                username=args["username"],
-                email=args["email"],
-                api_key=await generate_api_key(request.app["db"]),
-                hashed_password=pbkdf2_sha512.hash(args["password"]),
-            )
-        except UniqueViolationError:
-            return await render_template_async(
-                "dashboard/users/create.html",
-                request,
-                {"type": "signup", "email_error": ["A user with this email already exists"]},
-            )
+        status, ret = await create_user(request, template="onboarding.html", extra_ctx={"type": "signup"})
+        if status is Status.ERROR:
+            return ret
 
         return web.HTTPFound("/dashboard/users")
 

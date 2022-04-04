@@ -27,7 +27,7 @@ def truncate(text: str, limit: int):
 
 
 @web.middleware
-async def authentication_middleware(request, handler):
+async def authentication_middleware(request: web.Request, handler):
     fn = handler
     if hasattr(handler, request.method.lower()):
         fn = getattr(handler, request.method.lower())

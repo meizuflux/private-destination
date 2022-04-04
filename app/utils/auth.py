@@ -1,14 +1,43 @@
+from secrets import choice
+from string import ascii_letters, digits
 from uuid import UUID
 
 from aiohttp import web
+from aiohttp_jinja2 import render_template_async
+from asyncpg import UniqueViolationError
+from marshmallow import Schema, ValidationError, fields, validate
+from passlib.hash import pbkdf2_sha512
 
-from app.utils import Scopes
+from app.utils import Scopes, Status
 from app.utils.db import (
+    ConnOrPool,
+    insert_user,
     select_api_key_exists,
     select_session_exists,
     select_user_by_api_key,
     select_user_by_session,
 )
+from app.utils.forms import parser
+
+
+class LoginSchema(Schema):
+    email = fields.Email(required=True)
+    password = fields.Field(require=True)
+
+
+class SignUpSchema(LoginSchema):
+    username = fields.String(validate=validate.Length(3, 32), required=True)
+
+
+API_KEY_VALID_CHARS = ascii_letters + digits + "!@%^&?<>:;+=-_~"
+
+
+async def generate_api_key(db: ConnOrPool) -> str:
+    while True:
+        api_key = "".join(choice(API_KEY_VALID_CHARS) for _ in range(256))
+        if await select_api_key_exists(db, api_key=api_key) is False:
+            break
+    return api_key
 
 
 def requires_auth(
@@ -80,3 +109,53 @@ async def verify_user(request: web.Request, *, admin: bool, redirect: bool, scop
 
     request["user"] = user
     return user
+
+
+async def create_user(
+    request: web.Request,
+    *,
+    template: str,
+    extra_ctx: dict,
+):
+    try:
+        args = await parser.parse(SignUpSchema(), request, locations=["form"])
+    except ValidationError as e:
+        ctx = {
+            "username_error": e.messages.get("username"),
+            "email_error": e.messages.get("email"),
+            "password_error": e.messages.get("password"),
+            "username": e.data.get("username"),
+            "email": e.data.get("email"),
+            "password": e.data.get("password"),
+        }
+        ctx.update(extra_ctx)
+
+        return Status.ERROR, await render_template_async(
+            template,
+            request,
+            ctx,
+        )
+
+    try:
+        async with request.app["db"].acquire() as conn:
+            user_id = await insert_user(
+                conn,
+                username=args["username"],
+                email=args["email"],
+                api_key=await generate_api_key(conn),
+                hashed_password=pbkdf2_sha512.hash(args["password"]),
+            )
+    except UniqueViolationError:
+        ctx = {
+            "email_error": ["A user with this email already exists"],
+            "email": args["email"],
+            "password": args["password"],
+        }
+        ctx.update(extra_ctx)
+
+        return Status.ERROR, await render_template_async(
+            template,
+            request,
+            ctx,
+        )
+    return Status.OK, user_id

@@ -226,7 +226,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
 @bp.post("/shortner/{key}/delete")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @match_info_schema(KeySchema)
-async def edit_short_url_(request: web.Request) -> web.Response:
+async def delete_short_url_(request: web.Request) -> web.Response:
     key = request["match_info"]["key"]
 
     short_url = await select_short_url(request.app["db"], key=key)
@@ -260,7 +260,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
 
 @bp.get("/shortner/sharex")
 @requires_auth(redirect=False, scopes=["api_key"])
-async def sharex_config(request: web.Request) -> web.Response:
+async def shortner_sharex_config(request: web.Request) -> web.Response:
     data = {
         "Version": "13.4.0",
         "DestinationType": "URLShortener",
@@ -282,21 +282,21 @@ async def sharex_config(request: web.Request) -> web.Response:
 @bp.get("/settings")
 @template("dashboard/settings/index.html")
 @requires_auth(redirect=True, scopes=["id", "api_key", "username", "admin"], needs_authorization=False)
-async def general_settings(_: web.Request) -> web.Response:
+async def general_settings(_: web.Request):
     return {}
 
 
 @bp.get("/settings/sessions")
 @template("dashboard/settings/sessions.html")
 @requires_auth(redirect=True, scopes=["id", "admin"], needs_authorization=False)
-async def sessions_settings(request: web.Request) -> web.Response:
+async def sessions_settings(request: web.Request):
     user_sessions = await select_sessions(request.app["db"], user_id=request["user"]["id"])
     return {"sessions": user_sessions, "current_session": request.cookies.get("_session")}
 
 
 @bp.post("/settings/sessions/{token}/delete")
 @requires_auth(redirect=True, scopes=["id"], needs_authorization=False)
-@match_info_schema(SessionSchema())
+@match_info_schema(SessionSchema)
 async def delete_session_(request: web.Request) -> web.Response:
     # we don't need to check ownership since there is an extremely low chance of two uuids ever being the same (ie can't be guessed)
     await delete_session(request.app["db"], token=request["match_info"]["token"])
@@ -306,7 +306,7 @@ async def delete_session_(request: web.Request) -> web.Response:
 @bp.get("/settings/shortner")
 @template("dashboard/settings/shortner.html")
 @requires_auth(redirect=True, scopes="admin")
-async def shortner_settings(_: web.Request) -> web.Response:
+async def shortner_settings(_: web.Request):
     return {}
 
 
@@ -314,7 +314,7 @@ async def shortner_settings(_: web.Request) -> web.Response:
 @template("dashboard/users/index.html")
 @querystring_schema(UsersQuerystring)
 @requires_auth(admin=True, redirect=True)
-async def get(request: web.Request) -> web.Response:
+async def users(request: web.Request):
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "joined")
 
@@ -420,7 +420,7 @@ async def edit_user(request: web.Request) -> web.Response:
 @bp.post("/users/{user_id}/delete")
 @requires_auth(redirect=True, scopes=["id", "admin"], needs_authorization=False)
 @match_info_schema(UserIDSchema)
-async def edit_short_url_(request: web.Request) -> web.Response:
+async def delete_user_(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
     user = await select_user(request.app["db"], user_id=user_id)
     is_self = user_id == request["user"]["id"]
@@ -485,11 +485,9 @@ async def create_user(request: web.Request) -> web.Response:
         try:
             await insert_user(
                 request.app["db"],
-                user={
-                    "username": args["username"],
-                    "email": args["email"],
-                    "api_key": await generate_api_key(request.app["db"]),
-                },
+                username=args["username"],
+                email=args["email"],
+                api_key=await generate_api_key(request.app["db"]),
                 hashed_password=pbkdf2_sha512.hash(args["password"]),
             )
         except UniqueViolationError:

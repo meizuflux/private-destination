@@ -19,10 +19,13 @@ then run `scripts/admin.py` and follow the prompt. this will create an admin use
 `499` is for when the user's account is pending authorization. this technically would fall under `403` but I wanted an easier way to change the error page
 
 # todo list
-rewrite app to use raw html forms instead of js because I hate JS with a passion
-
-maybe password reset(?)
-
-maybe a bulma dark theme since light theme burns my eyes
-
-*maybe* use `hotwire` or `htmx`
+email with `sendinblue`
+- password reset
+- maybe some progressive enhancement like `hotwire` `htmx` or `hibiki`
+- bulma dark theme
+- welcome email
+- image cdn
+- maybe make the site invite only??
+- something similar to mystbin/pastebin
+- todo list
+- log ip with session

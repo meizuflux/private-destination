@@ -2,7 +2,7 @@ from aiohttp import web
 from aiohttp_apispec import match_info_schema
 from marshmallow import Schema, fields
 
-from app.blueprints.auth import generate_api_key
+from app.utils.auth import generate_api_key
 from app.routing import Blueprint
 from app.utils.auth import requires_auth
 from app.utils.db import authorize_user, delete_user, unauthorize_user, update_api_key

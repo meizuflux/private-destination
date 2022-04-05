@@ -6,9 +6,21 @@ from aiohttp import web
 from aiohttp_apispec import match_info_schema, querystring_schema
 from aiohttp_jinja2 import render_template_async, template
 from asyncpg import UniqueViolationError
-from marshmallow import Schema, ValidationError, fields, validate
+from marshmallow import ValidationError
 
-from app.blueprints.api.shortner import CreateUrlSchema, generate_url_key
+from app.blueprints.api.shortner import generate_url_key
+from app.models.auth import (
+    SessionSchema,
+    UserIDSchema,
+    UsersEditSchema,
+    UsersFilterSchema,
+)
+from app.models.shortner import (
+    ShortnerCreateSchema,
+    ShortnerEditSchema,
+    ShortnerFilterSchema,
+    ShortnerKeySchema,
+)
 from app.routing import Blueprint
 from app.utils import Status
 from app.utils.auth import create_user, requires_auth
@@ -17,7 +29,6 @@ from app.utils.db import (
     delete_short_url,
     delete_user,
     insert_short_url,
-    insert_user,
     select_sessions,
     select_short_url,
     select_short_url_count,
@@ -28,42 +39,6 @@ from app.utils.db import (
     update_user,
 )
 from app.utils.forms import parser
-
-
-class ShortnerQuerystring(Schema):
-    page = fields.Integer(validate=validate.Range(min=1, error="Page must be greater than or equal to 1"))
-    direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
-    sortby = fields.String(validate=validate.OneOf({"key", "destination", "clicks", "creation_date"}))
-
-
-class UsersQuerystring(Schema):
-    direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
-    sortby = fields.String(validate=validate.OneOf({"username", "id", "authorized", "email", "joined"}))
-
-
-class KeySchema(Schema):
-    key = fields.String(required=True)
-
-
-class UserIDSchema(Schema):
-    user_id = fields.Integer(require=True)
-
-
-class EditUrlSchema(Schema):
-    key = fields.String()
-    destination = fields.URL(required=True)
-    reset_clicks = fields.Boolean()
-
-
-class EditUserSchema(Schema):
-    username = fields.String(required=True)
-    email = fields.Email(required=True)
-    authorized = fields.Boolean(required=True)
-
-
-class SessionSchema(Schema):
-    token = fields.UUID(required=True)
-
 
 bp = Blueprint("/dashboard")
 
@@ -80,7 +55,7 @@ async def index(request: web.Request):
 
 @bp.get("/shortner")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-@querystring_schema(ShortnerQuerystring)
+@querystring_schema(ShortnerFilterSchema())
 @template("dashboard/shortner/index.html")
 async def shortner(request: web.Request):
     current_page = request["querystring"].get("page", 1) - 1
@@ -116,7 +91,7 @@ async def shortner(request: web.Request):
 async def create_short_url_(request: web.Request) -> web.Response:
     if request.method == "POST":
         try:
-            args = await parser.parse(CreateUrlSchema(), request, locations=["form"])
+            args = await parser.parse(ShortnerCreateSchema(), request, locations=["form"])
         except ValidationError as e:
             return await render_template_async(
                 "dashboard/shortner/create.html",
@@ -153,7 +128,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
 @bp.get("/shortner/{key}/edit")
 @bp.post("/shortner/{key}/edit")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-@match_info_schema(KeySchema)
+@match_info_schema(ShortnerKeySchema())
 async def edit_short_url_(request: web.Request) -> web.Response:
     key = request["match_info"]["key"]
 
@@ -174,7 +149,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
 
     if request.method == "POST":
         try:
-            args = await parser.parse(EditUrlSchema(), request, locations=["form"])
+            args = await parser.parse(ShortnerEditSchema(), request, locations=["form"])
         except ValidationError as e:
             return await render_template_async(
                 "dashboard/shortner/edit.html",
@@ -224,7 +199,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
 @bp.get("/shortner/{key}/delete")
 @bp.post("/shortner/{key}/delete")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-@match_info_schema(KeySchema)
+@match_info_schema(ShortnerKeySchema)
 async def delete_short_url_(request: web.Request) -> web.Response:
     key = request["match_info"]["key"]
 
@@ -311,7 +286,7 @@ async def shortner_settings(_: web.Request):
 
 @bp.get("/users")
 @template("dashboard/users/index.html")
-@querystring_schema(UsersQuerystring)
+@querystring_schema(UsersFilterSchema())
 @requires_auth(admin=True, redirect=True)
 async def users(request: web.Request):
     direction = request["querystring"].get("direction", "desc")
@@ -354,7 +329,7 @@ async def edit_user(request: web.Request) -> web.Response:
 
     if request.method == "POST":
         try:
-            args = await parser.parse(EditUserSchema(), request, locations=["form"])
+            args = await parser.parse(UsersEditSchema(), request, locations=["form"])
         except ValidationError as e:
             return await render_template_async(
                 "dashboard/users/edit.html",

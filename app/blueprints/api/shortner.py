@@ -4,8 +4,8 @@ from secrets import choice
 from aiohttp import web
 from aiohttp_apispec import json_schema, match_info_schema
 from asyncpg import UniqueViolationError
-from marshmallow import Schema, fields
 
+from app.models.shortner import ShortnerCreateSchema, ShortnerKeySchema
 from app.routing import Blueprint
 from app.utils.auth import requires_auth
 from app.utils.db import (
@@ -14,16 +14,6 @@ from app.utils.db import (
     insert_short_url,
     select_short_url_exists,
 )
-
-
-class CreateUrlSchema(Schema):
-    key = fields.String()
-    destination = fields.URL(required=True, schemes={"http", "https"})
-
-
-class KeyMatchSchema(Schema):
-    key = fields.String(required=True)
-
 
 all_chars = string.ascii_letters + string.digits
 
@@ -41,7 +31,7 @@ bp = Blueprint("/api/shortner")
 
 @bp.post("")
 @requires_auth(scopes="id")
-@json_schema(CreateUrlSchema())
+@json_schema(ShortnerCreateSchema())
 async def create_short_url_(request: web.Request) -> web.Response:
     json = request["json"]
     key = json.get("key")
@@ -57,7 +47,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
 
 @bp.delete("/{key}")
 @requires_auth(scopes=None)
-@match_info_schema(KeyMatchSchema)
+@match_info_schema(ShortnerKeySchema())
 async def delete_short_url_(request: web.Request) -> web.Response:
     key = request["match_info"]["key"]
 

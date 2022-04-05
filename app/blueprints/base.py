@@ -3,17 +3,13 @@ import asyncio
 import aiohttp_jinja2
 from aiohttp import web
 from aiohttp_apispec import match_info_schema
-from marshmallow import Schema, fields
 
+from app.models.shortner import ShortnerKeySchema
 from app.routing import Blueprint
 from app.utils.auth import verify_user
 from app.utils.db import add_short_url_click, select_short_url_destination
 
 bp = Blueprint()
-
-
-class ShortnerMatchInfo(Schema):
-    key = fields.Str(required=True)
 
 
 @bp.get("/")
@@ -25,7 +21,7 @@ async def login(request: web.Request) -> web.Response:
 
 
 @bp.get("/{key}")
-@match_info_schema(ShortnerMatchInfo)
+@match_info_schema(ShortnerKeySchema)
 async def shortner(request: web.Request) -> web.Response:
     key = request["match_info"]["key"]
     destination = await select_short_url_destination(request.app["db"], key=key)

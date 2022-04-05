@@ -5,9 +5,10 @@ from uuid import UUID
 from aiohttp import web
 from aiohttp_jinja2 import render_template_async
 from asyncpg import UniqueViolationError
-from marshmallow import Schema, ValidationError, fields, validate
+from marshmallow import ValidationError
 from passlib.hash import pbkdf2_sha512
 
+from app.models.auth import SignUpSchema
 from app.utils import Scopes, Status
 from app.utils.db import (
     ConnOrPool,
@@ -18,16 +19,6 @@ from app.utils.db import (
     select_user_by_session,
 )
 from app.utils.forms import parser
-
-
-class LoginSchema(Schema):
-    email = fields.Email(required=True)
-    password = fields.Field(require=True)
-
-
-class SignUpSchema(LoginSchema):
-    username = fields.String(validate=validate.Length(3, 32), required=True)
-
 
 API_KEY_VALID_CHARS = ascii_letters + digits + "!@%^&?<>:;+=-_~"
 
@@ -44,7 +35,7 @@ def requires_auth(
     *,
     admin: bool = False,
     redirect: bool = False,
-    scopes: Scopes = None,  # a tuple represents the columns, a false means don't fetch the user, and true means to get all columns (*)
+    scopes: Scopes = None,
     needs_authorization: bool = True,
 ):
     if scopes is not None:

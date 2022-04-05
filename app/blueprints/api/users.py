@@ -1,16 +1,10 @@
 from aiohttp import web
 from aiohttp_apispec import match_info_schema
-from marshmallow import Schema, fields
 
-from app.utils.auth import generate_api_key
+from app.models.auth import UserIDSchema
 from app.routing import Blueprint
-from app.utils.auth import requires_auth
+from app.utils.auth import generate_api_key, requires_auth
 from app.utils.db import authorize_user, delete_user, unauthorize_user, update_api_key
-
-
-class UserIdMatchinfo(Schema):
-    user_id = fields.Integer()
-
 
 bp = Blueprint("/api/users")
 
@@ -43,7 +37,7 @@ async def regen_api_key(request: web.Request) -> web.Response:
 
 @bp.post("/{user_id}/authorize")
 @requires_auth(admin=True)
-@match_info_schema(UserIdMatchinfo)
+@match_info_schema(UserIDSchema())
 async def authorize_user_(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
 
@@ -54,7 +48,7 @@ async def authorize_user_(request: web.Request) -> web.Response:
 
 @bp.post("/{user_id}/unauthorize")
 @requires_auth(admin=True)
-@match_info_schema(UserIdMatchinfo)
+@match_info_schema(UserIDSchema())
 async def unauthorize_user_(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
 
@@ -65,7 +59,7 @@ async def unauthorize_user_(request: web.Request) -> web.Response:
 
 @bp.delete("/{user_id}/delete")
 @requires_auth(admin=True)
-@match_info_schema(UserIdMatchinfo)
+@match_info_schema(UserIDSchema())
 async def delete_user_(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
 

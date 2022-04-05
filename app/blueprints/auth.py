@@ -6,9 +6,10 @@ from marshmallow import ValidationError
 from passlib.hash import pbkdf2_sha512
 from ua_parser import user_agent_parser
 
+from app.models.auth import LoginSchema
 from app.routing import Blueprint
 from app.utils import Status
-from app.utils.auth import LoginSchema, create_user, requires_auth, verify_user
+from app.utils.auth import create_user, requires_auth, verify_user
 from app.utils.db import delete_session, get_hash_and_id_by_email, insert_session
 from app.utils.forms import parser
 

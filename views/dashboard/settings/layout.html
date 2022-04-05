@@ -8,7 +8,7 @@
             <li class="{{'is-active' if request.rel_url.path == '/dashboard/settings' }}"><a href="/dashboard/settings">General</a></li>
             <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/sessions') }}"><a href="/dashboard/settings/sessions">Sessions</a></li>
             {% if user["authorized"] is true %}
-                <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/shortner') }}"><a href="/dashboard/settings/shortner">Shortner</a></li>
+                <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/shortener') }}"><a href="/dashboard/settings/shortener">Shortener</a></li>
             {% endif %}
         </ul>
     </div>

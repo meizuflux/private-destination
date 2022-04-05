@@ -1,2 +1,2 @@
 from . import auth, base, dashboard
-from .api import shortner, users
+from .api import shortener, users

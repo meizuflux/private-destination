@@ -5,7 +5,7 @@ from aiohttp import web
 from aiohttp_apispec import json_schema, match_info_schema
 from asyncpg import UniqueViolationError
 
-from app.models.shortner import ShortnerCreateSchema, ShortnerKeySchema
+from app.models.shortener import ShortenerCreateSchema, ShortenerKeySchema
 from app.routing import Blueprint
 from app.utils.auth import requires_auth
 from app.utils.db import (
@@ -26,12 +26,12 @@ async def generate_url_key(conn: ConnOrPool):
     return key
 
 
-bp = Blueprint("/api/shortner")
+bp = Blueprint("/api/shortener")
 
 
 @bp.post("")
 @requires_auth(scopes="id")
-@json_schema(ShortnerCreateSchema())
+@json_schema(ShortenerCreateSchema())
 async def create_short_url_(request: web.Request) -> web.Response:
     json = request["json"]
     key = json.get("key")
@@ -47,7 +47,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
 
 @bp.delete("/{key}")
 @requires_auth(scopes=None)
-@match_info_schema(ShortnerKeySchema())
+@match_info_schema(ShortenerKeySchema())
 async def delete_short_url_(request: web.Request) -> web.Response:
     key = request["match_info"]["key"]
 

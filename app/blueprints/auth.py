@@ -28,7 +28,7 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
         max_age=60 * 60 * 24,  # one day
         httponly=True,
         secure=not request.app["dev"],
-        samesite="strict",
+        samesite="strict", # using this lets me not need to setup csrf and whatnot
     )
 
     return res
@@ -77,22 +77,23 @@ async def login(request: web.Request) -> web.Response:
             )
 
         row = await get_hash_and_id_by_email(request.app["db"], email=args["email"])
-        if row is not None:
-            if pbkdf2_sha512.verify(args["password"], row["password"]) is True:
-                return await login_user(request, row["id"])
-
+        if row is None:
             return await render_template_async(
-                "onboarding.html", request, {"password_error": ["Invalid password"], "email": args["email"]}
+                "onboarding.html",
+                request,
+                {
+                    "email_error": ["We could not find a user with that email"],
+                    "email": args["email"],
+                    "password": args["password"],
+                },
             )
 
+        if pbkdf2_sha512.verify(args["password"], row["password"]) is True:
+            return await login_user(request, row["id"])
+
+        # email is right password is wrong
         return await render_template_async(
-            "onboarding.html",
-            request,
-            {
-                "email_error": ["We could not find a user with that email"],
-                "email": args["email"],
-                "password": args["password"],
-            },
+            "onboarding.html", request, {"password_error": ["Invalid password"], "email": args["email"]}
         )
 
     return await render_template_async("onboarding.html", request, {"type": "login"})

@@ -74,7 +74,7 @@ async def app_factory():
     # blueprints
     app.router.add_routes(blueprints.auth.bp)
     app.router.add_routes(blueprints.dashboard.bp)
-    app.router.add_routes(blueprints.api.shortner.bp)
+    app.router.add_routes(blueprints.api.shortener.bp)
     app.router.add_routes(blueprints.api.users.bp)
 
     # has to go last since it has a catch-all

@@ -8,18 +8,18 @@ from aiohttp_jinja2 import render_template_async, template
 from asyncpg import UniqueViolationError
 from marshmallow import ValidationError
 
-from app.blueprints.api.shortner import generate_url_key
+from app.blueprints.api.shortener import generate_url_key
 from app.models.auth import (
     SessionSchema,
     UserIDSchema,
     UsersEditSchema,
     UsersFilterSchema,
 )
-from app.models.shortner import (
-    ShortnerCreateSchema,
-    ShortnerEditSchema,
-    ShortnerFilterSchema,
-    ShortnerKeySchema,
+from app.models.shortener import (
+    ShortenerCreateSchema,
+    ShortenerEditSchema,
+    ShortenerFilterSchema,
+    ShortenerKeySchema,
 )
 from app.routing import Blueprint
 from app.utils import Status
@@ -53,11 +53,11 @@ async def index(request: web.Request):
     return {"url_count": url_count}
 
 
-@bp.get("/shortner")
+@bp.get("/shortener")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-@querystring_schema(ShortnerFilterSchema())
-@template("dashboard/shortner/index.html")
-async def shortner(request: web.Request):
+@querystring_schema(ShortenerFilterSchema())
+@template("dashboard/shortener/index.html")
+async def shortener(request: web.Request):
     current_page = request["querystring"].get("page", 1) - 1
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "creation_date")
@@ -85,16 +85,16 @@ async def shortner(request: web.Request):
     }
 
 
-@bp.get("/shortner/create")
-@bp.post("/shortner/create")
+@bp.get("/shortener/create")
+@bp.post("/shortener/create")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def create_short_url_(request: web.Request) -> web.Response:
     if request.method == "POST":
         try:
-            args = await parser.parse(ShortnerCreateSchema(), request, locations=["form"])
+            args = await parser.parse(ShortenerCreateSchema(), request, locations=["form"])
         except ValidationError as e:
             return await render_template_async(
-                "dashboard/shortner/create.html",
+                "dashboard/shortener/create.html",
                 request,
                 {
                     "key_error": e.messages.get("key"),
@@ -112,7 +112,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
             await insert_short_url(request.app["db"], owner=request["user"]["id"], key=key, destination=destination)
         except UniqueViolationError:
             return await render_template_async(
-                "dashboard/shortner/create.html",
+                "dashboard/shortener/create.html",
                 request,
                 {
                     "key_error": ["A shortened URL with this key already exists"],
@@ -120,39 +120,39 @@ async def create_short_url_(request: web.Request) -> web.Response:
                 status=400,
             )
 
-        return web.HTTPFound("/dashboard/shortner")
+        return web.HTTPFound("/dashboard/shortener")
 
-    return await render_template_async("dashboard/shortner/create.html", request, {})
+    return await render_template_async("dashboard/shortener/create.html", request, {})
 
 
-@bp.get("/shortner/{key}/edit")
-@bp.post("/shortner/{key}/edit")
+@bp.get("/shortener/{key}/edit")
+@bp.post("/shortener/{key}/edit")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-@match_info_schema(ShortnerKeySchema())
+@match_info_schema(ShortenerKeySchema())
 async def edit_short_url_(request: web.Request) -> web.Response:
     key = request["match_info"]["key"]
 
     short_url = await select_short_url(request.app["db"], key=key)
     if short_url is None:
         return await render_template_async(
-            "dashboard/shortner/edit.html",
+            "dashboard/shortener/edit.html",
             request,
             {"error": {"title": "Unknown Short URL", "message": f"Could not locate short URL"}},
         )
 
     if short_url["owner"] != request["user"]["id"]:
         return await render_template_async(
-            "dashboard/shortner/edit.html",
+            "dashboard/shortener/edit.html",
             request,
             {"error": {"title": "Missing Permissions", "message": f"You aren't the owner of this short URL"}},
         )
 
     if request.method == "POST":
         try:
-            args = await parser.parse(ShortnerEditSchema(), request, locations=["form"])
+            args = await parser.parse(ShortenerEditSchema(), request, locations=["form"])
         except ValidationError as e:
             return await render_template_async(
-                "dashboard/shortner/edit.html",
+                "dashboard/shortener/edit.html",
                 request,
                 {
                     "key_error": e.messages.get("key"),
@@ -176,7 +176,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
             )
         except UniqueViolationError as e:
             return await render_template_async(
-                "dashboard/shortner/edit.html",
+                "dashboard/shortener/edit.html",
                 request,
                 {
                     "key_error": ["A shortened URL with this key already exists"],
@@ -187,26 +187,26 @@ async def edit_short_url_(request: web.Request) -> web.Response:
                 status=400,
             )
 
-        return web.HTTPFound("/dashboard/shortner")
+        return web.HTTPFound("/dashboard/shortener")
 
     return await render_template_async(
-        "dashboard/shortner/edit.html",
+        "dashboard/shortener/edit.html",
         request,
         {"key": short_url["key"], "destination": short_url["destination"], "clicks": short_url["clicks"]},
     )
 
 
-@bp.get("/shortner/{key}/delete")
-@bp.post("/shortner/{key}/delete")
+@bp.get("/shortener/{key}/delete")
+@bp.post("/shortener/{key}/delete")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-@match_info_schema(ShortnerKeySchema)
+@match_info_schema(ShortenerKeySchema)
 async def delete_short_url_(request: web.Request) -> web.Response:
     key = request["match_info"]["key"]
 
     short_url = await select_short_url(request.app["db"], key=key)
     if short_url is None:
         return await render_template_async(
-            "dashboard/shortner/delete.html",
+            "dashboard/shortener/delete.html",
             request,
             {"error": {"title": "Unknown Short URL", "message": f"Could not locate short URL"}},
             status=404,
@@ -214,7 +214,7 @@ async def delete_short_url_(request: web.Request) -> web.Response:
 
     if short_url["owner"] != request["user"]["id"]:
         return await render_template_async(
-            "dashboard/shortner/delete.html",
+            "dashboard/shortener/delete.html",
             request,
             {"error": {"title": "Missing Permissions", "message": f"You aren't the owner of this short URL"}},
             status=409,
@@ -223,23 +223,23 @@ async def delete_short_url_(request: web.Request) -> web.Response:
     if request.method == "POST":
         await delete_short_url(request.app["db"], key=key)
 
-        return web.HTTPFound("/dashboard/shortner")
+        return web.HTTPFound("/dashboard/shortener")
 
     return await render_template_async(
-        "dashboard/shortner/delete.html",
+        "dashboard/shortener/delete.html",
         request,
         {"key": short_url["key"], "destination": short_url["destination"], "clicks": short_url["clicks"]},
     )
 
 
-@bp.get("/shortner/sharex")
+@bp.get("/shortener/sharex")
 @requires_auth(redirect=False, scopes=["api_key"])
-async def shortner_sharex_config(request: web.Request) -> web.Response:
+async def shortener_sharex_config(request: web.Request) -> web.Response:
     data = {
         "Version": "13.4.0",
         "DestinationType": "URLShortener",
         "RequestMethod": "POST",
-        "RequestURL": "https://mzf.one/api/shortner",
+        "RequestURL": "https://mzf.one/api/shortener",
         "Headers": {"x-api-key": request["user"]["api_key"]},
         "Body": "JSON",
         "Data": '{"destination":"$input$"}',
@@ -277,10 +277,10 @@ async def delete_session_(request: web.Request) -> web.Response:
     return web.HTTPFound("/dashboard/settings/sessions")
 
 
-@bp.get("/settings/shortner")
-@template("dashboard/settings/shortner.html")
+@bp.get("/settings/shortener")
+@template("dashboard/settings/shortener.html")
 @requires_auth(redirect=True, scopes="admin")
-async def shortner_settings(_: web.Request):
+async def shortener_settings(_: web.Request):
     return {}
 
 

@@ -1,7 +1,7 @@
-{% extends "dashboard/shortner/layout.html" %}
+{% extends "dashboard/shortener/layout.html" %}
 
 {% block title %}
-    URL Shortner
+    URL Shortener
 {% endblock title %}
 
 {% block main2 %}
@@ -57,7 +57,7 @@
                         <td>
                             <div class="buttons">
                                 <button class="button is-info is-small copy-btn" data-target="{{url['key']}}-key">Copy</button>
-                                <a href="/dashboard/shortner/{{url['key']}}/edit" class="button is-warning is-small">Edit</a>
+                                <a href="/dashboard/shortener/{{url['key']}}/edit" class="button is-warning is-small">Edit</a>
                             </div>
                         </td>
                     </tr>
@@ -68,19 +68,19 @@
     <nav class="pagination is-centered">
         <ul class="pagination-list">
             {% if current_page != 1 %}
-                <li><a class="pagination-link" href="/dashboard/shortner">1</a></li>
+                <li><a class="pagination-link" href="/dashboard/shortener">1</a></li>
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
                 {% if current_page != 2 %}
-                    <li><a class="pagination-link" href="/dashboard/shortner?page={{current_page - 1}}">{{current_page - 1}}</a></li>
+                    <li><a class="pagination-link" href="/dashboard/shortener?page={{current_page - 1}}">{{current_page - 1}}</a></li>
                 {% endif %}
             {% endif %}
             <li><a class="pagination-link is-current">{{current_page}}</a></li>
             {% if current_page != max_pages %}
                 {% if current_page != max_pages - 1 %}
-                    <li><a class="pagination-link" href="/dashboard/shortner?page={{current_page + 1}}">{{current_page + 1}}</a></li>
+                    <li><a class="pagination-link" href="/dashboard/shortener?page={{current_page + 1}}">{{current_page + 1}}</a></li>
                 {% endif %}
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
-                <li><a class="pagination-link" href="/dashboard/shortner?page={{max_pages}}">{{max_pages}}</a></li>
+                <li><a class="pagination-link" href="/dashboard/shortener?page={{max_pages}}">{{max_pages}}</a></li>
             {% endif %}
             </ul>
     </nav>
@@ -98,6 +98,6 @@
             </div>
         </div>
     </div>
-    <script src="/static/js/shortner.js" type="module"></script>
+    <script src="/static/js/shortener.js" type="module"></script>
     
 {% endblock %}

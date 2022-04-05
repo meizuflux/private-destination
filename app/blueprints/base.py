@@ -4,7 +4,7 @@ import aiohttp_jinja2
 from aiohttp import web
 from aiohttp_apispec import match_info_schema
 
-from app.models.shortner import ShortnerKeySchema
+from app.models.shortener import ShortenerKeySchema
 from app.routing import Blueprint
 from app.utils.auth import verify_user
 from app.utils.db import add_short_url_click, select_short_url_destination
@@ -21,13 +21,14 @@ async def login(request: web.Request) -> web.Response:
 
 
 @bp.get("/{key}")
-@match_info_schema(ShortnerKeySchema)
-async def shortner(request: web.Request) -> web.Response:
+@match_info_schema(ShortenerKeySchema)
+async def shortener(request: web.Request) -> web.Response:
     key = request["match_info"]["key"]
     destination = await select_short_url_destination(request.app["db"], key=key)
     if destination is None:
-        return web.Response(body="No shortened URL with that key was found.")
+        return web.Response(body="No shortened URL with that key was found.") # TODO: make a view for this
 
+    # run in background so that user can go to destination faster
     asyncio.get_event_loop().create_task(add_short_url_click(request.app["db"], key=key))
 
     return web.HTTPFound(destination)

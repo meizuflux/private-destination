@@ -14,5 +14,5 @@ build:
     node scripts/build.mjs && node scripts/code-editor.mjs
 
 watch:
-    yarn run chokidar "static/**/*.*" "templates/*.html" -c "node scripts/build.mjs" --initial
+    yarn run chokidar "static/**/*.*" "views/*.html" -c "node scripts/build.mjs" --initial
 

@@ -77,7 +77,7 @@ async def app_factory():
     app.router.add_routes(blueprints.api.shortner.bp)
     app.router.add_routes(blueprints.api.users.bp)
 
-    # default routes but it has to go last since it has a catch-all
+    # has to go last since it has a catch-all
     app.router.add_routes(blueprints.base.bp)
 
     setup_aiohttp_apispec(
@@ -92,7 +92,7 @@ async def app_factory():
     aiohttp_jinja2.setup(
         app,
         enable_async=True,
-        loader=FileSystemLoader("./templates"),
+        loader=FileSystemLoader("./views"),
         context_processors=[aiohttp_jinja2.request_processor, user_processor],
     )
     env = aiohttp_jinja2.get_env(app)

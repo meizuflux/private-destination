@@ -6,10 +6,17 @@
 
 {% block main2 %}
     <form action="/dashboard/shortener/create" method="POST" novalidate autocomplete="off">
-        <div class="field has-addons">
+        <div class="field">
             <label class="label">Alias</label>
-            <div class="control">
-                <input class="input {{'is-danger' if alias_error}}" type="text" placeholder="Alias of the URL" name="alias">
+            <div class="field has-addons">
+                <p class="control">
+                  <a class="button is-static">
+                    {{domain}}
+                  </a>
+                </p>
+                <div class="control is-expanded">
+                    <input class="input {{'is-danger' if alias_error}}" type="text" placeholder="Alias of the URL" name="alias">
+                </div>
             </div>
             {% if alias_error %}
                 <p class="help is-danger">{{alias_error[0]}}</p>
@@ -27,6 +34,7 @@
                 {% endif %}
             </div>
         </div>
+
         <div class="control">
             <button class="button is-info" type="submit">Shorten</button>
         </div>

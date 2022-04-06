@@ -18,7 +18,16 @@
         <form method="POST" novalidate>
             <div class="field">
                 <label class="label">Alias</label>
-                <input type="text" class="input {{'is-danger' if alias_error else ''}}" value="{{alias}}" name="alias" placeholder="Enter a unique identifier for the destination">
+                <div class="field has-addons">
+                    <p class="control">
+                      <a class="button is-static">
+                        {{domain}}
+                      </a>
+                    </p>
+                    <div class="control is-expanded">
+                        <input class="input {{'is-danger' if alias_error}}" type="text" placeholder="Alias of the URL" name="alias">
+                    </div>
+                </div>
                 {% if alias_error %}
                     <p class="help is-danger">{{alias_error[0]}}</p>
                 {% else %}

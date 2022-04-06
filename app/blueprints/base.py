@@ -26,7 +26,7 @@ async def shortener(request: web.Request) -> web.Response:
     alias = request["match_info"]["alias"]
     destination = await select_short_url_destination(request.app["db"], alias=alias)
     if destination is None:
-        return web.Response(body="No shortened URL with that alias was found.") # TODO: make a view for this
+        return web.Response(body="No shortened URL with that alias was found.")  # TODO: make a view for this
 
     # run in background so that user can go to destination faster
     asyncio.get_event_loop().create_task(add_short_url_click(request.app["db"], alias=alias))

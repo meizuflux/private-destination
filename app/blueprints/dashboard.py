@@ -16,10 +16,10 @@ from app.models.auth import (
     UsersFilterSchema,
 )
 from app.models.shortener import (
+    ShortenerAliasSchema,
     ShortenerCreateSchema,
     ShortenerEditSchema,
     ShortenerFilterSchema,
-    ShortenerAliasSchema,
 )
 from app.routing import Blueprint
 from app.utils import Status
@@ -122,7 +122,9 @@ async def create_short_url_(request: web.Request) -> web.Response:
 
         return web.HTTPFound("/dashboard/shortener")
 
-    return await render_template_async("dashboard/shortener/create.html", request, {})
+    return await render_template_async(
+        "dashboard/shortener/create.html", request, {"domain": f"https://{request.app['config']['domain']}/"}
+    )
 
 
 @bp.get("/shortener/{alias}/edit")
@@ -192,7 +194,12 @@ async def edit_short_url_(request: web.Request) -> web.Response:
     return await render_template_async(
         "dashboard/shortener/edit.html",
         request,
-        {"alias": short_url["alias"], "destination": short_url["destination"], "clicks": short_url["clicks"]},
+        {
+            "alias": short_url["alias"],
+            "destination": short_url["destination"],
+            "clicks": short_url["clicks"],
+            "domain": f"https://{request.app['config']['domain']}/",
+        },
     )
 
 

@@ -28,7 +28,7 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
         max_age=60 * 60 * 24,  # one day
         httponly=True,
         secure=not request.app["dev"],
-        samesite="strict", # using this lets me not need to setup csrf and whatnot
+        samesite="strict",  # using this lets me not need to setup csrf and whatnot
     )
 
     return res

@@ -12,7 +12,7 @@ from sys import argv
 from passlib.hash import pbkdf2_sha512
 from yaml import safe_load
 
-from app.blueprints.auth import generate_api_key
+from app.utils.auth import generate_api_key
 from app.utils.db import insert_user
 
 

@@ -14,7 +14,7 @@
                 <div class="control">
                     <div class="select">
                         <select name="sortby" title="Sort By">
-                            <option value="key" {% if sortby == "key" %}selected{% endif %}>Key</option>
+                            <option value="alias" {% if sortby == "alias" %}selected{% endif %}>Alias</option>
                             <option value="destination" {% if sortby == "destination" %}selected{% endif %}>Destination</option>
                             <option value="clicks" {% if sortby == "clicks" %}selected{% endif %}>Clicks</option>
                             <option value="creation_date" {% if sortby == "creation_date" or not sortby %}selected{% endif %}>Creation date</option>
@@ -40,7 +40,7 @@
         <table class="table is-striped is-hoverable is-fullwidth is-bordered is-narrow">
             <thead>
                 <tr>
-                    <th>Key</th>
+                    <th>Alias</th>
                     <th>Destination</th>
                     <th>Clicks</th>
                     <th>Creation Date</th>
@@ -50,14 +50,14 @@
             <tbody>
                 {% for url in values %}
                     <tr>
-                        <td><a href="/{{url['key']}}" id="{{url['key']}}-key" value="{{url['key']}}">{{truncate(url["key"], 15)}}</a></td>
+                        <td><a href="/{{url['alias']}}" id="{{url['alias']}}-alias" value="{{url['alias']}}">{{truncate(url["alias"], 15)}}</a></td>
                         <td><a href="{{url['destination']}}">{{truncate(url['destination'], 43)}}</a></td>
                         <td><code>{{url['clicks']}}</code></td>
                         <td>{{url["creation_date"].strftime("%d %B %Y at %H:%M")}}</td>
                         <td>
                             <div class="buttons">
-                                <button class="button is-info is-small copy-btn" data-target="{{url['key']}}-key">Copy</button>
-                                <a href="/dashboard/shortener/{{url['key']}}/edit" class="button is-warning is-small">Edit</a>
+                                <button class="button is-info is-small copy-btn" data-target="{{url['alias']}}-alias">Copy</button>
+                                <a href="/dashboard/shortener/{{url['alias']}}/edit" class="button is-warning is-small">Edit</a>
                             </div>
                         </td>
                     </tr>

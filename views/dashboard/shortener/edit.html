@@ -17,12 +17,12 @@
     {% else %}
         <form method="POST" novalidate>
             <div class="field">
-                <label class="label">Key</label>
-                <input type="text" class="input {{'is-danger' if key_error else ''}}" value="{{key}}" name="key" placeholder="Enter a unique identifier for the destination">
-                {% if key_error %}
-                    <p class="help is-danger">{{key_error[0]}}</p>
+                <label class="label">Alias</label>
+                <input type="text" class="input {{'is-danger' if alias_error else ''}}" value="{{alias}}" name="alias" placeholder="Enter a unique identifier for the destination">
+                {% if alias_error %}
+                    <p class="help is-danger">{{alias_error[0]}}</p>
                 {% else %}
-                    <p class="help">Leave this field blank to generate a random key</p>
+                    <p class="help">Leave this field blank to generate a random alias</p>
                 {% endif %}
             </div>
 
@@ -45,7 +45,7 @@
             <div class="field">
                 <div class="buttons">
                     <button class="button is-info" type="submit">Save</button>
-                    <a href="/dashboard/shortener/{{key}}/delete" class="button is-danger">Delete</a>
+                    <a href="/dashboard/shortener/{{alias}}/delete" class="button is-danger">Delete</a>
                 </div>
             </div>
         </form>

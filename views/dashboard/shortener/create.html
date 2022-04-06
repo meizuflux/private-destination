@@ -6,17 +6,18 @@
 
 {% block main2 %}
     <form action="/dashboard/shortener/create" method="POST" novalidate autocomplete="off">
-        <div class="field">
-            <label class="label">Key</label>
+        <div class="field has-addons">
+            <label class="label">Alias</label>
             <div class="control">
-                <input class="input {{'is-danger' if key_error}}" type="text" placeholder="Something to identify the URL" name="key">
+                <input class="input {{'is-danger' if alias_error}}" type="text" placeholder="Alias of the URL" name="alias">
             </div>
-            {% if key_error %}
-                <p class="help is-danger">{{key_error[0]}}</p>
+            {% if alias_error %}
+                <p class="help is-danger">{{alias_error[0]}}</p>
             {% else %}
-                <p class="help">Leave this field blank to generate a random key</p>
+                <p class="help">Leave this field blank to generate a random alias</p>
             {% endif %}
         </div>
+
         <div class="field">
             <label class="label">URL</label>
             <div class="control">

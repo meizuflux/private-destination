@@ -18,7 +18,7 @@ async def select_short_urls(conn: ConnOrPool, *, sortby: str, direction: str, ow
     # sort and direction weren't working as params to get passed so they have to go directly into the query
     # this is fine as they both are sanitized with the api-spec
     query = f"""
-        SELECT key, destination, clicks, creation_date 
+        SELECT alias, destination, clicks, creation_date 
         FROM urls 
         WHERE owner = $1
         ORDER BY {sortby} {direction.upper()}
@@ -29,41 +29,41 @@ async def select_short_urls(conn: ConnOrPool, *, sortby: str, direction: str, ow
 
 
 async def select_short_url_count(conn: ConnOrPool, *, owner: int) -> int:
-    return await conn.fetchval("SELECT count(key) FROM urls WHERE owner = $1", owner)
+    return await conn.fetchval("SELECT count(alias) FROM urls WHERE owner = $1", owner)
 
 
-async def insert_short_url(conn: ConnOrPool, *, owner: int, key: str, destination: str):
+async def insert_short_url(conn: ConnOrPool, *, owner: int, alias: str, destination: str):
     return await conn.fetchrow(
-        "INSERT INTO urls (owner, key, destination) VALUES ($1, $2, $3)", owner, key, destination
+        "INSERT INTO urls (owner, alias, destination) VALUES ($1, $2, $3)", owner, alias, destination
     )
 
 
-async def update_short_url(conn: ConnOrPool, *, key: str, new_key: str, destination: str, reset_clicks: bool):
-    query = f"UPDATE urls SET key = $1, destination = $2"
+async def update_short_url(conn: ConnOrPool, *, alias: str, new_alias: str, destination: str, reset_clicks: bool):
+    query = f"UPDATE urls SET alias = $1, destination = $2"
     if reset_clicks is True:
         query += ", clicks = 0"
-    query += " WHERE key = $3"
-    return await conn.execute(query, new_key, destination, key)
+    query += " WHERE alias = $3"
+    return await conn.execute(query, new_alias, destination, alias)
 
 
-async def delete_short_url(conn: ConnOrPool, *, key: str):
-    return await conn.execute("DELETE FROM urls WHERE key = $1", key)
+async def delete_short_url(conn: ConnOrPool, *, alias: str):
+    return await conn.execute("DELETE FROM urls WHERE alias = $1", alias)
 
 
-async def select_short_url_exists(conn: ConnOrPool, *, key: str):
-    return await conn.fetchval("SELECT EXISTS(SELECT 1 FROM urls WHERE key = $1)", key)
+async def select_short_url_exists(conn: ConnOrPool, *, alias: str):
+    return await conn.fetchval("SELECT EXISTS(SELECT 1 FROM urls WHERE alias = $1)", alias)
 
 
-async def select_short_url_destination(conn: ConnOrPool, *, key: str):
-    return await conn.fetchval("SELECT destination FROM urls WHERE key = $1", key)
+async def select_short_url_destination(conn: ConnOrPool, *, alias: str):
+    return await conn.fetchval("SELECT destination FROM urls WHERE alias = $1", alias)
 
 
-async def select_short_url(conn: ConnOrPool, *, key: str):
-    return await conn.fetchrow("SELECT owner, key, destination, clicks FROM urls WHERE key = $1", key)
+async def select_short_url(conn: ConnOrPool, *, alias: str):
+    return await conn.fetchrow("SELECT owner, alias, destination, clicks FROM urls WHERE alias = $1", alias)
 
 
-async def add_short_url_click(conn: ConnOrPool, *, key: str):
-    return await conn.execute("UPDATE urls SET clicks = clicks + 1 WHERE key = $1", key)
+async def add_short_url_click(conn: ConnOrPool, *, alias: str):
+    return await conn.execute("UPDATE urls SET clicks = clicks + 1 WHERE alias = $1", alias)
 
 
 async def insert_user(conn: ConnOrPool, *, username: str, email: str, api_key: str, hashed_password: str):

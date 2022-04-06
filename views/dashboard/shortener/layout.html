@@ -7,11 +7,11 @@
         <ul>
             <li class="{{'is-active' if request.rel_url.path == '/dashboard/shortener' }}"><a href="/dashboard/shortener">View All</a></li>
             <li class="{{'is-active' if request.rel_url.path == '/dashboard/shortener/create' }}"><a href="/dashboard/shortener/create">Create</a></li>
-            {% if key %}
-                {% if request.rel_url.path == "/dashboard/shortener/" + key + "/edit" %}
+            {% if alias %}
+                {% if request.rel_url.path == "/dashboard/shortener/" + alias + "/edit" %}
                     <li class="is-active"><a>Edit</a></li>
                 {% endif %}
-                {% if request.rel_url.path == "/dashboard/shortener/" + key + "/delete" %}
+                {% if request.rel_url.path == "/dashboard/shortener/" + alias + "/delete" %}
                     <li class="is-active"><a>Delete</a></li>
                 {% endif %}
             {% endif %}

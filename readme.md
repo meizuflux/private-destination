@@ -29,7 +29,6 @@ email with `sendinblue`
 - something similar to mystbin/pastebin
 - todo list
 - log ip with session
-- rename key in shortener to `alias`
 - add domain to left of shortner create thingy
 - add a few more limits on shortener alias
 - email verification

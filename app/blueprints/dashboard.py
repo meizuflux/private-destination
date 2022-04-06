@@ -8,7 +8,7 @@ from aiohttp_jinja2 import render_template_async, template
 from asyncpg import UniqueViolationError
 from marshmallow import ValidationError
 
-from app.blueprints.api.shortener import generate_url_key
+from app.blueprints.api.shortener import generate_url_alias
 from app.models.auth import (
     SessionSchema,
     UserIDSchema,
@@ -19,7 +19,7 @@ from app.models.shortener import (
     ShortenerCreateSchema,
     ShortenerEditSchema,
     ShortenerFilterSchema,
-    ShortenerKeySchema,
+    ShortenerAliasSchema,
 )
 from app.routing import Blueprint
 from app.utils import Status
@@ -97,25 +97,25 @@ async def create_short_url_(request: web.Request) -> web.Response:
                 "dashboard/shortener/create.html",
                 request,
                 {
-                    "key_error": e.messages.get("key"),
+                    "alias_error": e.messages.get("alias"),
                     "url_error": e.messages.get("destination"),
                 },
                 status=400,
             )
 
-        key = args.get("key")
-        if key is None or key == "":
-            key = await generate_url_key(request.app["db"])
+        alias = args.get("alias")
+        if alias is None or alias == "":
+            alias = await generate_url_alias(request.app["db"])
         destination = args.get("destination")
 
         try:
-            await insert_short_url(request.app["db"], owner=request["user"]["id"], key=key, destination=destination)
+            await insert_short_url(request.app["db"], owner=request["user"]["id"], alias=alias, destination=destination)
         except UniqueViolationError:
             return await render_template_async(
                 "dashboard/shortener/create.html",
                 request,
                 {
-                    "key_error": ["A shortened URL with this key already exists"],
+                    "alias_error": ["A shortened URL with this alias already exists"],
                 },
                 status=400,
             )
@@ -125,14 +125,14 @@ async def create_short_url_(request: web.Request) -> web.Response:
     return await render_template_async("dashboard/shortener/create.html", request, {})
 
 
-@bp.get("/shortener/{key}/edit")
-@bp.post("/shortener/{key}/edit")
+@bp.get("/shortener/{alias}/edit")
+@bp.post("/shortener/{alias}/edit")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-@match_info_schema(ShortenerKeySchema())
+@match_info_schema(ShortenerAliasSchema())
 async def edit_short_url_(request: web.Request) -> web.Response:
-    key = request["match_info"]["key"]
+    alias = request["match_info"]["alias"]
 
-    short_url = await select_short_url(request.app["db"], key=key)
+    short_url = await select_short_url(request.app["db"], alias=alias)
     if short_url is None:
         return await render_template_async(
             "dashboard/shortener/edit.html",
@@ -155,22 +155,22 @@ async def edit_short_url_(request: web.Request) -> web.Response:
                 "dashboard/shortener/edit.html",
                 request,
                 {
-                    "key_error": e.messages.get("key"),
+                    "alias_error": e.messages.get("alias"),
                     "destination_error": e.messages.get("destination"),
                 },
                 status=400,
             )
 
-        new_key = args.get("key")
-        if new_key is None or new_key == "":
-            new_key = await generate_url_key(request.app["db"])
+        new_alias = args.get("alias")
+        if new_alias is None or new_alias == "":
+            new_alias = await generate_url_alias(request.app["db"])
         destination = args["destination"]
 
         try:
             await update_short_url(
                 request.app["db"],
-                key=key,
-                new_key=new_key,
+                alias=alias,
+                new_alias=new_alias,
                 destination=destination,
                 reset_clicks=args.get("reset_clicks", False),
             )
@@ -179,8 +179,8 @@ async def edit_short_url_(request: web.Request) -> web.Response:
                 "dashboard/shortener/edit.html",
                 request,
                 {
-                    "key_error": ["A shortened URL with this key already exists"],
-                    "key": new_key,
+                    "alias_error": ["A shortened URL with this alias already exists"],
+                    "alias": new_alias,
                     "destination": destination,
                     "clicks": None,
                 },
@@ -192,18 +192,18 @@ async def edit_short_url_(request: web.Request) -> web.Response:
     return await render_template_async(
         "dashboard/shortener/edit.html",
         request,
-        {"key": short_url["key"], "destination": short_url["destination"], "clicks": short_url["clicks"]},
+        {"alias": short_url["alias"], "destination": short_url["destination"], "clicks": short_url["clicks"]},
     )
 
 
-@bp.get("/shortener/{key}/delete")
-@bp.post("/shortener/{key}/delete")
+@bp.get("/shortener/{alias}/delete")
+@bp.post("/shortener/{alias}/delete")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-@match_info_schema(ShortenerKeySchema)
+@match_info_schema(ShortenerAliasSchema)
 async def delete_short_url_(request: web.Request) -> web.Response:
-    key = request["match_info"]["key"]
+    alias = request["match_info"]["alias"]
 
-    short_url = await select_short_url(request.app["db"], key=key)
+    short_url = await select_short_url(request.app["db"], alias=alias)
     if short_url is None:
         return await render_template_async(
             "dashboard/shortener/delete.html",
@@ -221,14 +221,14 @@ async def delete_short_url_(request: web.Request) -> web.Response:
         )
 
     if request.method == "POST":
-        await delete_short_url(request.app["db"], key=key)
+        await delete_short_url(request.app["db"], alias=alias)
 
         return web.HTTPFound("/dashboard/shortener")
 
     return await render_template_async(
         "dashboard/shortener/delete.html",
         request,
-        {"key": short_url["key"], "destination": short_url["destination"], "clicks": short_url["clicks"]},
+        {"alias": short_url["alias"], "destination": short_url["destination"], "clicks": short_url["clicks"]},
     )
 
 
@@ -243,7 +243,7 @@ async def shortener_sharex_config(request: web.Request) -> web.Response:
         "Headers": {"x-api-key": request["user"]["api_key"]},
         "Body": "JSON",
         "Data": '{"destination":"$input$"}',
-        "URL": "https://mzf.one/$json:key$",
+        "URL": "https://mzf.one/$json:alias$",
         "ErrorMessage": "$json:message$",
     }
 

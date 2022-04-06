@@ -1,0 +1,12 @@
+{% extends "dashboard/settings/layout.html" %}
+
+{% block name %}
+    Account
+{% endblock %}
+
+{% block main2 %}
+    <div class="buttons has-addons">
+        <a href="/dashboard/users/{{user['id']}}/edit" class="button is-warning">Edit Account</a>
+        <a href="/dashboard/users/{{user['id']}}/delete" class="button is-danger">Delete Account</a>
+    </div>
+{% endblock %}

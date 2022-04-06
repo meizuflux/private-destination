@@ -8,7 +8,7 @@ from aiohttp_jinja2 import render_template_async, template
 from asyncpg import UniqueViolationError
 from marshmallow import ValidationError
 
-from app.blueprints.api.shortener import generate_url_alias
+from app.utils.shortener import generate_url_alias
 from app.models.auth import (
     SessionSchema,
     UserIDSchema,
@@ -23,7 +23,7 @@ from app.models.shortener import (
 )
 from app.routing import Blueprint
 from app.utils import Status
-from app.utils.auth import create_user, requires_auth
+from app.utils.auth import create_user, generate_api_key, requires_auth
 from app.utils.db import (
     delete_session,
     delete_short_url,
@@ -35,6 +35,7 @@ from app.utils.db import (
     select_short_urls,
     select_user,
     select_users,
+    update_api_key,
     update_short_url,
     update_user,
 )
@@ -261,10 +262,30 @@ async def shortener_sharex_config(request: web.Request) -> web.Response:
 
 
 @bp.get("/settings")
-@template("dashboard/settings/index.html")
+@template("dashboard/settings/account.html")
 @requires_auth(redirect=True, scopes=["id", "api_key", "username", "admin"], needs_authorization=False)
-async def general_settings(_: web.Request):
+async def account_settings(_: web.Request):
     return {}
+
+
+@bp.get("/settings/api_key")
+@requires_auth(redirect=False, scopes=["api_key", "admin"])
+@template("dashboard/settings/api_key/index.html")
+async def api_key_settings(_: web.Request):
+    return {}
+
+
+@bp.get("/settings/api_key/regenerate")
+@bp.post("/settings/api_key/regenerate")
+@requires_auth(redirect=False, scopes=["id", "api_key", "admin"])
+async def regen_api_key(request: web.Request) -> web.Response:
+    if request.method == "POST":
+        async with request.app["db"].acquire() as conn:
+            await update_api_key(request.app["db"], user_id=request["user"]["id"], api_key=await generate_api_key(conn))
+
+        return web.HTTPFound("/dashboard/settings/api_key")
+
+    return await render_template_async("/dashboard/settings/api_key/regen.html", request, {})
 
 
 @bp.get("/settings/sessions")

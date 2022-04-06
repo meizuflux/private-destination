@@ -1,0 +1,17 @@
+{% extends 'dashboard/layout.html' %}
+
+{% block title %}
+    Regen API Key
+{% endblock %}
+
+{% block main %}
+    <h1 class="title">Regenerate API Key</h1>
+    <h2 class="subtitle">Are you sure that you want to regenerate your API key?</h2>
+    <p class="mb-3">This will revoke your currently active API Key. You cannot undo this action.</p>
+
+    <form method="POST">
+        <div class="field">
+            <button class="button is-warning" type="submit">Yes, I would like to regenerate my API key</button>
+        </div>
+    </form>
+{% endblock  %}

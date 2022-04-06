@@ -13,7 +13,7 @@ for (let copyBtn of <HTMLButtonElement[]>document.getElementsByClassName("copy-b
                     copyBtn.classList.add("is-info")
                 }, 1000)
             },
-            (r) => alert('Could not copy codeblock:\n' + r.toString())
+            (r) => alert('Could not copy shortened URL:\n' + r.toString())
         )
     })
 }

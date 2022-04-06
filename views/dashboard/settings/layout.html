@@ -1,12 +1,20 @@
 {% extends 'dashboard/layout.html' %}
 
+{% block name %}
+{% endblock name %}
+
+{% block title %}
+    {{self.name()}} Settings
+{% endblock title %}
+
 {% block main %}
-    <div class="title mb-3">Settings</div>
+    <div class="title mb-3">{{self.name()}} Settings</div>
 
     <div class="tabs mb-3">
         <ul>
-            <li class="{{'is-active' if request.rel_url.path == '/dashboard/settings' }}"><a href="/dashboard/settings">General</a></li>
+            <li class="{{'is-active' if request.rel_url.path == '/dashboard/settings' }}"><a href="/dashboard/settings">Account</a></li>
             <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/sessions') }}"><a href="/dashboard/settings/sessions">Sessions</a></li>
+            <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/api_key') }}"><a href="/dashboard/settings/api_key">API Key</a></li>
             {% if user["authorized"] is true %}
                 <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/shortener') }}"><a href="/dashboard/settings/shortener">Shortener</a></li>
             {% endif %}

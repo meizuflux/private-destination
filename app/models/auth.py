@@ -7,11 +7,10 @@ class LoginSchema(Schema):
 
 
 class SignUpSchema(LoginSchema):
-    username = fields.String(validate=validate.Length(3, 32), required=True)
+    ...
 
 
 class UsersEditSchema(Schema):
-    username = fields.String(required=True)
     email = fields.Email(required=True)
     authorized = fields.Boolean(required=True)
 
@@ -26,4 +25,4 @@ class UserIDSchema(Schema):
 
 class UsersFilterSchema(Schema):
     direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
-    sortby = fields.String(validate=validate.OneOf({"username", "id", "authorized", "email", "joined"}))
+    sortby = fields.String(validate=validate.OneOf({"id", "authorized", "email", "joined"}))

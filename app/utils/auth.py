@@ -112,10 +112,7 @@ async def create_user(
         args = await parser.parse(SignUpSchema(), request, locations=["form"])
     except ValidationError as e:
         ctx = {
-            "username_error": e.messages.get("username"),
             "email_error": e.messages.get("email"),
-            "password_error": e.messages.get("password"),
-            "username": e.data.get("username"),
             "email": e.data.get("email"),
             "password": e.data.get("password"),
         }
@@ -131,7 +128,6 @@ async def create_user(
         async with request.app["db"].acquire() as conn:
             user_id = await insert_user(
                 conn,
-                username=args["username"],
                 email=args["email"],
                 api_key=await generate_api_key(conn),
                 hashed_password=pbkdf2_sha512.hash(args["password"]),

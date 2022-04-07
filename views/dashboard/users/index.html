@@ -14,7 +14,6 @@ Manage Users
                 <div class="control">
                     <div class="select">
                         <select name="sortby" title="Sort By">
-                            <option value="username" {% if sortby == "username" %}selected{% endif %}>Username</option>
                             <option value="email" {% if sortby == "email" %}selected{% endif %}>Email</option>
                             <option value="id" {% if sortby == "id" %}selected{% endif %}>User ID</option>
                             <option value="authorized" {% if sortby == "authorized" %}selected{% endif %}>Authorized</option>
@@ -42,7 +41,6 @@ Manage Users
         <table class="table is-striped is-hoverable is-fullwidth is-bordered is-narrow">
             <thead>
                 <tr>
-                    <th>Username</th>
                     <th>Email</th>
                     <th>User ID</th>
                     <th>Authorized</th>
@@ -53,7 +51,6 @@ Manage Users
             <tbody>
                 {% for i, u in enumerate(users, start=1) %}
                     <tr>
-                        <td>{{truncate(u["username"], 15)}}</td>
                         <td>{{u["email"]}}</td>
                         <td><code>{{u["id"]}}</code></a></td>
                         <td><code>{{u["authorized"]}}</code></td>

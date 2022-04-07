@@ -28,7 +28,6 @@ async def main():
 
     print("Creating admin user:")
 
-    username = input("Enter username: ")
     email = input("Enter email: ")
 
     password = getpass("Enter password: ")
@@ -46,7 +45,6 @@ async def main():
     try:
         user_id = await insert_user(
             pool,
-            username=username,
             email=email,
             api_key=await generate_api_key(pool),
             hashed_password=pw_hash,

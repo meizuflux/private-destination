@@ -27,14 +27,6 @@
             </div>
 
             <div class="field">
-                <label class="label">Username</label>
-                <input class="input {{'is-danger' if username_error else ''}}" type="text" value="{{username}}" name="username">
-                {% if username_error %}
-                    <p class="help is-danger">{{username_error[0]}}</p>
-                {% endif %}
-            </div>
-
-            <div class="field">
                 <label class="label">Email</label>
                 <input class="input {{'is-danger' if email_error else ''}}" type="email" value="{{email}}" name="email">
                 {% if email_error %}

@@ -3,15 +3,6 @@
 {% block main2 %}
     <form method="POST">
         <div class="field">
-            <label class="label">Username</label>
-            <div class="control">
-                <input id="username" name="username" class="input {{'is-danger' if username_error else ''}}" type="text" placeholder="A unique username">
-                {% if username_error %}
-                    <p class="help is-danger">{{username_error[0]}}</p>
-                {% endif %}
-            </div>
-        </div>
-        <div class="field">
             <label class="label">Email</label>
             <div class="control">
                 <input id="email" name="email" class="input {{'is-danger' if email_error else ''}}" type="text" placeholder="User's email">

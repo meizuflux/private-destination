@@ -47,7 +47,7 @@ bp = Blueprint("/dashboard")
 
 
 @bp.get("")
-@requires_auth(redirect=True, scopes=["id", "username", "admin"], needs_authorization=False)
+@requires_auth(redirect=True, scopes=["id", "admin"], needs_authorization=False)
 @template("dashboard/index.html")
 async def index(request: web.Request):
     url_count = await select_short_url_count(request.app["db"], owner=request["user"]["id"])
@@ -280,7 +280,7 @@ async def shortener_sharex_config(request: web.Request) -> web.Response:
 
 @bp.get("/settings")
 @template("dashboard/settings/account.html")
-@requires_auth(redirect=True, scopes=["id", "api_key", "username", "admin"], needs_authorization=False)
+@requires_auth(redirect=True, scopes=["id", "api_key", "admin"], needs_authorization=False)
 async def account_settings(_: web.Request):
     return {}
 
@@ -380,10 +380,8 @@ async def edit_user(request: web.Request) -> web.Response:
                 "dashboard/users/edit.html",
                 request,
                 {
-                    "username_error": e.messages.get("username"),
                     "email_error": e.messages.get("email"),
                     "id": user["id"],
-                    "username": user["username"],
                     "email": user["email"],
                     "authorized": user["authorized"],
                     "admin": user["admin"],
@@ -397,7 +395,6 @@ async def edit_user(request: web.Request) -> web.Response:
             await update_user(
                 request.app["db"],
                 user_id=user_id,
-                username=args["username"],
                 email=args["email"],
                 authorized=args["authorized"],
             )
@@ -408,7 +405,6 @@ async def edit_user(request: web.Request) -> web.Response:
                 {
                     "email_error": ["A user with this email already exists"],
                     "id": user["id"],
-                    "username": user["username"],
                     "email": user["email"],
                     "authorized": user["authorized"],
                     "admin": user["admin"],
@@ -425,7 +421,6 @@ async def edit_user(request: web.Request) -> web.Response:
         request,
         {
             "id": user["id"],
-            "username": user["username"],
             "email": user["email"],
             "authorized": user["authorized"],
             "admin": user["admin"],
@@ -478,7 +473,7 @@ async def delete_user_(request: web.Request) -> web.Response:
     return await render_template_async(
         "dashboard/users/delete.html",
         request,
-        {"id": user["id"], "username": user["username"], "email": user["email"], "is_self": is_self},
+        {"id": user["id"], "email": user["email"], "is_self": is_self},
     )
 
 

@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    username TEXT NOT NULL,
     email TEXT UNIQUE,
     password TEXT,
     api_key TEXT,

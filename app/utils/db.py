@@ -66,22 +66,22 @@ async def add_short_url_click(conn: ConnOrPool, *, alias: str):
     return await conn.execute("UPDATE urls SET clicks = clicks + 1 WHERE alias = $1", alias)
 
 
-async def insert_user(conn: ConnOrPool, *, username: str, email: str, api_key: str, hashed_password: str):
+async def insert_user(conn: ConnOrPool, *, email: str, api_key: str, hashed_password: str):
     query = """
-        INSERT INTO users (username, email, password, api_key)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO users (email, password, api_key)
+        VALUES ($1, $2, $3)
         RETURNING id
     """
-    return await conn.fetchval(query, username, email, hashed_password, api_key)
+    return await conn.fetchval(query, email, hashed_password, api_key)
 
 
-async def update_user(conn: ConnOrPool, *, user_id: int, username: str, email: str, authorized: bool):
+async def update_user(conn: ConnOrPool, *, user_id: int, email: str, authorized: bool):
     query = """
         UPDATE users
-        SET username = $1, email = $2, authorized = $3
-        WHERE id = $4
+        SET email = $1, authorized = $2
+        WHERE id = $3
     """
-    return await conn.execute(query, username, email, authorized, user_id)
+    return await conn.execute(query, email, authorized, user_id)
 
 
 async def delete_user(conn: ConnOrPool, *, user_id: int):
@@ -91,7 +91,7 @@ async def delete_user(conn: ConnOrPool, *, user_id: int):
 async def select_users(conn: ConnOrPool, *, sortby: str, direction: str):
     query = f"""
         SELECT
-            id, username, email, joined, authorized
+            id, email, joined, authorized
         FROM
             users
         ORDER BY {sortby} {direction.upper()}

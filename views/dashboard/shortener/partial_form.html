@@ -1,0 +1,50 @@
+<form method="POST" novalidate autocomplete="off">
+    <div class="field">
+        <label class="label">Alias</label>
+        <div class="field has-addons">
+            <p class="control">
+              <a class="button is-static">
+                {{domain}}
+              </a>
+            </p>
+            <div class="control is-expanded">
+                <input class="input {{'is-danger' if alias_error}}" type="text" placeholder="Alias of the URL" name="alias" value="{{alias}}">
+            </div>
+        </div>
+        {% if alias_error %}
+            <p class="help is-danger">{{alias_error[0]}}</p>
+        {% else %}
+            <p class="help">Leave this field blank to generate a random alias</p>
+        {% endif %}
+    </div>
+
+    <div class="field">
+        <label class="label">URL</label>
+        <div class="control">
+            <input class="input {{'is-danger' if url_error}}" type="url" placeholder="Your long URL" name="destination" value="{{destination}}">
+            {% if url_error %}
+                <p class="help is-danger">{{url_error[0]}}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if type == "edit" %}
+        <div class="field">
+            <label class="checkbox">
+                <input type="checkbox" name="reset_clicks" />
+                Reset clicks {% if clicks is not none %}(Current count <code>{{clicks}}</code>){% endif %}
+            </label>
+        </div>
+    {% endif %}
+
+    <div class="control">
+        {% if type == "create" %}
+            <button class="button is-info" type="submit">Create</button>
+        {% elif type == "edit" %}
+            <div class="buttons">
+                <button class="button is-info" type="submit">Save</button>
+                <a href="/dashboard/shortener/{{alias}}/delete" class="button is-danger">Delete</a>
+            </div>
+        {% endif %}
+    </div>
+</form>

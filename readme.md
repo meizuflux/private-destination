@@ -31,3 +31,4 @@ email with `sendinblue`
 - log ip with session
 - add a few more limits on shortener alias
 - email verification
+- remove need for username

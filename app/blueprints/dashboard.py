@@ -100,6 +100,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
                 {
                     "alias_error": e.messages.get("alias"),
                     "url_error": e.messages.get("destination"),
+                    "domain": f"https://{request.app['config']['domain']}/",
                 },
                 status=400,
             )
@@ -117,6 +118,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
                 request,
                 {
                     "alias_error": ["A shortened URL with this alias already exists"],
+                    "domain": f"https://{request.app['config']['domain']}/",
                 },
                 status=400,
             )
@@ -140,14 +142,26 @@ async def edit_short_url_(request: web.Request) -> web.Response:
         return await render_template_async(
             "dashboard/shortener/edit.html",
             request,
-            {"error": {"title": "Unknown Short URL", "message": f"Could not locate short URL"}},
+            {
+                "error": {
+                    "title": "Unknown Short URL",
+                    "message": f"Could not locate short URL"
+                },
+                "domain": f"https://{request.app['config']['domain']}/",
+            },
         )
 
     if short_url["owner"] != request["user"]["id"]:
         return await render_template_async(
             "dashboard/shortener/edit.html",
             request,
-            {"error": {"title": "Missing Permissions", "message": f"You aren't the owner of this short URL"}},
+            {
+                "error": {
+                    "title": "Missing Permissions",
+                    "message": f"You aren't the owner of this short URL"
+                },
+                "domain": f"https://{request.app['config']['domain']}/",
+            },
         )
 
     if request.method == "POST":
@@ -160,6 +174,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
                 {
                     "alias_error": e.messages.get("alias"),
                     "destination_error": e.messages.get("destination"),
+                    "domain": f"https://{request.app['config']['domain']}/",
                 },
                 status=400,
             )
@@ -186,6 +201,8 @@ async def edit_short_url_(request: web.Request) -> web.Response:
                     "alias": new_alias,
                     "destination": destination,
                     "clicks": None,
+                    "domain": f"https://{request.app['config']['domain']}/",
+
                 },
                 status=400,
             )

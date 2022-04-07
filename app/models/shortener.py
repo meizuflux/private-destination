@@ -1,4 +1,15 @@
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, validate, ValidationError
+
+
+def none_or_len(name: str, min: int, max: int):
+    def validator(string: str):
+        if string != "": # it won't be None, it will be ""
+            if len(string) < min:
+                raise ValidationError(f"Length must be between {min} and {max} or empty")
+            if len(string) > max:
+                raise ValidationError(f"Length must be between {min} and {max} or empty")
+
+    return validator
 
 
 class ShortenerAliasSchema(Schema):
@@ -12,11 +23,11 @@ class ShortenerFilterSchema(Schema):
 
 
 class ShortenerEditSchema(Schema):
-    alias = fields.String()
-    destination = fields.URL(required=True)
+    alias = fields.String(validate=none_or_len("alias", 3, 64))
+    destination = fields.URL(required=True, schemes={"http", "https"})
     reset_clicks = fields.Boolean()
 
 
 class ShortenerCreateSchema(Schema):
-    alias = fields.String()
+    alias = fields.String(validate=none_or_len("alias", 3, 64))
     destination = fields.URL(required=True, schemes={"http", "https"})

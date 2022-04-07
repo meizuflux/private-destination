@@ -5,38 +5,7 @@
 {% endblock title %}
 
 {% block main2 %}
-    <form action="/dashboard/shortener/create" method="POST" novalidate autocomplete="off">
-        <div class="field">
-            <label class="label">Alias</label>
-            <div class="field has-addons">
-                <p class="control">
-                  <a class="button is-static">
-                    {{domain}}
-                  </a>
-                </p>
-                <div class="control is-expanded">
-                    <input class="input {{'is-danger' if alias_error}}" type="text" placeholder="Alias of the URL" name="alias">
-                </div>
-            </div>
-            {% if alias_error %}
-                <p class="help is-danger">{{alias_error[0]}}</p>
-            {% else %}
-                <p class="help">Leave this field blank to generate a random alias</p>
-            {% endif %}
-        </div>
-
-        <div class="field">
-            <label class="label">URL</label>
-            <div class="control">
-                <input class="input {{'is-danger' if url_error}}" type="url" placeholder="Your long URL" name="destination">
-                {% if url_error %}
-                    <p class="help is-danger">{{url_error[0]}}</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="control">
-            <button class="button is-info" type="submit">Shorten</button>
-        </div>
-    </form>
+    {% with type = "create" %}
+        {% include "dashboard/shortener/partial_form.html" %}
+    {% endwith %}
 {% endblock main2 %}

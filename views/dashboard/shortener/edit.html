@@ -15,48 +15,8 @@
             </div>
         </article>
     {% else %}
-        <form method="POST" novalidate>
-            <div class="field">
-                <label class="label">Alias</label>
-                <div class="field has-addons">
-                    <p class="control">
-                      <a class="button is-static">
-                        {{domain}}
-                      </a>
-                    </p>
-                    <div class="control is-expanded">
-                        <input class="input {{'is-danger' if alias_error}}" type="text" placeholder="Alias of the URL" name="alias">
-                    </div>
-                </div>
-                {% if alias_error %}
-                    <p class="help is-danger">{{alias_error[0]}}</p>
-                {% else %}
-                    <p class="help">Leave this field blank to generate a random alias</p>
-                {% endif %}
-            </div>
-
-            <div class="field">
-                <label class="label">Destination</label>
-                <input type="url" class="input" value="{{destination}}" name="destination" placeholder="Enter a long URL">
-                {% if destination_error %}
-                    <p class="help is-danger">{{destination_error[0]}}</p>
-                {% endif %}
-            </div>
-
-            <div class="field">
-                <label class="checkbox">
-                    <input type="checkbox" name="reset_clicks" />
-                    Reset clicks {% if clicks is not none %}(Current count <code>{{clicks}}</code>){% endif %}
-                </label>
-            </div>
-
-
-            <div class="field">
-                <div class="buttons">
-                    <button class="button is-info" type="submit">Save</button>
-                    <a href="/dashboard/shortener/{{alias}}/delete" class="button is-danger">Delete</a>
-                </div>
-            </div>
-        </form>
+        {% with type = "edit" %}
+            {% include "dashboard/shortener/partial_form.html" %}
+        {% endwith %}
     {% endif %}
 {% endblock main2 %}

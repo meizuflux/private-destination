@@ -9,9 +9,7 @@ ConnOrPool = Union[Connection, Pool]
 
 
 def form_scopes(scopes: Scopes) -> str:
-    if isinstance(scopes, str):
-        return scopes
-    return ", ".join(scopes)
+    return scopes if isinstance(scopes, str) else ", ".join(scopes)
 
 
 async def select_short_urls(conn: ConnOrPool, *, sortby: str, direction: str, owner: int, offset: int) -> List[Record]:
@@ -39,7 +37,7 @@ async def insert_short_url(conn: ConnOrPool, *, owner: int, alias: str, destinat
 
 
 async def update_short_url(conn: ConnOrPool, *, alias: str, new_alias: str, destination: str, reset_clicks: bool):
-    query = f"UPDATE urls SET alias = $1, destination = $2"
+    query = "UPDATE urls SET alias = $1, destination = $2"
     if reset_clicks is True:
         query += ", clicks = 0"
     query += " WHERE alias = $3"
@@ -116,12 +114,13 @@ async def get_hash_and_id_by_email(conn: ConnOrPool, *, email: str):
     return await conn.fetchrow("SELECT id, password FROM users WHERE email = $1", email)
 
 
-async def insert_session(conn: ConnOrPool, *, user_id: int, browser: str, os: str):
+async def insert_session(conn: ConnOrPool, *, user_id: int, browser: str, os: str, ip: str):
     return await conn.fetchval(
-        "INSERT INTO sessions (token, user_id, browser, os) (SELECT gen_random_uuid(), $1, $2, $3) RETURNING token;",
+        "INSERT INTO sessions (token, user_id, browser, os, ip) (SELECT gen_random_uuid(), $1, $2, $3, $4) RETURNING token;",
         user_id,
         browser,
         os,
+        ip,
     )
 
 
@@ -142,7 +141,7 @@ async def select_user_by_session(conn: ConnOrPool, *, token: UUID, scopes: Scope
 
 async def select_sessions(conn: ConnOrPool, *, user_id: int):
     return await conn.fetch(
-        "SELECT token, created, browser, os FROM sessions WHERE user_id = $1 ORDER BY created DESC", user_id
+        "SELECT token, created, browser, os, ip FROM sessions WHERE user_id = $1 ORDER BY created DESC", user_id
     )
 
 

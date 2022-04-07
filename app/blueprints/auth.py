@@ -19,7 +19,10 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
     browser = metadata["user_agent"]["family"]
     os = metadata["os"]["family"]
 
-    uuid = await insert_session(request.app["db"], user_id=user_id, browser=browser, os=os)
+    # get ip from forwarded for header or remote address
+    ip = request.headers.get("X-Forwarded-For", request.remote)
+
+    uuid = await insert_session(request.app["db"], user_id=user_id, browser=browser, os=os, ip=ip)
 
     res = web.HTTPFound("/dashboard")
     res.set_cookie(

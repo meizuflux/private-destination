@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
     expires TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT ((NOW() + interval '1 day') AT TIME ZONE 'UTC'),
 
+    ip INET,
     browser TEXT DEFAULT 'Unknown',
     os TEXT DEFAULT 'UnknownOS'
 );

@@ -28,5 +28,4 @@ email with `sendinblue`
 - maybe make the site invite only??
 - something similar to mystbin/pastebin
 - todo list
-- log ip with session
 - email verification

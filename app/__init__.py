@@ -108,8 +108,6 @@ async def app_factory():
 
     app["db"] = await create_pool(dsn=app["config"]["postgres_dsn"])
     app["session"] = ClientSession()
-    with open("schema.sql") as f:
-        await app["db"].execute(f.read())
 
     async def close(a):
         await a["session"].close()

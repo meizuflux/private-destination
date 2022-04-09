@@ -101,6 +101,8 @@ async def create_short_url_(request: web.Request) -> web.Response:
                     "alias_error": e.messages.get("alias"),
                     "url_error": e.messages.get("destination"),
                     "domain": f"https://{request.app['config']['domain']}/",
+                    "alias": e.data.get("alias"),
+                    "destination": e.data.get("destination"),
                 },
                 status=400,
             )
@@ -119,6 +121,8 @@ async def create_short_url_(request: web.Request) -> web.Response:
                 {
                     "alias_error": ["A shortened URL with this alias already exists"],
                     "domain": f"https://{request.app['config']['domain']}/",
+                    "alias": alias,
+                    "destination": destination,
                 },
                 status=400,
             )
@@ -175,6 +179,8 @@ async def edit_short_url_(request: web.Request) -> web.Response:
                     "alias_error": e.messages.get("alias"),
                     "destination_error": e.messages.get("destination"),
                     "domain": f"https://{request.app['config']['domain']}/",
+                    "alias": e.data.get("alias"),
+                    "destination": e.data.get("destination"),
                 },
                 status=400,
             )

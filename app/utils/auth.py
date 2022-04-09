@@ -69,20 +69,18 @@ async def verify_user(request: web.Request, *, admin: bool, redirect: bool, scop
     async def by_session():
         session = request.cookies.get("_session")
         if session is not None:
-            if scopes is not None:
-                user = await select_user_by_session(request.app["db"], token=UUID(session), scopes=scopes)
-                return user
-            else:
+            if scopes is None and admin is not True:
                 return await select_session_exists(request.app["db"], token=UUID(session))
+            user = await select_user_by_session(request.app["db"], token=UUID(session), scopes=scopes)
+            return user
 
     async def by_api_key():
         api_key = request.headers.get("x-api-key")
         if api_key is not None:
-            if scopes is not None or admin is True:
-                user = await select_user_by_api_key(request.app["db"], api_key=api_key, scopes=scopes)
-                return user
-            else:
+            if scopes is None and admin is not True:
                 return await select_api_key_exists(request.app["db"], api_key=api_key)
+            user = await select_user_by_api_key(request.app["db"], api_key=api_key, scopes=scopes)
+            return user
 
     user = await by_session() or await by_api_key()
 

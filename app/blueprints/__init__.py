@@ -1,1 +1,3 @@
-from . import auth, base, dashboard
+from . import auth, base
+from .dashboard import settings, shortener
+from .admin import users

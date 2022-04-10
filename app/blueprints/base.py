@@ -6,8 +6,8 @@ from aiohttp_apispec import match_info_schema
 
 from app.models.shortener import ShortenerAliasSchema
 from app.routing import Blueprint
-from app.utils.auth import verify_user
-from app.utils.db import add_short_url_click, select_short_url_destination
+from app.utils.auth import requires_auth, verify_user
+from app.utils.db import add_short_url_click, select_short_url_count, select_short_url_destination
 
 bp = Blueprint()
 
@@ -18,6 +18,13 @@ async def login(request: web.Request) -> web.Response:
         return web.HTTPFound("/dashboard")
 
     return await aiohttp_jinja2.render_template_async("index.html", request, {})
+
+@bp.get("/dashboard")
+@requires_auth(redirect=True, scopes=["id", "admin"], needs_authorization=False)
+@aiohttp_jinja2.template("dashboard/index.html")
+async def index(request: web.Request):
+    url_count = await select_short_url_count(request.app["db"], owner=request["user"]["id"])
+    return {"url_count": url_count}
 
 
 @bp.get("/{alias}")

@@ -70,7 +70,10 @@ async def app_factory():
 
     # blueprints
     app.router.add_routes(blueprints.auth.bp)
-    app.router.add_routes(blueprints.dashboard.bp)
+    app.router.add_routes(blueprints.dashboard.settings.bp)
+    app.router.add_routes(blueprints.dashboard.shortener.bp)
+    app.router.add_routes(blueprints.admin.users.bp)
+    print("Routes:", app.router.routes)
 
     # has to go last since it has a catch-all
     app.router.add_routes(blueprints.base.bp)

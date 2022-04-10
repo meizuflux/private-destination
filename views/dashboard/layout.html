@@ -12,7 +12,7 @@
                         <ul class="menu-list">
                             <li><a href="/dashboard/shortener" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/shortener') else ''}}">URL Shortener</a></li>
                             {% if user["admin"] %}
-                                <li><a href="/dashboard/users" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/users') else ''}}">Manage Users</a></li>
+                                <li><a href="/admin/users" class="{{'is-active' if request.rel_url.path.startswith('/admin/users') else ''}}">Manage Users</a></li>
                             {% endif %}
                         </ul>
                     {% endif %}

@@ -23,6 +23,14 @@ from app import blueprints
 def truncate(text: str, limit: int):
     return f'{text[:limit - 3]}...' if len(text) > limit else text
 
+async def handle_errors(request: web.Request, error: web.HTTPException):
+    if not str(request.rel_url).startswith("/api") and error.status in {403, 404, 499, 500}:
+        return await aiohttp_jinja2.render_template_async(
+            f"errors/{error.status}.html", request, {}, status=error.status
+        )
+
+    raise error
+
 
 @web.middleware
 async def authentication_middleware(request: web.Request, handler):
@@ -44,22 +52,12 @@ async def authentication_middleware(request: web.Request, handler):
     return await handler(request)
 
 
-async def handle_errors(request: web.Request, error: web.HTTPException):
-    if not str(request.rel_url).startswith("/api") and error.status in {403, 404, 499, 500}:
-        return await aiohttp_jinja2.render_template_async(
-            f"errors/{error.status}.html", request, {}, status=error.status
-        )
-
-    raise error
-
-
 @web.middleware
 async def exception_middleware(request: web.Request, handler):
     try:
         return await handler(request)
     except web.HTTPException as e:  # handle exceptions here
         return await handle_errors(request, e)
-
 
 async def user_processor(request: web.Request):
     return {"user": request.get("user")}
@@ -73,7 +71,6 @@ async def app_factory():
     app.router.add_routes(blueprints.dashboard.settings.bp)
     app.router.add_routes(blueprints.dashboard.shortener.bp)
     app.router.add_routes(blueprints.admin.users.bp)
-    print("Routes:", app.router.routes)
 
     # has to go last since it has a catch-all
     app.router.add_routes(blueprints.base.bp)
@@ -111,6 +108,17 @@ async def app_factory():
 
     app["db"] = await create_pool(dsn=app["config"]["postgres_dsn"])
     app["session"] = ClientSession()
+
+    async def security_signal(request: web.Request, response: web.Response):
+        response.headers["Permissions-Policy"] = "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(self), display-capture=(), document-domain=(), encrypted-media=(self), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(self), geolocation=(), gyroscope=(), keyboard-map=*, magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(self), publickey-credentials-get=(self), screen-wake-lock=(self), sync-xhr=*, usb=(), web-share=(), xr-spatial-tracking=(), clipboard-read=(), clipboard-write=(self), gamepad=(), speaker-selection=(self)"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["Content-Security-Policy"] = "default-src 'self'; style-src cdnjs.cloudflare.com" # TODO: add report-uri
+        if app["dev"] is False:
+            response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
+
+    app.on_response_prepare.append(security_signal)
 
     async def close(a):
         await a["session"].close()

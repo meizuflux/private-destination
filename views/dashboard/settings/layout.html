@@ -12,7 +12,7 @@
 
     <div class="tabs mb-3">
         <ul>
-            <li class="{{'is-active' if request.rel_url.path == '/dashboard/settings' }}"><a href="/dashboard/settings">Account</a></li>
+            <li class="{{'is-active' if request.rel_url.path == '/dashboard/settings' or request.rel_url.path.startswith('/dashboard/settings/account') }}"><a href="/dashboard/settings">Account</a></li>
             <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/sessions') }}"><a href="/dashboard/settings/sessions">Sessions</a></li>
             <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/api_key') }}"><a href="/dashboard/settings/api_key">API Key</a></li>
             {% if user["authorized"] is true %}

@@ -1,5 +1,8 @@
+from ctypes import Union
 from secrets import choice
 from string import ascii_letters, digits
+from typing import Literal, Tuple
+from asyncpg import Record
 from uuid import UUID
 
 from aiohttp import web
@@ -8,7 +11,7 @@ from asyncpg import UniqueViolationError
 from marshmallow import ValidationError
 from passlib.hash import pbkdf2_sha512
 
-from app.models.auth import SignUpSchema
+from app.models.auth import SignUpSchema, UsersEditSchema
 from app.utils import Scopes, Status
 from app.utils.db import (
     ConnOrPool,
@@ -17,6 +20,7 @@ from app.utils.db import (
     select_session_exists,
     select_user_by_api_key,
     select_user_by_session,
+    update_user,
 )
 from app.utils.forms import parser
 
@@ -60,11 +64,6 @@ def requires_auth(
     return deco
 
 
-class HTTPPendingAuthorization(web.HTTPClientError):
-    status_code = 499
-    reason = "Pending Authorization"
-
-
 async def verify_user(request: web.Request, *, admin: bool, redirect: bool, scopes: Scopes, needs_authorization: bool):
     async def by_session():
         session = request.cookies.get("_session")
@@ -91,7 +90,7 @@ async def verify_user(request: web.Request, *, admin: bool, redirect: bool, scop
     if scopes is not None:
         if needs_authorization is True:
             if user["authorized"] is False:
-                return HTTPPendingAuthorization()
+                return web.Response(status=499, reason="Pending Authorization")
 
         if admin is True and user["admin"] is False:
             return web.HTTPForbidden()
@@ -105,7 +104,7 @@ async def create_user(
     *,
     template: str,
     extra_ctx: dict,
-):
+) -> Tuple[Literal[Status.OK], None] | Tuple[Literal[Status.ERROR], web.Response]:
     try:
         args = await parser.parse(SignUpSchema(), request, locations=["form"])
     except ValidationError as e:
@@ -144,3 +143,56 @@ async def create_user(
             ctx,
         )
     return Status.OK, user_id
+
+async def edit_user(
+    request: web.Request,
+    *,
+    old_user: Record,
+    template: str,
+    extra_ctx: dict = {},
+) -> Tuple[Literal[Status.OK], None] | Tuple[Literal[Status.ERROR], web.Response]:
+    try:
+        args = await parser.parse(UsersEditSchema(), request, locations=["form"])
+    except ValidationError as e:
+        ctx = {
+            "email_error": e.messages.get("email"),
+            "id": old_user["id"],
+            "email": e.data.get("email"),
+            "authorized": old_user["authorized"],
+            "admin": old_user["admin"],
+            "joined": old_user["joined"],
+        }
+        ctx.update(extra_ctx)
+
+        return Status.ERROR, await render_template_async(
+            template,
+            request,
+            ctx,
+            status=400,
+        )
+
+    try:
+        await update_user(
+            request.app["db"],
+            user_id=old_user["id"],
+            email=args["email"],
+            authorized=args["authorized"],
+        )
+    except UniqueViolationError as e:
+        ctx = {
+            "email_error": ["A user with this email already exists"],
+            "id": old_user["id"],
+            "email": args["email"],
+            "authorized": old_user["authorized"],
+            "admin": old_user["admin"],
+            "joined": old_user["joined"],
+        }
+        ctx.update(extra_ctx)
+        return Status.ERROR, await render_template_async(
+            template,
+            request,
+            ctx,
+            status=400,
+        )
+    
+    return Status.OK, None

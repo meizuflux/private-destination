@@ -5,8 +5,37 @@
 {% endblock %}
 
 {% block main2 %}
-    <div class="buttons has-addons">
-        <a href="/dashboard/users/{{user['id']}}/edit" class="button is-warning">Edit Account</a>
-        <a href="/dashboard/users/{{user['id']}}/delete" class="button is-danger">Delete Account</a>
-    </div>
+    <form novalidate>
+        <div class="field">
+            <label class="label">User ID</label>
+            <input class="input" type="text" value="{{id}}" disabled>
+        </div>
+
+        <div class="field">
+            <label class="label">Joined</label>
+            <input class="input" type="text" value="{{joined.strftime('%d %B %Y at %H:%M')}}" disabled>
+        </div>
+
+        <div class="field">
+            <label class="label">Email</label>
+            <input class="input" type="email" value="{{email}}" name="email" disabled>
+        </div>
+
+        <div class="field">
+            <label class="label">Authorized</label>
+            <input name="authorized" value="{{user['authorized']}}" type="hidden">
+            <label class="radio" disabled>
+                <input type="radio" name="authorized" value="True" {% if authorized == True %}checked{% endif%} disabled>
+                True
+            </label>
+            <label class="radio" disabled>
+                <input type="radio" name="authorized" value="False" {% if authorized != True %}checked{% endif%} disabled>
+                False
+            </label>
+        </div>
+        <div class="buttons has-addons">
+            <a href="/dashboard/settings/account/edit" class="button is-warning">Edit</a>
+            <a href="/dashboard/settings/account/delete" class="button is-danger">Delete</a>
+        </div>
+    </form>
 {% endblock %}

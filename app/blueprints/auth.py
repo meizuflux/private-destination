@@ -26,6 +26,10 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
         if peername is not None:
             ip, _ = peername
 
+    split = ip.split(",")
+    if len(split) > 0:
+        ip = split[0]
+
     uuid = await insert_session(request.app["db"], user_id=user_id, browser=browser, os=os, ip=ip)
 
     res = web.HTTPFound("/dashboard")

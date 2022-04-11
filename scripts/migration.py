@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime
-from sys import argv
+from sys import argv, exit
 import asyncpg
 from yaml import safe_load
 
@@ -12,13 +12,17 @@ async def main():
     else:
         db_dsn = config["dev"]["postgres_dsn"]
 
-    print("Enter database migration. Press Ctrl-D or Ctrl-Z ( windows ) to save it.")
+    print("Enter database migration. Enter '\s' to save or '\q' to quit")
     lines = []
     while True:
-        try:
-            line = input()
-        except EOFError:
+        line = input()
+        
+        if line == "\s":
             break
+        if line == "\q":
+            print("Exiting....")
+            exit()
+
         lines.append(line)
 
     migration = "\n".join(lines)

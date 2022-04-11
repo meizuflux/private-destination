@@ -1,16 +1,22 @@
+from aiohttp import web
 from aiohttp_apispec import match_info_schema
 from aiohttp_jinja2 import render_template_async, template
 from multidict import MultiDict
+
 from app.models.auth import SessionSchema
 from app.routing import Blueprint
 from app.utils import Status
-
 from app.utils.auth import edit_user, generate_api_key, requires_auth
-from app.utils.db import delete_session, delete_user, select_sessions, select_user, update_api_key
-from aiohttp import web
-
+from app.utils.db import (
+    delete_session,
+    delete_user,
+    select_sessions,
+    select_user,
+    update_api_key,
+)
 
 bp = Blueprint("/dashboard/settings")
+
 
 @bp.get("")
 @bp.get("/account")
@@ -71,6 +77,7 @@ async def delete_session_(request: web.Request) -> web.Response:
 async def shortener_settings(_: web.Request):
     return {}
 
+
 @bp.get("/account/edit")
 @bp.post("/account/edit")
 @requires_auth(redirect=True, scopes=["id", "admin"])
@@ -86,11 +93,12 @@ async def edit_self(request: web.Request):
         # also a note: request.post is supposed to be async that's why the override is async
         async def inject_authorized():
             return MultiDict(
-            {
-                "email": form["email"],
-                "authorized": user["authorized"],
-            }
-        )
+                {
+                    "email": form["email"],
+                    "authorized": user["authorized"],
+                }
+            )
+
         request.post = inject_authorized
         status, ret = await edit_user(
             request,
@@ -113,6 +121,7 @@ async def edit_self(request: web.Request):
             "joined": user["joined"],
         },
     )
+
 
 @bp.get("/account/delete")
 @bp.post("/account/delete")

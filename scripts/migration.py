@@ -1,8 +1,10 @@
 import asyncio
 from datetime import datetime
 from sys import argv, exit
+
 import asyncpg
 from yaml import safe_load
+
 
 async def main():
     with open("config.yml", "r") as f:
@@ -16,7 +18,7 @@ async def main():
     lines = []
     while True:
         line = input()
-        
+
         if line == "\s":
             break
         if line == "\q":
@@ -36,6 +38,6 @@ async def main():
         f.write(migration)
     print(f"Migration saved to {filename}")
 
+
 if __name__ == "__main__":
     asyncio.run(main())
-

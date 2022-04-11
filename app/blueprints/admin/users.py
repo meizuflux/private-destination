@@ -1,14 +1,15 @@
+from aiohttp import web
 from aiohttp_apispec import match_info_schema, querystring_schema
 from aiohttp_jinja2 import render_template_async, template
+
 from app.models.auth import UserIDSchema, UsersFilterSchema
 from app.routing import Blueprint
 from app.utils import Status
 from app.utils.auth import create_user, edit_user, requires_auth
 from app.utils.db import delete_user, select_user, select_users
-from aiohttp import web
-
 
 bp = Blueprint("/admin/users")
+
 
 @bp.get("")
 @template("admin/users/index.html")
@@ -46,7 +47,7 @@ async def edit_user_(request: web.Request) -> web.Response:
             template="admin/users/edit.html",
             extra_ctx={
                 "is_self": is_self,
-            }
+            },
         )
         if status is Status.ERROR:
             return ret

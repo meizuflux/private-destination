@@ -1,9 +1,10 @@
-from secrets import choice
 import string
+from secrets import choice
 
 from app.utils.db import ConnOrPool, select_short_url_exists
 
 ALPHANUMERIC_CHARS = string.ascii_letters + string.digits
+
 
 async def generate_url_alias(conn: ConnOrPool):
     while True:

@@ -1,21 +1,34 @@
 from io import BytesIO
 from json import dumps
 from math import ceil
+
+from aiohttp import web
 from aiohttp_apispec import match_info_schema, querystring_schema
 from aiohttp_jinja2 import render_template_async, template
 from asyncpg import UniqueViolationError
 from marshmallow import ValidationError
-from app.models.shortener import ShortenerAliasSchema, ShortenerCreateSchema, ShortenerEditSchema, ShortenerFilterSchema
+
+from app.models.shortener import (
+    ShortenerAliasSchema,
+    ShortenerCreateSchema,
+    ShortenerEditSchema,
+    ShortenerFilterSchema,
+)
 from app.routing import Blueprint
 from app.utils.auth import requires_auth
+from app.utils.db import (
+    delete_short_url,
+    insert_short_url,
+    select_short_url,
+    select_short_url_count,
+    select_short_urls,
+    update_short_url,
+)
 from app.utils.forms import parser
-from app.utils.db import delete_short_url, insert_short_url, select_short_url, select_short_url_count, select_short_urls, update_short_url
-from aiohttp import web
-
 from app.utils.shortener import generate_url_alias
 
-
 bp = Blueprint("/dashboard/shortener")
+
 
 @bp.get("")
 @requires_auth(redirect=True, scopes=["id", "admin"])
@@ -110,10 +123,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
             "dashboard/shortener/edit.html",
             request,
             {
-                "error": {
-                    "title": "Unknown Short URL",
-                    "message": "Could not locate short URL"
-                },
+                "error": {"title": "Unknown Short URL", "message": "Could not locate short URL"},
                 "domain": "https://{request.app['config']['domain']}/",
             },
         )
@@ -123,10 +133,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
             "dashboard/shortener/edit.html",
             request,
             {
-                "error": {
-                    "title": "Missing Permissions",
-                    "message": "You aren't the owner of this short URL"
-                },
+                "error": {"title": "Missing Permissions", "message": "You aren't the owner of this short URL"},
                 "domain": "https://{request.app['config']['domain']}/",
             },
         )
@@ -171,7 +178,6 @@ async def edit_short_url_(request: web.Request) -> web.Response:
                     "destination": destination,
                     "clicks": None,
                     "domain": f"https://{request.app['config']['domain']}/",
-
                 },
                 status=400,
             )
@@ -202,12 +208,7 @@ async def delete_short_url_(request: web.Request) -> web.Response:
         return await render_template_async(
             "dashboard/shortener/delete.html",
             request,
-            {
-                "error": {
-                    "title": "Unknown Short URL",
-                    "message": "Could not locate short URL"
-                }
-            },
+            {"error": {"title": "Unknown Short URL", "message": "Could not locate short URL"}},
             status=404,
         )
 
@@ -215,12 +216,7 @@ async def delete_short_url_(request: web.Request) -> web.Response:
         return await render_template_async(
             "dashboard/shortener/delete.html",
             request,
-            {
-                "error": {
-                    "title": "Missing Permissions",
-                    "message": "You aren't the owner of this short URL"
-                }
-            },
+            {"error": {"title": "Missing Permissions", "message": "You aren't the owner of this short URL"}},
             status=409,
         )
 

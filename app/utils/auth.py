@@ -2,12 +2,11 @@ from ctypes import Union
 from secrets import choice
 from string import ascii_letters, digits
 from typing import Literal, Tuple
-from asyncpg import Record
 from uuid import UUID
 
 from aiohttp import web
 from aiohttp_jinja2 import render_template_async
-from asyncpg import UniqueViolationError
+from asyncpg import Record, UniqueViolationError
 from marshmallow import ValidationError
 from passlib.hash import pbkdf2_sha512
 
@@ -144,6 +143,7 @@ async def create_user(
         )
     return Status.OK, user_id
 
+
 async def edit_user(
     request: web.Request,
     *,
@@ -194,5 +194,5 @@ async def edit_user(
             ctx,
             status=400,
         )
-    
+
     return Status.OK, None

@@ -1,9 +1,9 @@
-from marshmallow import Schema, fields, validate, ValidationError
+from marshmallow import Schema, ValidationError, fields, validate
 
 
 def none_or_len(name: str, min: int, max: int):
     def validator(string: str):
-        if string != "": # it won't be None, it will be ""
+        if string != "":  # it won't be None, it will be ""
             if len(string) < min:
                 raise ValidationError(f"Length must be between {min} and {max} or empty")
             if len(string) > max:

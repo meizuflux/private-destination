@@ -16,7 +16,7 @@ first create tables
 $ psql [options] < schema.sql
 ```
 
-then run `scripts/admin.py` and follow the prompt. this will create an admin user with the credentials you provide
+then run `scripts/admin.py [--dev]` and follow the prompt. this will create an admin user with the credentials you provide
 
 # http codes
 `401` is for when the user is not logged in
@@ -28,7 +28,7 @@ then run `scripts/admin.py` and follow the prompt. this will create an admin use
 # todo list
 email with `sendinblue`
 - password reset
-- maybe some progressive enhancement like `hotwire` `htmx` or `hibiki`
+- some progressive enhancement like `hotwire` `htmx` or `hibiki`
 - bulma dark theme
 - welcome email
 - image cdn
@@ -36,3 +36,5 @@ email with `sendinblue`
 - something similar to mystbin/pastebin
 - todo list
 - email verification
+- seperate admin dashboard to manage *everything*, not just users
+- panel on admin dashboard to view process usage

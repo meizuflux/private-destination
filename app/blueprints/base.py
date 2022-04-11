@@ -11,7 +11,11 @@ from app.utils.db import (
     add_short_url_click,
     select_short_url_count,
     select_short_url_destination,
+    select_total_sessions_count,
+    select_total_short_url_count,
+    select_total_users_count
 )
+import psutil
 
 bp = Blueprint()
 
@@ -30,6 +34,26 @@ async def login(request: web.Request) -> web.Response:
 async def index(request: web.Request):
     url_count = await select_short_url_count(request.app["db"], owner=request["user"]["id"])
     return {"url_count": url_count}
+
+@bp.get("/admin")
+@aiohttp_jinja2.template("admin/index.html")
+async def home(request: web.Request):
+    async with request.app["db"].acquire() as conn:
+        urls_count = await select_total_short_url_count(conn)
+        users_count = await select_total_users_count(conn)
+        sessions_count = await select_total_sessions_count(conn)
+
+    return {
+        "counters": {
+            "urls": urls_count,
+            "users": users_count,
+            "sessions": sessions_count
+        },
+        "stats": {
+            "cpu_percent": psutil.cpu_percent(),
+            "memory_percent": psutil.virtual_memory()[2]
+        }
+    }
 
 
 @bp.get("/{alias}")

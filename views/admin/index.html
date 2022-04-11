@@ -1,0 +1,31 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}
+    Admin Dashboard
+{% endblock title %}
+
+{% block main %}
+    <h1 class="title">Hello</h1>
+    <h2 class="subtitle mb-3">Welcome to the admin dashboard</h2>
+
+    <div class="tile is-ancestor">
+        <div class="tile is-parent">
+            <article class="tile is-child box">
+                <p class="title">URL Shortener</p>
+                <p class="subtitle">There are {{counters["urls"]}} shortened urls</p>
+            </article>
+        </div>
+        <div class="tile is-parent">
+            <article class="tile is-child box">
+                <p class="title">Users</p>
+                <p class="subtitle">There are {{counters["users"]}} users with {{counters["sessions"]}} active sessions</p>
+            </article>
+        </div>
+        <div class="tile is-parent">
+            <article class="tile is-child box">
+                <p class="title">Application</p>
+                <p class="subtitle">Currently running with {{stats["cpu_percent"]}}% CPU usage and {{stats["memory_percent"]}}% memory usage</p>
+            </article>
+        </div>
+    </div>
+{% endblock %}

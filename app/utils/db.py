@@ -29,6 +29,8 @@ async def select_short_urls(conn: ConnOrPool, *, sortby: str, direction: str, ow
 async def select_short_url_count(conn: ConnOrPool, *, owner: int) -> int:
     return await conn.fetchval("SELECT count(alias) FROM urls WHERE owner = $1", owner)
 
+async def select_total_short_url_count(conn: ConnOrPool):
+    return await conn.fetchval("SELECT count(alias) FROM urls")
 
 async def insert_short_url(conn: ConnOrPool, *, owner: int, alias: str, destination: str):
     return await conn.fetchrow(
@@ -97,6 +99,9 @@ async def select_users(conn: ConnOrPool, *, sortby: str, direction: str):
 
     return await conn.fetch(query)
 
+async def select_total_users_count(conn: ConnOrPool):
+    return await conn.fetchval("SELECT count(id) FROM users")
+
 
 async def select_user(conn: ConnOrPool, *, user_id: int):
     return await conn.fetchrow("SELECT * FROM users WHERE id = $1", user_id)
@@ -131,6 +136,8 @@ async def delete_session(conn: ConnOrPool, *, token: UUID):
 async def select_session_exists(conn: ConnOrPool, *, token: UUID):
     return await conn.fetchval("SELECT EXISTS(SELECT 1 FROM sessions WHERE token = $1)", token)
 
+async def select_total_sessions_count(conn: ConnOrPool):
+    return await conn.fetchval("SELECT count(token) FROM sessions")
 
 async def select_user_by_session(conn: ConnOrPool, *, token: UUID, scopes: Scopes):
     return await conn.fetchrow(

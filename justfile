@@ -11,7 +11,7 @@ format:
     isort . && black .
 
 build:
-    node scripts/build.mjs && node scripts/code-editor.mjs
+    node scripts/build.mjs
 
 watch:
     yarn run chokidar "static/**/*.*" "views/*.html" -c "node scripts/build.mjs" --initial

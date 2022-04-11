@@ -47,9 +47,7 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
 
 bp = Blueprint("/auth")
 
-
-@bp.get("/signup")
-@bp.post("/signup")
+@bp.route("/signup", methods=["GET", "POST"])
 async def signup(request: web.Request) -> web.Response:
     if await verify_user(request, admin=False, redirect=False, scopes=None, needs_authorization=True) is True:
         return web.HTTPFound("/dashboard")
@@ -64,8 +62,7 @@ async def signup(request: web.Request) -> web.Response:
     return await render_template_async("onboarding.html", request, {"type": "signup"})
 
 
-@bp.get("/login")
-@bp.post("/login")
+@bp.route("/login", methods=["GET", "POST"])
 async def login(request: web.Request) -> web.Response:
     if await verify_user(request, admin=False, redirect=False, scopes=None, needs_authorization=True) is True:
         return web.HTTPFound("/dashboard")

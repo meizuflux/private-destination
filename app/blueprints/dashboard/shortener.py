@@ -62,8 +62,7 @@ async def shortener(request: web.Request):
     }
 
 
-@bp.get("/create")
-@bp.post("/create")
+@bp.route("/create", methods=["GET", "POST"])
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def create_short_url_(request: web.Request) -> web.Response:
     if request.method == "POST":
@@ -110,8 +109,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
     )
 
 
-@bp.get("/{alias}/edit")
-@bp.post("/{alias}/edit")
+@bp.route("/{alias}/edit", methods=["GET", "POST"])
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @match_info_schema(ShortenerAliasSchema())
 async def edit_short_url_(request: web.Request) -> web.Response:
@@ -195,9 +193,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
         },
     )
 
-
-@bp.get("/{alias}/delete")
-@bp.post("/{alias}/delete")
+@bp.route("/{alias}/delete", methods=["GET", "POST"])
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @match_info_schema(ShortenerAliasSchema)
 async def delete_short_url_(request: web.Request) -> web.Response:

@@ -41,8 +41,7 @@ async def api_key_settings(_: web.Request):
     return {}
 
 
-@bp.get("/api_key/regenerate")
-@bp.post("/api_key/regenerate")
+@bp.route("/api_key/regenerate", methods=["GET", "POST"])
 @requires_auth(redirect=False, scopes=["id", "api_key", "admin"])
 async def regen_api_key(request: web.Request) -> web.Response:
     if request.method == "POST":
@@ -77,9 +76,7 @@ async def delete_session_(request: web.Request) -> web.Response:
 async def shortener_settings(_: web.Request):
     return {}
 
-
-@bp.get("/account/edit")
-@bp.post("/account/edit")
+@bp.route("/account/edit", methods=["GET", "POST"])
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def edit_self(request: web.Request):
     user = await select_user(request.app["db"], user_id=request["user"]["id"])
@@ -122,9 +119,7 @@ async def edit_self(request: web.Request):
         },
     )
 
-
-@bp.get("/account/delete")
-@bp.post("/account/delete")
+@bp.route("/account/delete", methods=["GET", "POST"])
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def edit_self(request: web.Request):
     if request.method == "POST":

@@ -23,8 +23,7 @@ async def users(request: web.Request):
     return {"users": users, "sortby": sortby, "direction": direction}
 
 
-@bp.get("/{user_id}/edit")
-@bp.post("/{user_id}/edit")
+@bp.route("/{user_id}/edit", methods=["GET", "POST"])
 @match_info_schema(UserIDSchema)
 @requires_auth(admin=True, redirect=True, scopes="id", needs_authorization=False)
 async def edit_user_(request: web.Request) -> web.Response:
@@ -52,7 +51,7 @@ async def edit_user_(request: web.Request) -> web.Response:
         if status is Status.ERROR:
             return ret
 
-        return web.HTTPFound("/adming/users")
+        return web.HTTPFound("/admin/users")
 
     return await render_template_async(
         "admin/users/edit.html",
@@ -68,8 +67,7 @@ async def edit_user_(request: web.Request) -> web.Response:
     )
 
 
-@bp.get("/{user_id}/delete")
-@bp.post("/{user_id}/delete")
+@bp.route("/{user_id}/delete", methods=["GET", "POST"])
 @requires_auth(redirect=True, scopes=["id", "admin"], needs_authorization=False)
 @match_info_schema(UserIDSchema)
 async def delete_user_(request: web.Request) -> web.Response:
@@ -96,8 +94,7 @@ async def delete_user_(request: web.Request) -> web.Response:
     )
 
 
-@bp.get("/create")
-@bp.post("/create")
+@bp.route("/create", methods=["GET", "POST"])
 @requires_auth(admin=True, redirect=True)
 async def create_user_(request: web.Request) -> web.Response:
     if request.method == "POST":

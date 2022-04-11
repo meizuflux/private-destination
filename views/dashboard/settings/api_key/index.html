@@ -6,7 +6,7 @@
 
 {% block main2 %}
     <input id="api-key" class="input mb-3" type="password" readonly value="{{user['api_key']}}"/>
-    <div class="buttons has-addons">
+    <div class="buttons">
         <button class="button is-primary" id="toggle-show-api-key">Show</button>
         <button class="button is-info" id="copy-api-key">Copy</button>
         <a class="button is-danger" href="/dashboard/settings/api_key/regenerate">Regenerate</a>

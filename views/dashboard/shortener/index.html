@@ -5,37 +5,33 @@
 {% endblock title %}
 
 {% block main2 %}
-    <div class="field">
-        <div class="field-label mb-1" style="text-align: left;">
-            <label class="label">Sort By</label>
-        </div>
-        <div class="field-body">
-            <form class="field is-narrow has-addons">
-                <div class="control">
-                    <div class="select">
-                        <select name="sortby" title="Sort By">
-                            <option value="alias" {% if sortby == "alias" %}selected{% endif %}>Alias</option>
-                            <option value="destination" {% if sortby == "destination" %}selected{% endif %}>Destination</option>
-                            <option value="clicks" {% if sortby == "clicks" %}selected{% endif %}>Clicks</option>
-                            <option value="creation_date" {% if sortby == "creation_date" or not sortby %}selected{% endif %}>Creation date</option>
-                        </select>
-                    </div>
+    <form class="mb-3">
+        <label class="label">Sort By</label>
+        <div class="field has-addons">
+            <div class="control">
+                <div class="select">
+                    <select name="sortby" title="Sort By">
+                        <option value="alias" {% if sortby == "alias" %}selected{% endif %}>Alias</option>
+                        <option value="destination" {% if sortby == "destination" %}selected{% endif %}>Destination</option>
+                        <option value="clicks" {% if sortby == "clicks" %}selected{% endif %}>Clicks</option>
+                        <option value="creation_date" {% if sortby == "creation_date" or not sortby %}selected{% endif %}>Creation date</option>
+                    </select>
                 </div>
-                <div class="control">
-                    <div class="select">
-                        <select name="direction" title="Direction">
-                            <option value="desc" {% if direction == "desc" or not direction %}selected{% endif %}>Descending</option>
-                            <option value="asc" {% if direction == "asc" %}selected{% endif %}>Ascending</option>
-                        </select>
-                    </div>
+            </div>
+            <div class="control">
+                <div class="select">
+                    <select name="direction" title="Direction">
+                        <option value="desc" {% if direction == "desc" or not direction %}selected{% endif %}>Descending</option>
+                        <option value="asc" {% if direction == "asc" %}selected{% endif %}>Ascending</option>
+                    </select>
                 </div>
-                <button class="button is-primary" type="submit">
-                    Go
-                </button>
-            </form>
+            </div>
+            <div class="control">
+                <button class="button is-info" type="submit">Go</button>
+            </div>
         </div>
-    </div>
-
+    </form>
+    
     <div class="table-container">
         <table class="table is-striped is-hoverable is-fullwidth is-bordered is-narrow">
             <thead>

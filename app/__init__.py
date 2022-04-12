@@ -73,6 +73,7 @@ async def app_factory():
     app.router.add_routes(blueprints.dashboard.settings.bp)
     app.router.add_routes(blueprints.dashboard.shortener.bp)
     app.router.add_routes(blueprints.admin.users.bp)
+    app.router.add_routes(blueprints.admin.application.bp)
 
     # has to go last since it has a catch-all
     app.router.add_routes(blueprints.base.bp)
@@ -120,7 +121,7 @@ async def app_factory():
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers[
             "Content-Security-Policy"
-        ] = "default-src 'self' meizuflux.com *.meizuflux.com; style-src cdnjs.cloudflare.com"  # TODO: add report-uri
+        ] = "default-src 'self' meizuflux.com *.meizuflux.com; style-src 'self' cdnjs.cloudflare.com"  # TODO: add report-uri
         if app["dev"] is False:
             response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
 

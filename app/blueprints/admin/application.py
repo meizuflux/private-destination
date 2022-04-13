@@ -35,12 +35,28 @@ async def index(request: web.Request):
         "used": "{:,.2f} GB".format(mem.used / 1024 / 1024 / 1024),
         "percent": mem.percent
     }
-    drives= [[part.mountpoint, psutil.disk_usage(part.mountpoint)] for part in psutil.disk_partitions()]
+    drives = []
+    for partition in psutil.disk_partitions():
+        usage = psutil.disk_usage(partition.mountpoint)
+        drives.append({
+            "mountpoint": partition.mountpoint,
+            "total": f"{usage.total / 1024 / 1024 / 1024:,.2f} GB",
+            "used": f"{usage.used / 1024 / 1024 / 1024:,.2f} GB",
+            "free": f"{usage.free / 1024 / 1024 / 1024:,.2f} GB",
+            "percent": str(usage.percent) + "%"
+        })
+    counters = psutil.disk_io_counters()
     ctx["disk"] = {
         "drives": drives,
         "count": len(drives),
-        "counters": psutil.disk_io_counters()
+        "counters": {
+            "read_count": f"{counters.read_count:,}",
+            "read_bytes": f"{counters.read_bytes / 1024 / 1024 / 1024:,.2f} GB",
+            "write_count": f"{counters.write_count:,}",
+            "write_bytes": f"{counters.write_bytes / 1024 / 1024 / 1024:,.2f} GB",
+        }
     }
+    
     p = psutil.Process()
     with p.oneshot():
         ctx["process"] = {

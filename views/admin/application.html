@@ -33,16 +33,16 @@ Percent Used: {{memory["percent"]}}%
     <pre class="pb-0">
 Partition Count: {{disk["count"]}}
 Stats:
-    Read Count: {{"{:,}".format(disk["counters"].read_count)}}
-    Read Bytes: {{"{:,.2f} GB".format(disk["counters"].read_bytes / 1024 / 1024 / 1024)}}
-    Write Count: {{"{:,}".format(disk["counters"].write_count)}}
-    Write Bytes: {{"{:,.2f} GB".format(disk["counters"].write_bytes / 1024 / 1024 / 1024)}}
+    Read Count: {{disk["counters"]["read_count"]}}
+    Read Bytes: {{disk["counters"]["read_bytes"]}}
+    Write Count: {{disk["counters"]["write_count"]}}
+    Write Bytes: {{disk["counters"]["write_bytes"]}}
 Space:{% for p in disk["drives"] %}
-    {{p[0]}}:
-        Total: {{"{:,.2f} GB".format(p[1].total / 1024 / 1024 / 1024)}}
-        Used: {{"{:,.2f} GB".format(p[1].used / 1024 / 1024 / 1024)}}
-        Free: {{"{:,.2f} GB".format(p[1].free / 1024 / 1024 / 1024)}}
-        Percent Used: {{p[1].percent}}%{% endfor %}
+    {{p["mountpoint"]}}:
+        Total: {{p["total"]}}
+        Used: {{p["used"]}}
+        Free: {{p["free"]}}
+        Percent Used: {{p.percent}}{% endfor %}
     </pre>
 
     <h2 class="title is-3 mb-1 mt-2">Process</h2>

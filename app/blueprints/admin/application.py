@@ -61,7 +61,6 @@ async def index(request: web.Request):
     with p.oneshot():
         ctx["process"] = {
             "memory": "{:,.2f} MB".format(p.memory_full_info().uss / 1024 / 1024),
-            "cpu": p.cpu_percent() / ctx["cpu"]["cores"]
         }
         ctx["process"].update(p.as_dict(attrs=["pid", "username", "cwd", "exe", "cmdline"]))
 

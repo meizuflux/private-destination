@@ -11,36 +11,38 @@ Application
     <pre class="pb-0">
 Users: {{service["user_count"]}}
 Sessions: {{service["session_count"]}}
+Logged in Users: {{service["unique_session_count"]}}
 Shortened URLs: {{service["shortener_count"]}}
     </pre>
 
     <h2 class="title is-3 mb-1 mt-2">CPU</h2>
     <pre class="pb-0">
-Percent:   {{cpu["percentage"]}}
-Cores:     {{cpu["cores"]}}
+Percent: {{cpu["percentage"]}}%
+Cores: {{cpu["cores"]}}
 Frequency: {{cpu["frequency"]}}
     </pre>
 
     <h2 class="title is-3 mb-1 mt-2">Memory</h2>
     <pre class="pb-0">
-Total:   {{memory["total"]}}
-Used:    {{memory["used"]}}
-Percent: {{memory["percentage"]}}%
+Total: {{memory["total"]}}
+Used: {{memory["used"]}}
+Percent Used: {{memory["percent"]}}%
     </pre>
 
     <h2 class="title is-3 mb-1 mt-2">Disk</h2>
     <pre class="pb-0">
 Partition Count: {{disk["count"]}}
 Stats:
-    Read Count:  {{disk["counters"].read_count}}
-    Read Bytes:  {{disk["counters"].read_bytes}}
-    Write Count: {{disk["counters"].write_count}}
-    Write Bytes: {{disk["counters"].write_bytes}}
+    Read Count: {{"{:,}".format(disk["counters"].read_count)}}
+    Read Bytes: {{"{:,.2f} GB".format(disk["counters"].read_bytes / 1024 / 1024 / 1024)}}
+    Write Count: {{"{:,}".format(disk["counters"].write_count)}}
+    Write Bytes: {{"{:,.2f} GB".format(disk["counters"].write_bytes / 1024 / 1024 / 1024)}}
 Space:{% for p in disk["drives"] %}
     {{p[0]}}:
-        Total:   {{p[1].total}}
-        Used:    {{p[1].used}}
-        Percent: {{p[1].percent}}{% endfor %}
+        Total: {{"{:,.2f} GB".format(p[1].total / 1024 / 1024 / 1024)}}
+        Used: {{"{:,.2f} GB".format(p[1].used / 1024 / 1024 / 1024)}}
+        Free: {{"{:,.2f} GB".format(p[1].free / 1024 / 1024 / 1024)}}
+        Percent Used: {{p[1].percent}}%{% endfor %}
     </pre>
 
     <h2 class="title is-3 mb-1 mt-2">Process</h2>

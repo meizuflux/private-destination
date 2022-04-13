@@ -3,6 +3,7 @@ from aiohttp_jinja2 import template
 from aiohttp import web
 from app.utils.db import (
     select_total_sessions_count,
+    select_total_unique_sessions_count,
     select_total_short_url_count,
     select_total_users_count
 )
@@ -19,7 +20,8 @@ async def index(request: web.Request):
         ctx["service"] = {
             "shortener_count": await select_total_short_url_count(conn),
             "user_count": await select_total_users_count(conn),
-            "session_count": await select_total_sessions_count(conn)
+            "session_count": await select_total_sessions_count(conn),
+            "unique_session_count": await select_total_unique_sessions_count(conn)
         }
 
     ctx["cpu"] = {
@@ -29,9 +31,9 @@ async def index(request: web.Request):
     }
     mem = psutil.virtual_memory()
     ctx["memory"] = {
-        "total": mem.total,
-        "used": mem.used,
-        "percentage": mem.percent
+        "total": "{:,.2f} GB".format(mem.total / 1024 / 1024 / 1024),
+        "used": "{:,.2f} GB".format(mem.used / 1024 / 1024 / 1024),
+        "percent": mem.percent
     }
     drives= [[part.mountpoint, psutil.disk_usage(part.mountpoint)] for part in psutil.disk_partitions()]
     ctx["disk"] = {
@@ -42,7 +44,7 @@ async def index(request: web.Request):
     p = psutil.Process()
     with p.oneshot():
         ctx["process"] = {
-            "memory": p.memory_full_info().uss ,
+            "memory": "{:,.2f} MB".format(p.memory_full_info().uss / 1024 / 1024),
             "cpu": p.cpu_percent() / ctx["cpu"]["cores"]
         }
         ctx["process"].update(p.as_dict(attrs=["pid", "username", "cwd", "exe", "cmdline"]))

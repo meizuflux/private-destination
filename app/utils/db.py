@@ -139,6 +139,9 @@ async def select_session_exists(conn: ConnOrPool, *, token: UUID):
 async def select_total_sessions_count(conn: ConnOrPool):
     return await conn.fetchval("SELECT count(token) FROM sessions")
 
+async def select_total_unique_sessions_count(conn: ConnOrPool):
+    return await conn.fetchval("SELECT count(DISTINCT user_id) FROM sessions")
+
 async def select_user_by_session(conn: ConnOrPool, *, token: UUID, scopes: Scopes):
     return await conn.fetchrow(
         f"SELECT {form_scopes(scopes)} FROM users WHERE id = (SELECT user_id FROM sessions WHERE token = $1);",

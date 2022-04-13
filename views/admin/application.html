@@ -4,14 +4,15 @@
 Application
 {% endblock %}
 
-{% block head %}
-<link rel="stylesheet" href="/static/css/pre.css" />
-{% endblock %}
-
 {% block main %}
     <h1 class="title">Application Stats</h1>
 
-    
+    <h2 class="title is-3 mb-1 mt-2">Service</h2>
+    <pre class="pb-0">
+Users: {{service["user_count"]}}
+Sessions: {{service["session_count"]}}
+Shortened URLs: {{service["shortener_count"]}}
+    </pre>
 
     <h2 class="title is-3 mb-1 mt-2">CPU</h2>
     <pre class="pb-0">
@@ -43,7 +44,7 @@ Space:{% for p in disk["drives"] %}
     </pre>
 
     <h2 class="title is-3 mb-1 mt-2">Process</h2>
-    <pre class="pb-0 slider">
+    <pre class="pb-0">
 Memory Usage: {{process["memory"]}}
 CPU Usage: {{process["cpu"]}}
 Process ID: {{process["pid"]}}

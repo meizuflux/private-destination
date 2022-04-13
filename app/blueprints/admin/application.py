@@ -13,11 +13,14 @@ bp = Blueprint("/admin/application")
 @bp.get("")
 @template("admin/application.html")
 async def index(request: web.Request):
-    async with request.app["db"].acquire() as conn:
-        urls_count = await select_total_short_url_count(conn)
-        users_count = await select_total_users_count(conn)
-        sessions_count = await select_total_sessions_count(conn)
     ctx = {}
+
+    async with request.app["db"].acquire() as conn:
+        ctx["service"] = {
+            "shortener_count": await select_total_short_url_count(conn),
+            "user_count": await select_total_users_count(conn),
+            "session_count": await select_total_sessions_count(conn)
+        }
 
     ctx["cpu"] = {
         "percentage": "%, ".join([str(i) for i in psutil.cpu_percent(percpu=True)]),

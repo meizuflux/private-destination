@@ -193,6 +193,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
         },
     )
 
+
 @bp.route("/{alias}/delete", methods=["GET", "POST"])
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @match_info_schema(ShortenerAliasSchema)

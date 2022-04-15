@@ -76,6 +76,7 @@ async def delete_session_(request: web.Request) -> web.Response:
 async def shortener_settings(_: web.Request):
     return {}
 
+
 @bp.route("/account/edit", methods=["GET", "POST"])
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def edit_self(request: web.Request):
@@ -118,6 +119,7 @@ async def edit_self(request: web.Request):
             "joined": user["joined"],
         },
     )
+
 
 @bp.route("/account/delete", methods=["GET", "POST"])
 @requires_auth(redirect=True, scopes=["id", "admin"])

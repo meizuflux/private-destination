@@ -1,18 +1,19 @@
+import os
 import subprocess
-from app.routing import Blueprint
-from aiohttp_jinja2 import template
-from aiohttp import web
-from app.utils.db import (
-    select_total_sessions_count,
-    select_total_unique_sessions_count,
-    select_total_short_url_count,
-    select_total_users_count
-)
-import psutil
+from importlib.metadata import version
 from pathlib import Path
 
-import os
-from importlib.metadata import version
+import psutil
+from aiohttp import web
+from aiohttp_jinja2 import template
+
+from app.routing import Blueprint
+from app.utils.db import (
+    select_total_sessions_count,
+    select_total_short_url_count,
+    select_total_unique_sessions_count,
+    select_total_users_count,
+)
 
 files = lines = characters = classes = functions = coroutines = comments = 0
 for f in Path("./").rglob("*.py"):
@@ -44,15 +45,7 @@ code_stats = {
     "comments": f"{comments:,}",
 }
 
-_pkgs = [
-    "aiohttp",
-    "gunicorn",
-    "asyncpg",
-    "marshmallow",
-    "passlib",
-    "psutil",
-    "jinja2"
-]
+_pkgs = ["aiohttp", "gunicorn", "asyncpg", "marshmallow", "passlib", "psutil", "jinja2"]
 
 if os.name != "nt":
     _pkgs.append("uvloop")
@@ -68,10 +61,11 @@ git_stats = {
     "remote": remote,
     "commit_count": subprocess.getoutput("git rev-list --count HEAD"),
     "commit_message": subprocess.getoutput("git log -1 --pretty=%B").strip(),
-    "commit_url": f"https://github.com/{'/'.join(remote.split('/')[-2:]).removesuffix('.git')}/commit/{revision}"
+    "commit_url": f"https://github.com/{'/'.join(remote.split('/')[-2:]).removesuffix('.git')}/commit/{revision}",
 }
 
 bp = Blueprint("/admin/application")
+
 
 @bp.get("")
 @template("admin/application.html")
@@ -87,30 +81,32 @@ async def index(request: web.Request):
             "shortener_count": await select_total_short_url_count(conn),
             "user_count": await select_total_users_count(conn),
             "session_count": await select_total_sessions_count(conn),
-            "unique_session_count": await select_total_unique_sessions_count(conn)
+            "unique_session_count": await select_total_unique_sessions_count(conn),
         }
 
     ctx["cpu"] = {
         "percentage": "%, ".join([str(i) for i in psutil.cpu_percent(percpu=True)]),
         "cores": psutil.cpu_count(),
-        "frequency": psutil.cpu_freq().current
+        "frequency": psutil.cpu_freq().current,
     }
     mem = psutil.virtual_memory()
     ctx["memory"] = {
         "total": "{:,.2f} GB".format(mem.total / 1024 / 1024 / 1024),
         "used": "{:,.2f} GB".format(mem.used / 1024 / 1024 / 1024),
-        "percent": mem.percent
+        "percent": mem.percent,
     }
     drives = []
     for partition in psutil.disk_partitions():
         usage = psutil.disk_usage(partition.mountpoint)
-        drives.append({
-            "mountpoint": partition.mountpoint,
-            "total": f"{usage.total / 1024 / 1024 / 1024:,.2f} GB",
-            "used": f"{usage.used / 1024 / 1024 / 1024:,.2f} GB",
-            "free": f"{usage.free / 1024 / 1024 / 1024:,.2f} GB",
-            "percent": f"{str(usage.percent)}%",
-        })
+        drives.append(
+            {
+                "mountpoint": partition.mountpoint,
+                "total": f"{usage.total / 1024 / 1024 / 1024:,.2f} GB",
+                "used": f"{usage.used / 1024 / 1024 / 1024:,.2f} GB",
+                "free": f"{usage.free / 1024 / 1024 / 1024:,.2f} GB",
+                "percent": f"{str(usage.percent)}%",
+            }
+        )
     counters = psutil.disk_io_counters()
     ctx["disk"] = {
         "drives": drives,
@@ -120,9 +116,9 @@ async def index(request: web.Request):
             "read_bytes": f"{counters.read_bytes / 1024 / 1024 / 1024:,.2f} GB",
             "write_count": f"{counters.write_count:,}",
             "write_bytes": f"{counters.write_bytes / 1024 / 1024 / 1024:,.2f} GB",
-        }
+        },
     }
-    
+
     p = psutil.Process()
     with p.oneshot():
         ctx["process"] = {

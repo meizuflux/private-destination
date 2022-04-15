@@ -47,6 +47,7 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
 
 bp = Blueprint("/auth")
 
+
 @bp.route("/signup", methods=["GET", "POST"])
 async def signup(request: web.Request) -> web.Response:
     if await verify_user(request, admin=False, redirect=False, scopes=None, needs_authorization=True) is True:

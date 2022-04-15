@@ -1,6 +1,7 @@
 import asyncio
 
 import aiohttp_jinja2
+import psutil
 from aiohttp import web
 from aiohttp_apispec import match_info_schema
 
@@ -13,9 +14,8 @@ from app.utils.db import (
     select_short_url_destination,
     select_total_sessions_count,
     select_total_short_url_count,
-    select_total_users_count
+    select_total_users_count,
 )
-import psutil
 
 bp = Blueprint()
 
@@ -35,6 +35,7 @@ async def index(request: web.Request):
     url_count = await select_short_url_count(request.app["db"], owner=request["user"]["id"])
     return {"url_count": url_count}
 
+
 @bp.get("/admin")
 @aiohttp_jinja2.template("admin/index.html")
 async def home(request: web.Request):
@@ -44,15 +45,8 @@ async def home(request: web.Request):
         sessions_count = await select_total_sessions_count(conn)
 
     return {
-        "counters": {
-            "urls": urls_count,
-            "users": users_count,
-            "sessions": sessions_count
-        },
-        "stats": {
-            "cpu_percent": psutil.cpu_percent(),
-            "memory_percent": psutil.virtual_memory()[2]
-        }
+        "counters": {"urls": urls_count, "users": users_count, "sessions": sessions_count},
+        "stats": {"cpu_percent": psutil.cpu_percent(), "memory_percent": psutil.virtual_memory()[2]},
     }
 
 

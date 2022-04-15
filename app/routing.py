@@ -1,7 +1,7 @@
 from typing import Any, List
 
-from aiohttp import web, hdrs
-from aiohttp.web_routedef import _Deco, _HandlerType, RouteDef
+from aiohttp import hdrs, web
+from aiohttp.web_routedef import RouteDef, _Deco, _HandlerType
 
 
 class Blueprint(web.RouteTableDef):
@@ -15,15 +15,14 @@ class Blueprint(web.RouteTableDef):
             for method in methods:
                 self._items.append(RouteDef(method, self._prefix + path, handler, kwargs))
             return handler
-        return inner
 
+        return inner
 
     def head(self, path: str, **kwargs: Any) -> _Deco:
         return self.route(path, methods=[hdrs.METH_HEAD], **kwargs)
 
     def get(self, path: str, **kwargs: Any) -> _Deco:
         return self.route(path, methods=[hdrs.METH_GET], **kwargs)
-
 
     def post(self, path: str, **kwargs: Any) -> _Deco:
         return self.route(path, methods=[hdrs.METH_POST], **kwargs)

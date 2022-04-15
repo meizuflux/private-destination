@@ -20,7 +20,7 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
     os = metadata["os"]["family"]
 
     # get ip from forwarded for header or remote address
-    ip = request.headers.getone("X-Forwarded-For")
+    ip = request.headers.getone("X-Forwarded-For", None)
     if ip is None:
         peername = request.transport.get_extra_info("peername")
         if peername is not None:

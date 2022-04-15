@@ -1,3 +1,4 @@
+import subprocess
 from app.routing import Blueprint
 from aiohttp_jinja2 import template
 from aiohttp import web
@@ -8,13 +9,78 @@ from app.utils.db import (
     select_total_users_count
 )
 import psutil
+from pathlib import Path
+
+import os
+from importlib.metadata import version
+
+files = lines = characters = classes = functions = coroutines = comments = 0
+for f in Path("./").rglob("*.py"):
+    if str(f).startswith("venv"):
+        continue
+    files += 1
+    with f.open(encoding="utf-8") as of:
+        _lines = of.readlines()
+        lines += len(_lines)
+        for l in _lines:
+            l = l.strip()
+            characters += len(l)
+            if l.startswith("class"):
+                classes += 1
+            if l.startswith("def"):
+                functions += 1
+            if l.startswith("async def"):
+                functions += 1
+                coroutines += 1
+            if "#" in l:
+                comments += 1
+code_stats = {
+    "files": f"{files:,}",
+    "lines": f"{lines:,}",
+    "characters": f"{characters:,}",
+    "classes": f"{classes:,}",
+    "functions": f"{functions:,}",
+    "coroutines": f"{coroutines:,}",
+    "comments": f"{comments:,}",
+}
+
+_pkgs = [
+    "aiohttp",
+    "gunicorn",
+    "asyncpg",
+    "marshmallow",
+    "passlib",
+    "psutil",
+    "jinja2"
+]
+
+if os.name != "nt":
+    _pkgs.append("uvloop")
+
+packages = {pkg: version(pkg) for pkg in _pkgs}
+
+revision = subprocess.getoutput("git rev-parse HEAD")
+short_revision = revision[:7]
+remote = subprocess.getoutput("git config --get remote.origin.url")
+git_stats = {
+    "revision": revision[:7],
+    "branch": subprocess.getoutput("git rev-parse --abbrev-ref HEAD"),
+    "remote": remote,
+    "commit_count": subprocess.getoutput("git rev-list --count HEAD"),
+    "commit_message": subprocess.getoutput("git log -1 --pretty=%B").strip(),
+    "commit_url": f"https://github.com/{'/'.join(remote.split('/')[-2:]).removesuffix('.git')}/commit/{revision}"
+}
 
 bp = Blueprint("/admin/application")
 
 @bp.get("")
 @template("admin/application.html")
 async def index(request: web.Request):
-    ctx = {}
+    ctx = {
+        "packages": packages,
+        "code_stats": code_stats,
+        "git": git_stats,
+    }
 
     async with request.app["db"].acquire() as conn:
         ctx["service"] = {
@@ -43,7 +109,7 @@ async def index(request: web.Request):
             "total": f"{usage.total / 1024 / 1024 / 1024:,.2f} GB",
             "used": f"{usage.used / 1024 / 1024 / 1024:,.2f} GB",
             "free": f"{usage.free / 1024 / 1024 / 1024:,.2f} GB",
-            "percent": str(usage.percent) + "%"
+            "percent": f"{str(usage.percent)}%",
         })
     counters = psutil.disk_io_counters()
     ctx["disk"] = {

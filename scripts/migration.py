@@ -33,7 +33,7 @@ async def main():
 
     await conn.execute(migration)
 
-    filename = datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + ".sql"
+    filename = "migrations/" + datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + ".sql"
     with open(filename, "w") as f:
         f.write(migration)
     print(f"Migration saved to {filename}")

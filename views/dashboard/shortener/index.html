@@ -46,8 +46,8 @@
             <tbody>
                 {% for url in values %}
                     <tr>
-                        <td><a href="/{{url['alias']}}" id="{{url['alias']}}-alias" value="{{url['alias']}}">{{truncate(url["alias"], 15)}}</a></td>
-                        <td><a href="{{url['destination']}}">{{truncate(url['destination'], 43)}}</a></td>
+                        <td><a href="/{{url['alias']}}" id="{{url['alias']}}-alias" value="{{url['alias']}}" target="_blank" rel="noopener noreferrer">{{truncate(url["alias"], 15)}}</a></td>
+                        <td><a href="{{url['destination']}}" target="_blank" rel="noopener noreferrer">{{truncate(url['destination'], 43)}}</a></td>
                         <td><code>{{url['clicks']}}</code></td>
                         <td>{{url["creation_date"].strftime("%d %B %Y at %H:%M")}}</td>
                         <td>

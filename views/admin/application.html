@@ -7,7 +7,7 @@ Application
 {% block main %}
     <h1 class="title">Application Stats</h1>
 
-    <h2 class="title is-3 mb-1 mt-2">Service</h2>
+    <h2 class="title is-4 mb-1 mt-2">Service</h2>
     <pre class="pb-0">
 Users: {{service["user_count"]}}
 Sessions: {{service["session_count"]}}
@@ -15,7 +15,7 @@ Logged in Users: {{service["unique_session_count"]}}
 Shortened URLs: {{service["shortener_count"]}}
     </pre>
 
-    <h2 class="title is-3 mb-1 mt-2">Package Versions</h2>
+    <h2 class="title is-4 mb-1 mt-2">Package Versions</h2>
     <pre class="pb-0">{% for name, version in packages.items() %}
 {{name}}: v{{version}}{% endfor %}
     </pre>
@@ -30,31 +30,31 @@ Function: {{code_stats["functions"]}}
 Coroutines: {{code_stats["coroutines"]}}
 Comments: {{code_stats["comments"]}}
     </pre>
-    <h2 class="title is-3 mb-1 mt-2">Git</h2>
+    <h2 class="title is-4 mb-1 mt-2">Git</h2>
     <pre class="pb-0">
 Branch: {{git["branch"]}}
-Remote: <a href="{{git['remote']}}">{{git["remote"]}}</a>
+Remote: <a href="{{git['remote']}}" target="_blank" rel="noopener noreferrer">{{git["remote"]}}</a>
 Commit Count: {{git["commit_count"]}}
 Current Commit:
-    Revision: <a href="{{git['commit_url']}}">{{git["revision"]}}</a>
+    Revision: <a href="{{git['commit_url']}}" target="_blank" rel="noopener noreferrer">{{git["revision"]}}</a>
     Message: {{git["commit_message"]}}
     </pre>
 
-    <h2 class="title is-3 mb-1 mt-2">CPU</h2>
+    <h2 class="title is-4 mb-1 mt-2">CPU</h2>
     <pre class="pb-0">
 Percent: {{cpu["percentage"]}}%
 Cores: {{cpu["cores"]}}
 Frequency: {{cpu["frequency"]}}
     </pre>
 
-    <h2 class="title is-3 mb-1 mt-2">Memory</h2>
+    <h2 class="title is-4 mb-1 mt-2">Memory</h2>
     <pre class="pb-0">
 Total: {{memory["total"]}}
 Used: {{memory["used"]}}
 Percent Used: {{memory["percent"]}}%
     </pre>
 
-    <h2 class="title is-3 mb-1 mt-2">Disk</h2>
+    <h2 class="title is-4 mb-1 mt-2">Disk</h2>
     <pre class="pb-0">
 Partition Count: {{disk["count"]}}
 Stats:
@@ -70,7 +70,7 @@ Space:{% for p in disk["drives"] %}
         Percent Used: {{p.percent}}{% endfor %}
     </pre>
 
-    <h2 class="title is-3 mb-1 mt-2">Process</h2>
+    <h2 class="title is-4 mb-1 mt-2">Process</h2>
     <pre class="pb-0">
 Memory Usage: {{process["memory"]}}
 Process ID: {{process["pid"]}}

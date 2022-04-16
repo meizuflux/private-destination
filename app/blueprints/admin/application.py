@@ -17,7 +17,13 @@ from app.utils.db import (
 
 files = lines = characters = classes = functions = coroutines = comments = 0
 for f in Path("./").rglob("*.*"):
-    if str(f).startswith("venv") or str(f).startswith(".git") or str(f).startswith("node_modules") or str(f).startswith("dist") or str(f).endswith(".pyc"):
+    if (
+        str(f).startswith("venv")
+        or str(f).startswith(".git")
+        or str(f).startswith("node_modules")
+        or str(f).startswith("dist")
+        or str(f).endswith(".pyc")
+    ):
         continue
     files += 1
     with f.open(encoding="utf-8") as of:

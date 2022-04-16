@@ -16,8 +16,8 @@ from app.utils.db import (
 )
 
 files = lines = characters = classes = functions = coroutines = comments = 0
-for f in Path("./").rglob("*.py"):
-    if str(f).startswith("venv"):
+for f in Path("./").rglob("*.*"):
+    if str(f).startswith("venv") or str(f).startswith(".git") or str(f).startswith("node_modules") or str(f).startswith("dist") or str(f).endswith(".pyc"):
         continue
     files += 1
     with f.open(encoding="utf-8") as of:
@@ -26,15 +26,16 @@ for f in Path("./").rglob("*.py"):
         for l in _lines:
             l = l.strip()
             characters += len(l)
-            if l.startswith("class"):
-                classes += 1
-            if l.startswith("def"):
-                functions += 1
-            if l.startswith("async def"):
-                functions += 1
-                coroutines += 1
-            if "#" in l:
-                comments += 1
+            if f.suffix == ".py":
+                if l.startswith("class"):
+                    classes += 1
+                if l.startswith("def"):
+                    functions += 1
+                if l.startswith("async def"):
+                    functions += 1
+                    coroutines += 1
+                if "#" in l:
+                    comments += 1
 code_stats = {
     "files": f"{files:,}",
     "lines": f"{lines:,}",

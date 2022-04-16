@@ -11,6 +11,7 @@
                         </p>
                         <ul class="menu-list">
                             <li><a href="/dashboard/shortener" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/shortener') else ''}}">URL Shortener</a></li>
+                            <li><a href="/dashboard/notes" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/notes') else ''}}">Secure Notes</a></li>
                             {% if user["admin"] %}
                                 <li><a href="/admin">Admin Dashboard</a></li>
                             {% endif %}

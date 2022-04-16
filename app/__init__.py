@@ -72,6 +72,7 @@ async def app_factory():
     app.router.add_routes(blueprints.auth.bp)
     app.router.add_routes(blueprints.dashboard.settings.bp)
     app.router.add_routes(blueprints.dashboard.shortener.bp)
+    app.router.add_routes(blueprints.dashboard.notes.bp)
     app.router.add_routes(blueprints.admin.users.bp)
     app.router.add_routes(blueprints.admin.application.bp)
 

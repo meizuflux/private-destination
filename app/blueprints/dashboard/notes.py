@@ -1,0 +1,211 @@
+import asyncio
+from contextlib import suppress
+from math import ceil
+import os
+from pydoc import plain
+from re import T
+from uuid import UUID
+import uuid
+from aiohttp_apispec import match_info_schema, querystring_schema
+from aiohttp_jinja2 import render_string_async, render_template_async, template
+from app.routing import Blueprint
+from aiohttp import web
+from marshmallow import Schema, fields, ValidationError, validate
+from app.utils.auth import requires_auth, verify_user
+from app.utils.db import select_note_count, select_notes, select_user
+from app.utils.forms import parser
+from cryptography.fernet import Fernet
+import base64
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from jinja2 import Template
+
+class NoteSchema(Schema):
+    name = fields.Str(required=True)
+    identifier = fields.Str(required=True, validate=validate.OneOf(["name", "id"]), default="id")
+    content = fields.Str(required=True)
+    password = fields.String()
+    share_email = fields.Boolean(load_default=False)
+    private = fields.Boolean(load_default=False)
+    style = fields.String(validate=validate.OneOf(["plaintext", "styled"]), default="plaintext")
+
+class NotesFilterSchema(Schema):
+    page = fields.Integer(validate=validate.Range(min=1, error="Page must be greater than or equal to 1"))
+    direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
+    sortby = fields.String(validate=validate.OneOf({"id", "name", "has_password", "share_email", "private", "style", "identifier", "clicks", "creation_date"}))
+
+
+class ViewNoteSchema(Schema):
+    password = fields.Str()
+
+class NameSchema(Schema):
+    name = fields.Str(required=True)
+
+def create_fernet(salt: bytes, password: str):
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+        backend=default_backend()
+    )
+    return Fernet(base64.urlsafe_b64encode(kdf.derive(password)))
+
+def derive_salt_and_content(stored):
+    return stored[:32], stored[32:]
+
+bp = Blueprint("")
+
+@bp.get("/dashboard/notes")
+@querystring_schema(NotesFilterSchema())
+@requires_auth(redirect=True, scopes=["id", "admin"])
+@template("dashboard/notes/index.html")
+async def index(request):
+    current_page = request["querystring"].get("page", 1) - 1
+    direction = request["querystring"].get("direction", "desc")
+    sortby = request["querystring"].get("sortby", "creation_date")
+
+    async with request.app["db"].acquire() as conn:
+        notes = await select_notes(
+            conn,
+            sortby=sortby,
+            direction=direction.upper(),
+            owner=request["user"]["id"],
+            offset=current_page * 50,
+        )
+        notes_count = await select_note_count(conn, owner=request["user"]["id"])
+
+    max_pages = ceil(notes_count / 50)
+
+    if max_pages == 0:
+        max_pages = 1
+    return {
+        "current_page": current_page + 1,
+        "max_pages": max_pages,
+        "values": notes,
+        "sortby": sortby,
+        "direction": direction,
+    }
+
+@bp.get("/dashboard/notes/create")
+@template("dashboard/notes/create.html")
+@requires_auth(redirect=True, scopes=["id", "admin"])
+async def index(request):
+    return {}
+
+@bp.post("/dashboard/notes/create")
+@requires_auth(redirect=True, scopes=["id", "admin"])
+async def create(request):
+    args = await parser.parse(NoteSchema(), request, locations=["form"])
+
+    name = args["name"]
+    content = args["content"]
+    password = args["password"]
+
+    has_pw = False
+    if password != "":
+        salt = os.urandom(32)
+        fernet = create_fernet(salt, password.encode())
+        stored = salt + fernet.encrypt(content.encode())
+        has_pw = True
+    else:
+        stored = content.encode()
+
+    query = """
+INSERT INTO notes (owner, name, content, has_password, share_email, private, style, identifier)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning id
+    """
+    args = (
+        request["user"]["id"],
+        name,
+        stored,
+        has_pw,
+        args["share_email"],
+        args["private"],
+        args["style"],
+        args["identifier"]
+    )
+    id_ = await request.app["db"].fetchval(query, *args)
+
+    id_ = base64.urlsafe_b64encode(str(id_).encode())
+
+    return web.HTTPFound("/dashboard/notes")
+
+@bp.get("/notes/{name}")
+@match_info_schema(NameSchema())
+@template("dashboard/notes/view.html")
+async def get(request):
+    name = request["match_info"]["name"]
+    alt = None
+    with suppress(ValueError):
+        alt = uuid.UUID(base64.urlsafe_b64decode(name).decode("utf-8"))
+    name_type = "ID" if isinstance(name, uuid.UUID) else "name"
+
+    has_pw = await request.app["db"].fetchval("SELECT has_password FROM notes WHERE (identifier = 'name' AND name = $1) OR (identifier = 'id' AND id = $2)", name, alt)
+
+    return {
+        "name": request.match_info["name"],
+        "has_pw": has_pw,
+        "name_type": name_type,
+    }
+
+@bp.post("/notes/{name}")
+@match_info_schema(NameSchema())
+async def view(request):
+    try:
+        args = await parser.parse(ViewNoteSchema(), request, locations=["form"])
+    except ValidationError as e:
+        return web.json_response({"error": e.messages})
+
+    name = request["match_info"]["name"]
+    alt = None
+    with suppress(ValueError):
+        alt = uuid.UUID(base64.urlsafe_b64decode(name).decode("utf-8"))
+
+    note = await request.app["db"].fetchrow("SELECT has_password, content, owner, name, share_email, private, style FROM notes WHERE (identifier = 'name' AND name = $1) OR (identifier = 'id' AND id = $2)", name, alt)
+    if note is None:
+        return web.Response(text="Note not found", status=404)
+
+    if note["private"] is True:
+        user = await verify_user(request, scopes=["id"])
+        if isinstance(user, web.HTTPException):
+            return web.Response(text="Not logged in and note is private", status=403)
+        if user["id"] != note["owner"]:
+            return web.Response(text="Note is private", status=403)
+
+    if note["has_password"] is True:
+        password = args.get("password")
+        if password is None:
+            return web.Response(text="Password required", status=401)
+        salt, encrypted_content = derive_salt_and_content(note["content"])
+        fernet = create_fernet(salt, password.encode())
+        decoded = fernet.decrypt(encrypted_content).decode("utf-8")
+    else:
+        decoded = note["content"].decode("utf-8")
+
+    email = None
+    if note["share_email"] is True:
+        email = (await select_user(request.app["db"], user_id=note["owner"])).get("email")
+
+    asyncio.get_event_loop().create_task(request.app["db"].execute("UPDATE notes SET clicks = clicks + 1 WHERE (identifier = 'name' AND name = $1) OR (identifier = 'id' AND id = $2)", name, alt))
+
+    if note["style"] == "plaintext":
+        template = await render_string_async(
+            "dashboard/notes/view.txt", request,
+            {
+                "name": note["name"],
+                "email": email,
+                "content": decoded
+            }
+        )
+        return web.Response(text=template, content_type="text/plain")
+    if note["style"] == "styled":
+        return await render_template_async(
+            "dashboard/notes/view_stylized.html", request,
+            {
+                "name": note["name"],
+                "email": email,
+                "content": decoded
+            }
+        )

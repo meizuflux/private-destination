@@ -1,0 +1,89 @@
+{% extends 'dashboard/notes/layout.html' %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/textarea.css">
+{% endblock head %}
+
+{% block main2 %}
+    <form method="POST">
+        <div class="field">
+            <label class="label">Name</label>
+            <div class="control">
+                <input class="input" type="text" placeholder="Name" name="name">
+            </div>
+            <p class="help">A name to describe the note</p>
+        </div>
+        <div class="field">
+            <label for="" class="label">Identifier</label>
+            <div class="control">
+                <label class="radio">
+                    <input type="radio" name="identifier" value="name">
+                    Name
+                  </label>
+                  <label class="radio">
+                    <input type="radio" name="identifier" checked value="id">
+                    Random ID
+                  </label>
+            </div>
+        </div>
+        <div class="field">
+            <label class="label">Content</label>
+            <div class="control">
+                <textarea class="textarea" placeholder="Content" name="content"></textarea>
+            </div>
+            <p class="help">The text that you want people to see</p>
+        </div>
+        <div class="field">
+            <label class="label">Password (optional)</label>
+            <div class="control">
+                <input class="input" type="password" placeholder="Password" name="password" id="password">
+            </div>
+            <p class="help">Adding a password will encrypt the note with the password and require viewers to enter it in order to view the note</p>
+        </div>
+        <div class="field">
+            <div class="control">
+                <label class="checkbox">
+                    <input type="checkbox" id="show-password">
+                    <span id="show-password-text">Show</span> Password
+                </label>
+            </div>
+        </div>
+        <div class="field">
+            <label class="label">Options</label>
+            <div class="control">
+                <label class="checkbox" title="Your email will be displayed when viewing this note">
+                    <input type="checkbox" checked name="share_email">
+                    Share Email
+                </label>
+            </div>
+            <div class="control">
+                <label for="" class="checkbox" title="Only you will be able to access this note">
+                    <input type="checkbox" name="private">
+                    Private
+                </label>
+            </div>
+            <p class="help">Hover for details</p>
+        </div>
+        <div class="field">
+            <label for="" class="label">Style</label>
+            <div class="control">
+                <label class="radio">
+                    <input type="radio" name="style" checked value="styled">
+                    Stylized
+                </label>
+                <label class="radio">
+                    <input type="radio" name="style" value="plaintext">
+                    Plaintext
+                </label>
+            </div>
+        </div>
+        <div class="field is-grouped">
+            <div class="control">
+                <button class="button is-info" type="submit">Create Secure Note</button>
+            </div>
+        </div>
+    </form>
+
+    <script src="/static/js/textarea.js"></script>
+    <script src="/static/js/show-pw.js"></script>
+{% endblock %}

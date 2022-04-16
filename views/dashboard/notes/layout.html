@@ -1,0 +1,27 @@
+{% extends 'dashboard/layout.html' %}
+
+{% block title %}
+    Secure Notes
+{% endblock title %}
+
+{% block main %}
+    <div class="title mb-3">Secure Notes</div>
+
+    <div class="tabs mb-3">
+        <ul>
+            <li class="{{'is-active' if request.rel_url.path == '/dashboard/notes' }}"><a href="/dashboard/notes">View All</a></li>
+            <li class="{{'is-active' if request.rel_url.path == '/dashboard/notes/create' }}"><a href="/dashboard/notes/create">Create</a></li>
+            {% if name %}
+                {% if request.rel_url.path == "/dashboard/notes/" + notes + "/edit" %}
+                    <li class="is-active"><a>Edit</a></li>
+                {% endif %}
+                {% if request.rel_url.path == "/dashboard/notes/" + notes + "/delete" %}
+                    <li class="is-active"><a>Delete</a></li>
+                {% endif %}
+            {% endif %}
+        </ul>
+    </div>
+
+{% block main2 %}
+{% endblock  %}
+{% endblock main %}

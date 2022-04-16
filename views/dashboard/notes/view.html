@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <div class="container mt-4">
+        <div class="columns is-flex is-vcentered is-centered">
+            <div class="column is-9">
+                <div class="box">
+                    {% if has_pw is none %}
+                        <p class="title is-4">Unknown note</p>
+                    {% else %}
+                        <p class="title is-4">
+                            View note with {{name_type}} <code>{{name}}</code>
+                        </p>
+                        <form method="POST">
+                            {% if has_pw is true %}
+                                <div class="field">
+                                    <label class="label">Password</label>
+                                    <div class="control">
+                                        <input class="input" type="text" placeholder="Password for the note" name="password">
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="field">
+                                <div class="control">
+                                    <button class="button is-link" type="submit">Go</button>
+                                </div>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    
+{% endblock %}

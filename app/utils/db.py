@@ -11,6 +11,21 @@ ConnOrPool = Union[Connection, Pool]
 def form_scopes(scopes: Scopes) -> str:
     return scopes if isinstance(scopes, str) else ", ".join(scopes)
 
+async def select_notes(conn: ConnOrPool, *, sortby: str, direction: str, owner: int, offset: int) -> List[Record]:
+    # sort and direction weren't working as params to get passed so they have to go directly into the query
+    # this is fine as they both are sanitized with the api-spec
+    query = f"""
+        SELECT encode(convert_to(cast(id as text), 'UTF8'), 'base64') AS id, owner, name, content, has_password, share_email, private, style, identifier, clicks, creation_date
+        FROM notes
+        WHERE owner = $1
+        ORDER BY {sortby} {direction.upper()}
+        LIMIT 50
+        OFFSET $2
+    """
+    return await conn.fetch(query, owner, offset)
+
+async def select_note_count(conn: ConnOrPool, *, owner: int) -> int:
+    return await conn.fetchval("SELECT count(id) FROM notes WHERE owner = $1", owner)
 
 async def select_short_urls(conn: ConnOrPool, *, sortby: str, direction: str, owner: int, offset: int) -> List[Record]:
     # sort and direction weren't working as params to get passed so they have to go directly into the query

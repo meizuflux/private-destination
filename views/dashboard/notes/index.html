@@ -1,0 +1,105 @@
+{% extends 'dashboard/notes/layout.html' %}
+
+{% block title %}
+    View secure notes
+{% endblock title %}
+
+{% block main2 %}
+    <form class="mb-3">
+        <label class="label">Sort By</label>
+        <div class="field has-addons">
+            <div class="control">
+                <div class="select">
+                    <select name="sortby" title="Sort By">
+                        <option value="id" {% if sortby == "id" %}selected{% endif %}>ID</option>
+                        <option value="name" {% if sortby == "name" %}selected{% endif %}>Name</option>
+                        <option value="has_password" {% if sortby == "has_password" %}selected{% endif %}>Has Password</option>
+                        <option value="share_email" {% if sortby == "share_email" %}selected{% endif %}>Share Email</option>
+                        <option value="private" {% if sortby == "private" %}selected{% endif %}>Private</option>
+                        <option value="style" {% if sortby == "style" %}selected{% endif %}>Style</option>
+                        <option value="identifier" {% if sortby == "identifier" %}selected{% endif %}>Identifier</option>
+                        <option value="clicks" {% if sortby == "clicks" %}selected{% endif %}>Clicks</option>
+                        <option value="creation_date" {% if sortby == "creation_date" or not sortby %}selected{% endif %}>Creation date</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control">
+                <div class="select">
+                    <select name="direction" title="Direction">
+                        <option value="desc" {% if direction == "desc" or not direction %}selected{% endif %}>Descending</option>
+                        <option value="asc" {% if direction == "asc" %}selected{% endif %}>Ascending</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control">
+                <button class="button is-info" type="submit">Go</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="table-container">
+        <table class="table is-striped is-hoverable is-fullwidth is-bordered is-narrow">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Has Password</th>
+                    <th>Share Email</th>
+                    <th>Private</th>
+                    <th>Style</th>
+                    <th>Identifier</th>
+                    <th>Clicks</th>
+                    <th>Creation Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for note in values %}
+                    <tr>
+                        {% if note["identifier"] == "name" %}
+                            <td>{{note["id"]}}</td>
+                            <td><a href="/notes/{{note['name']}}" target="_blank" rel="noopener noreferrer" id="{{note['id']}}">{{note['name']}}</a></td>
+                        {% endif %}
+                        {% if note["identifier"] == "id" %}
+                            <td><a href="/notes/{{note['id']}}" target="_blank" rel="noopener noreferrer" id="{{note['id']}}">{{note["id"]}}</a></td>
+                            <td>{{note['name']}}</td>
+                        {% endif %}
+                        <td>{{note["has_password"]}}</td>
+                        <td>{{note["share_email"]}}</td>
+                        <td>{{note["private"]}}</td>
+                        <td>{{note["style"]}}</td>
+                        <td>{{note["identifier"]}}</td>
+                        <td>{{note["clicks"]}}</td>
+                        <td>{{note["creation_date"].strftime("%d %B %Y at %H:%M")}}</td>
+                        <td>
+                            <div class="buttons">
+                                <button class="button is-info is-small copy-btn" data-target="{{note['id']}}">Copy</button>
+                                <a href="/dashboard/notes/{{url['alias']}}/edit" class="button is-warning is-small">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <nav class="pagination is-centered">
+        <ul class="pagination-list">
+            {% if current_page != 1 %}
+                <li><a class="pagination-link" href="/dashboard/notes">1</a></li>
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+                {% if current_page != 2 %}
+                    <li><a class="pagination-link" href="/dashboard/notes?page={{current_page - 1}}">{{current_page - 1}}</a></li>
+                {% endif %}
+            {% endif %}
+            <li><a class="pagination-link is-current">{{current_page}}</a></li>
+            {% if current_page != max_pages %}
+                {% if current_page != max_pages - 1 %}
+                    <li><a class="pagination-link" href="/dashboard/notes?page={{current_page + 1}}">{{current_page + 1}}</a></li>
+                {% endif %}
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+                <li><a class="pagination-link" href="/dashboard/notes?page={{max_pages}}">{{max_pages}}</a></li>
+            {% endif %}
+            </ul>
+    </nav>
+    <script src="/static/js/notes.js"></script>
+{% endblock main2 %}

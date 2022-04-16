@@ -9,6 +9,11 @@
     {% endblock %}
 </head>
 <body>
+    <noscript>
+        <div class="column is-fullwidth has-text-centered has-background-warning">
+            <h6 class="title is-6">Some functionality is unsupported with JS disabled</h6>
+        </div>
+    </noscript>
     {% block body %}
     {% endblock %}
     <script defer data-domain="mzf.one" src="https://analytics.meizuflux.com/js/script.outbound-links.js"></script>

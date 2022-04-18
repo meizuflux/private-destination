@@ -16,8 +16,6 @@
                         <option value="has_password" {% if sortby == "has_password" %}selected{% endif %}>Has Password</option>
                         <option value="share_email" {% if sortby == "share_email" %}selected{% endif %}>Share Email</option>
                         <option value="private" {% if sortby == "private" %}selected{% endif %}>Private</option>
-                        <option value="style" {% if sortby == "style" %}selected{% endif %}>Style</option>
-                        <option value="identifier" {% if sortby == "identifier" %}selected{% endif %}>Identifier</option>
                         <option value="clicks" {% if sortby == "clicks" %}selected{% endif %}>Clicks</option>
                         <option value="creation_date" {% if sortby == "creation_date" or not sortby %}selected{% endif %}>Creation date</option>
                     </select>
@@ -46,8 +44,6 @@
                     <th>Has Password</th>
                     <th>Share Email</th>
                     <th>Private</th>
-                    <th>Style</th>
-                    <th>Identifier</th>
                     <th>Clicks</th>
                     <th>Creation Date</th>
                     <th>Actions</th>
@@ -56,25 +52,17 @@
             <tbody>
                 {% for note in values %}
                     <tr>
-                        {% if note["identifier"] == "name" %}
-                            <td>{{note["id"]}}</td>
-                            <td><a href="/notes/{{note['name']}}" target="_blank" rel="noopener noreferrer" id="{{note['id']}}">{{note['name']}}</a></td>
-                        {% endif %}
-                        {% if note["identifier"] == "id" %}
-                            <td><a href="/notes/{{note['id']}}" target="_blank" rel="noopener noreferrer" id="{{note['id']}}">{{note["id"]}}</a></td>
-                            <td>{{note['name']}}</td>
-                        {% endif %}
+                        <td><a href="/notes/{{note['id']}}" target="_blank" rel="noopener noreferrer" id="{{note['id']}}">{{note["id"]}}</a></td>
+                        <td>{{note['name']}}</td>
                         <td>{{note["has_password"]}}</td>
                         <td>{{note["share_email"]}}</td>
                         <td>{{note["private"]}}</td>
-                        <td>{{note["style"]}}</td>
-                        <td>{{note["identifier"]}}</td>
                         <td>{{note["clicks"]}}</td>
                         <td>{{note["creation_date"].strftime("%d %B %Y at %H:%M")}}</td>
                         <td>
                             <div class="buttons">
                                 <button class="button is-info is-small copy-btn" data-target="{{note['id']}}">Copy</button>
-                                <a href="/dashboard/notes/{{url['alias']}}/edit" class="button is-warning is-small">Edit</a>
+                                <a href="/dashboard/notes/{{note['id']}}/edit" class="button is-warning is-small" disabled title="Feature in progress">Edit</a>
                             </div>
                         </td>
                     </tr>

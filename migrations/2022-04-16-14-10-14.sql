@@ -6,9 +6,6 @@ CREATE TABLE IF NOT EXISTS notes (
     has_password BOOLEAN DEFAULT false,
     share_email BOOLEAN DEFAULT True,
     private BOOLEAN DEFAULT false,
-    style TEXT DEFAULT 'raw', -- 'raw', 'styled'
-    identifier TEXT DEFAULT 'id', -- 'id', 'name'
     clicks BIGINT DEFAULT 0 NOT NULL,
-    creation_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
-    UNIQUE (owner, name)
+    creation_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );

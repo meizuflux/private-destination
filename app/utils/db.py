@@ -16,7 +16,7 @@ async def select_notes(conn: ConnOrPool, *, sortby: str, direction: str, owner: 
     # sort and direction weren't working as params to get passed so they have to go directly into the query
     # this is fine as they both are sanitized with the api-spec
     query = f"""
-        SELECT encode(convert_to(cast(id as text), 'UTF8'), 'base64') AS id, owner, name, content, has_password, share_email, private, style, identifier, clicks, creation_date
+        SELECT encode(convert_to(cast(id as text), 'UTF8'), 'base64') AS id, owner, name, content, has_password, share_email, private, clicks, creation_date
         FROM notes
         WHERE owner = $1
         ORDER BY {sortby} {direction.upper()}

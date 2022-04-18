@@ -1,5 +1,0 @@
-Metadata:
-    Name: {{name}}{% if email %}
-    Owner Email: {{email}}{% endif %}
-----------------------------------------------------------------
-{{content}}

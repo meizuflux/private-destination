@@ -33,7 +33,6 @@ email with `sendinblue`
 - welcome email
 - image cdn
 - maybe make the site invite only??
-- something similar to mystbin/pastebin
 - todo list
 - email verification
 - seperate admin dashboard to manage *everything*, not just users

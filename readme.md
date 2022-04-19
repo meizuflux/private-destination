@@ -39,3 +39,4 @@ email with `sendinblue`
 - seperate admin dashboard to manage *everything*, not just users
 - panel on admin dashboard to view process usage
 - allow use of user password to unlock secure note content
+- migrate to argon2_cffi for password hashing

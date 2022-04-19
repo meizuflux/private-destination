@@ -39,3 +39,16 @@ email with `sendinblue`
 - panel on admin dashboard to view process usage
 - allow use of user password to unlock secure note content
 - migrate to argon2_cffi for password hashing
+
+# invite only pondering
+```sql
+create table if not exists invites (
+    user_id bigint references users(id) on delete cascade,
+    code text not null primary key,
+    used bigint references users (id) on delete cascate default null, -- the user who signed up
+    required_email text default null,
+)
+```
+then can track count, and easily generate/delete without needing to change users
+
+might want to add `invite_code` field to user obj to track

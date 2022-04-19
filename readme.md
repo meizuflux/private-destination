@@ -38,3 +38,4 @@ email with `sendinblue`
 - email verification
 - seperate admin dashboard to manage *everything*, not just users
 - panel on admin dashboard to view process usage
+- allow use of user password to unlock secure note content

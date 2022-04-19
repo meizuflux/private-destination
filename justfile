@@ -16,3 +16,9 @@ build:
 watch:
     yarn run chokidar "static/**/*.*" "views/*.html" -c "node scripts/build.mjs" --initial
 
+install:
+    pip install -r requirements.txt && pip install -r requirements-dev.txt
+
+pyenv:
+    pyenv install 3.10.2 && pyenv global 3.10.2
+

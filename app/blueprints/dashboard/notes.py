@@ -49,7 +49,7 @@ class PasswordIncorrectSchema(Schema):
     incorrect_password = fields.Boolean()
 
 
-def create_fernet(salt: bytes, password: str):
+def create_fernet(salt: bytes, password: bytes):
     kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100000, backend=default_backend())
     return Fernet(base64.urlsafe_b64encode(kdf.derive(password)))
 
@@ -65,7 +65,7 @@ bp = Blueprint("")
 @querystring_schema(NotesFilterSchema())
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @template("dashboard/notes/index.html")
-async def index(request):
+async def index(request: web.Request):
     current_page = request["querystring"].get("page", 1) - 1
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "creation_date")
@@ -96,13 +96,13 @@ async def index(request):
 @bp.get("/dashboard/notes/create")
 @template("dashboard/notes/create.html")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-async def index(request):
+async def create_note(request):
     return {"errors": {}}
 
 
 @bp.post("/dashboard/notes/create")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-async def create(request):
+async def create_note_form(request: web.Request) -> web.Response:
     try:
         args = await parser.parse(NoteSchema(), request, locations=["form"])
     except ValidationError as e:
@@ -144,7 +144,7 @@ VALUES ($1, $2, $3, $4, $5, $6) returning id
 @match_info_schema(IdSchema())
 @querystring_schema(PasswordIncorrectSchema())
 @template("dashboard/notes/view.html")
-async def get(request):
+async def view_note(request: web.Request):
     note_id = request["match_info"]["note_id"]
     as_uuid = uuid.UUID(base64.urlsafe_b64decode(note_id).decode("utf-8"))
 
@@ -162,7 +162,7 @@ async def get(request):
 
 @bp.post("/notes/{note_id}")
 @match_info_schema(IdSchema())
-async def view(request):
+async def view_note_form(request: web.Request) -> web.Response:
     try:
         args = await parser.parse(ViewNoteSchema(), request, locations=["form"])
     except ValidationError as e:
@@ -179,7 +179,7 @@ async def view(request):
         return web.Response(text="Note not found", status=404)
 
     if note["private"] is True:
-        user = await verify_user(request, scopes=["id"])
+        user = await verify_user(request, scopes=["id"], admin=False, redirect=False, needs_authorization=True)
         if isinstance(user, web.HTTPException):
             return web.Response(text="Not logged in and note is private", status=403)
         if user["id"] != note["owner"]:

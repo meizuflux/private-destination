@@ -39,16 +39,10 @@ email with `sendinblue`
 - panel on admin dashboard to view process usage
 - allow use of user password to unlock secure note content
 - migrate to argon2_cffi for password hashing
-
-# invite only pondering
-```sql
-create table if not exists invites (
-    user_id bigint references users(id) on delete cascade,
-    code text not null primary key,
-    used bigint references users (id) on delete cascate default null, -- the user who signed up
-    required_email text default null,
-)
-```
-then can track count, and easily generate/delete without needing to change users
-
-might want to add `invite_code` field to user obj to track
+- make api key encrypted with user's password - so its not in plaintext
+- make sessions generate uuid by random
+- make jinja responses the proper error code (shouldn't be 200 for an error)
+- make error handling in the templates simpler and less verbose
+- pull out common jinja2 html into a macro or component file
+- migrate users id to use identity
+- add editing and deleting of notes

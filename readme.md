@@ -46,3 +46,4 @@ email with `sendinblue`
 - pull out common jinja2 html into a macro or component file
 - migrate users id to use identity
 - add editing and deleting of notes
+- add a decorator to allow routes to return 2 different types of responses (json and html) based on content type to allow it to act more like an api and reenable sharex compatibility

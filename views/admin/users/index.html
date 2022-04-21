@@ -44,7 +44,7 @@ Manage Users
                 </tr>
             </thead>
             <tbody>
-                {% for i, u in enumerate(users, start=1) %}
+                {% for u in users %}
                     <tr>
                         <td>{{u["email"]}}</td>
                         <td><code>{{u["id"]}}</code></a></td>

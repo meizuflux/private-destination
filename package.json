@@ -12,8 +12,9 @@
     "@codemirror/lang-json": "^0.19.2",
     "@codemirror/lang-python": "^0.19.4",
     "@codemirror/lang-rust": "^0.19.2",
-    
+    "bulma": "^0.9.3",
     "chokidar-cli": "^3.0.0",
-    "esbuild": "^0.14.25"
+    "esbuild": "^0.14.25",
+    "sass-embedded": "^1.50.1"
   }
 }

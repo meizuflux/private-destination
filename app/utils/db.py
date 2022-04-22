@@ -26,8 +26,11 @@ async def select_notes(conn: ConnOrPool, *, sortby: str, direction: str, owner: 
     return await conn.fetch(query, owner, offset)
 
 
-async def select_note_count(conn: ConnOrPool, *, owner: int) -> int:
+async def select_notes_count(conn: ConnOrPool, *, owner: int) -> int:
     return await conn.fetchval("SELECT count(id) FROM notes WHERE owner = $1", owner)
+
+async def select_total_notes_count(conn: ConnOrPool) -> int:
+    return await conn.fetchval("SELECT count(id) FROM notes")
 
 
 async def select_short_urls(conn: ConnOrPool, *, sortby: str, direction: str, owner: int, offset: int) -> List[Record]:
@@ -44,11 +47,11 @@ async def select_short_urls(conn: ConnOrPool, *, sortby: str, direction: str, ow
     return await conn.fetch(query, owner, offset)
 
 
-async def select_short_url_count(conn: ConnOrPool, *, owner: int) -> int:
+async def select_short_urls_count(conn: ConnOrPool, *, owner: int) -> int:
     return await conn.fetchval("SELECT count(alias) FROM urls WHERE owner = $1", owner)
 
 
-async def select_total_short_url_count(conn: ConnOrPool):
+async def select_total_short_urls_count(conn: ConnOrPool):
     return await conn.fetchval("SELECT count(alias) FROM urls")
 
 
@@ -95,13 +98,13 @@ async def insert_user(conn: ConnOrPool, *, email: str, api_key: str, hashed_pass
     return await conn.fetchval(query, email, hashed_password, api_key)
 
 
-async def update_user(conn: ConnOrPool, *, user_id: int, email: str, authorized: bool):
+async def update_user(conn: ConnOrPool, *, user_id: int, email: str):
     query = """
         UPDATE users
-        SET email = $1, authorized = $2
-        WHERE id = $3
+        SET email = $1
+        WHERE id = $2
     """
-    return await conn.execute(query, email, authorized, user_id)
+    return await conn.execute(query, email, user_id)
 
 
 async def delete_user(conn: ConnOrPool, *, user_id: int):
@@ -111,7 +114,7 @@ async def delete_user(conn: ConnOrPool, *, user_id: int):
 async def select_users(conn: ConnOrPool, *, sortby: str, direction: str):
     query = f"""
         SELECT
-            id, email, joined, authorized
+            id, email, joined
         FROM
             users
         ORDER BY {sortby} {direction.upper()}
@@ -126,15 +129,6 @@ async def select_total_users_count(conn: ConnOrPool):
 
 async def select_user(conn: ConnOrPool, *, user_id: int):
     return await conn.fetchrow("SELECT * FROM users WHERE id = $1", user_id)
-
-
-async def authorize_user(conn: ConnOrPool, *, user_id: int):
-    return await conn.execute("UPDATE users SET authorized = true WHERE id = $1", user_id)
-
-
-async def unauthorize_user(conn: ConnOrPool, *, user_id: int):
-    return await conn.execute("UPDATE users SET authorized = false WHERE id = $1", user_id)
-
 
 async def get_hash_and_id_by_email(conn: ConnOrPool, *, email: str):
     return await conn.fetchrow("SELECT id, password FROM users WHERE email = $1", email)

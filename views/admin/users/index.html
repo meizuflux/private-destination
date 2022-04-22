@@ -13,7 +13,6 @@ Manage Users
                     <select name="sortby" title="Sort By">
                         <option value="email" {% if sortby == "email" %}selected{% endif %}>Email</option>
                         <option value="id" {% if sortby == "id" %}selected{% endif %}>User ID</option>
-                        <option value="authorized" {% if sortby == "authorized" %}selected{% endif %}>Authorized</option>
                         <option value="joined" {% if sortby == "joined" or not sortby %}selected{% endif %}>Joined</option>
                     </select>
                 </div>
@@ -38,7 +37,6 @@ Manage Users
                 <tr>
                     <th>Email</th>
                     <th>User ID</th>
-                    <th>Authorized</th>
                     <th>Joined</th>
                     <th>Actions</th>
                 </tr>
@@ -48,7 +46,6 @@ Manage Users
                     <tr>
                         <td>{{u["email"]}}</td>
                         <td><code>{{u["id"]}}</code></a></td>
-                        <td><code>{{u["authorized"]}}</code></td>
                         <td>{{u["joined"].strftime("%d %B %Y at %H:%M")}}</td>
                         <td>
                             <a href="/admin/users/{{u['id']}}/edit" class="button is-warning is-small">Edit</a>

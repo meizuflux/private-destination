@@ -25,7 +25,7 @@ async def users(request: web.Request):
 
 @bp.route("/{user_id}/edit", methods=["GET", "POST"])
 @match_info_schema(UserIDSchema)
-@requires_auth(admin=True, redirect=True, scopes="id", needs_authorization=False)
+@requires_auth(admin=True, redirect=True, scopes="id")
 async def edit_user_(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
     user = await select_user(request.app["db"], user_id=user_id)
@@ -59,7 +59,6 @@ async def edit_user_(request: web.Request) -> web.Response:
         {
             "id": user["id"],
             "email": user["email"],
-            "authorized": user["authorized"],
             "admin": user["admin"],
             "joined": user["joined"],
             "is_self": is_self,
@@ -68,7 +67,7 @@ async def edit_user_(request: web.Request) -> web.Response:
 
 
 @bp.route("/{user_id}/delete", methods=["GET", "POST"])
-@requires_auth(redirect=True, scopes=["id", "admin"], needs_authorization=False)
+@requires_auth(redirect=True, scopes=["id", "admin"])
 @match_info_schema(UserIDSchema)
 async def delete_user_(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]

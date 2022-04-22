@@ -20,19 +20,6 @@
             <label class="label">Email</label>
             <input class="input" type="email" value="{{email}}" name="email" disabled>
         </div>
-
-        <div class="field">
-            <label class="label">Authorized</label>
-            <input name="authorized" value="{{user['authorized']}}" type="hidden">
-            <label class="radio" disabled>
-                <input type="radio" name="authorized" value="True" {% if authorized == True %}checked{% endif%} disabled>
-                True
-            </label>
-            <label class="radio" disabled>
-                <input type="radio" name="authorized" value="False" {% if authorized != True %}checked{% endif%} disabled>
-                False
-            </label>
-        </div>
         <div class="buttons">
             <a href="/dashboard/settings/account/edit" class="button is-warning">Edit</a>
             <a href="/dashboard/settings/account/delete" class="button is-danger">Delete</a>

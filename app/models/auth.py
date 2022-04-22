@@ -3,16 +3,15 @@ from marshmallow import Schema, fields, validate
 
 class LoginSchema(Schema):
     email = fields.Email(required=True)
-    password = fields.Field(require=True)
+    password = fields.Field(required=True, validate=validate.Length(min=5, max=1024)) 
 
 
 class SignUpSchema(LoginSchema):
-    ...
+    invite_code = fields.UUID(required=True)
 
 
 class UsersEditSchema(Schema):
     email = fields.Email(required=True)
-    authorized = fields.Boolean(required=True)
 
 
 class SessionSchema(Schema):
@@ -25,4 +24,4 @@ class UserIDSchema(Schema):
 
 class UsersFilterSchema(Schema):
     direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
-    sortby = fields.String(validate=validate.OneOf({"id", "authorized", "email", "joined"}))
+    sortby = fields.String(validate=validate.OneOf({"id", "email", "joined"}))

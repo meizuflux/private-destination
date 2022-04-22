@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import binascii
 import os
 import uuid
 from contextlib import suppress
@@ -16,7 +17,7 @@ from marshmallow import Schema, ValidationError, fields, validate
 
 from app.routing import Blueprint
 from app.utils.auth import requires_auth, verify_user
-from app.utils.db import select_note_count, select_notes, select_user
+from app.utils.db import select_notes_count, select_notes, select_user
 from app.utils.forms import parser
 
 
@@ -78,7 +79,7 @@ async def index(request: web.Request):
             owner=request["user"]["id"],
             offset=current_page * 50,
         )
-        notes_count = await select_note_count(conn, owner=request["user"]["id"])
+        notes_count = await select_notes_count(conn, owner=request["user"]["id"])
 
     max_pages = ceil(notes_count / 50)
 
@@ -106,7 +107,7 @@ async def create_note_form(request: web.Request) -> web.Response:
     try:
         args = await parser.parse(NoteSchema(), request, locations=["form"])
     except ValidationError as e:
-        return await render_template_async("/dashboard/notes/create.html", request, {"errors": e.messages})
+        return await render_template_async("/dashboard/notes/create.html", request, {"errors": e.messages}, status=400)
 
     name = args["name"]
     content = args["content"]
@@ -146,7 +147,10 @@ VALUES ($1, $2, $3, $4, $5, $6) returning id
 @template("dashboard/notes/view.html")
 async def view_note(request: web.Request):
     note_id = request["match_info"]["note_id"]
-    as_uuid = uuid.UUID(base64.urlsafe_b64decode(note_id).decode("utf-8"))
+    try:
+        as_uuid = uuid.UUID(base64.urlsafe_b64decode(note_id).decode("utf-8"))
+    except (ValueError, binascii.Error):
+        return web.Response(text="Invalid Note ID", status=400)
 
     has_pw = await request.app["db"].fetchval(
         "SELECT has_password FROM notes WHERE id = $1",
@@ -166,10 +170,13 @@ async def view_note_form(request: web.Request) -> web.Response:
     try:
         args = await parser.parse(ViewNoteSchema(), request, locations=["form"])
     except ValidationError as e:
-        return web.json_response({"error": e.messages})
+        return web.json_response({"error": e.messages}, status=400)
 
     note_id = request["match_info"]["note_id"]
-    as_uuid = uuid.UUID(base64.urlsafe_b64decode(note_id).decode("utf-8"))
+    try:
+        as_uuid = uuid.UUID(base64.urlsafe_b64decode(note_id).decode("utf-8"))
+    except (ValueError, binascii.Error):
+        return web.Response(text="Invalid Note ID", status=400)
 
     note = await request.app["db"].fetchrow(
         "SELECT has_password, content, owner, name, share_email, private FROM notes WHERE id = $1",
@@ -179,7 +186,7 @@ async def view_note_form(request: web.Request) -> web.Response:
         return web.Response(text="Note not found", status=404)
 
     if note["private"] is True:
-        user = await verify_user(request, scopes=["id"], admin=False, redirect=False, needs_authorization=True)
+        user = await verify_user(request, scopes=["id"], admin=False, redirect=False)
         if isinstance(user, web.HTTPException):
             return web.Response(text="Not logged in and note is private", status=403)
         if user["id"] != note["owner"]:

@@ -10,7 +10,7 @@ from aiohttp_jinja2 import template
 from app.routing import Blueprint
 from app.utils.db import (
     select_total_sessions_count,
-    select_total_short_url_count,
+    select_total_short_urls_count,
     select_total_unique_sessions_count,
     select_total_users_count,
 )
@@ -23,6 +23,7 @@ for f in Path("./").rglob("*.*"):
         or str(f).startswith("node_modules")
         or str(f).startswith("dist")
         or str(f).endswith(".pyc")
+        or str(f).replace("\\", "/") == "static/css/bulma.css" # windows has paths with \ instad of /
     ):
         continue
     files += 1
@@ -85,7 +86,7 @@ async def index(request: web.Request):
 
     async with request.app["db"].acquire() as conn:
         ctx["service"] = {
-            "shortener_count": await select_total_short_url_count(conn),
+            "shortener_count": await select_total_short_urls_count(conn),
             "user_count": await select_total_users_count(conn),
             "session_count": await select_total_sessions_count(conn),
             "unique_session_count": await select_total_unique_sessions_count(conn),

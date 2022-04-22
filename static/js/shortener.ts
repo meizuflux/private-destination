@@ -1,4 +1,4 @@
-for (let copyBtn of <HTMLButtonElement[]>document.getElementsByClassName("copy-btn")) {
+for (let copyBtn of document.getElementsByClassName("copy-btn")) {
     let target = document.getElementById(copyBtn.dataset.target)
     copyBtn.addEventListener("click", async () => {
         await navigator.clipboard.writeText(location.origin + "/" + target.getAttribute("value"))

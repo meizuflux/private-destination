@@ -1,8 +1,10 @@
+import base64
 from uuid import UUID
 
 from aiohttp import web
+from aiohttp_apispec import match_info_schema, querystring_schema
 from aiohttp_jinja2 import render_template_async
-from marshmallow import ValidationError
+from marshmallow import Schema, ValidationError, fields
 from passlib.hash import pbkdf2_sha512
 from ua_parser import user_agent_parser
 
@@ -13,6 +15,8 @@ from app.utils.auth import create_user, requires_auth, verify_user
 from app.utils.db import delete_session, get_hash_and_id_by_email, insert_session
 from app.utils.forms import parser
 
+class InviteCodeSchema(Schema):
+    code = fields.UUID()
 
 async def login_user(request: web.Request, user_id: int) -> web.Response:
     metadata = user_agent_parser.Parse(request.headers.getone("User-Agent"))
@@ -26,9 +30,9 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
         if peername is not None:
             ip, _ = peername
 
-    split = ip.split(",")
+    split = ip.split(",") # for some reason the ip might have a comma
     if len(split) > 0:
-        ip = split[0]
+        ip = split[0] # no idea why this happens but it does
 
     uuid = await insert_session(request.app["db"], user_id=user_id, browser=browser, os=os, ip=ip)
 
@@ -36,7 +40,7 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
     res.set_cookie(
         name="_session",
         value=str(uuid),
-        max_age=60 * 60 * 24,  # one day
+        max_age=60 * 60 * 24, # one day
         httponly=True,
         secure=not request.app["dev"],
         samesite="strict",  # using this lets me not need to setup csrf and whatnot
@@ -47,25 +51,35 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
 
 bp = Blueprint("/auth")
 
+@bp.get("/invite/{code}")
+@match_info_schema(InviteCodeSchema())
+async def invite(request: web.Request) -> web.Response:
+    if await verify_user(request, admin=False, redirect=False, scopes=None):
+        return web.HTTPFound("/dashboard")
+    return web.HTTPFound(f"/auth/login?code={request['match_info']['code']}")
+
 
 @bp.route("/signup", methods=["GET", "POST"])
+@querystring_schema(InviteCodeSchema())
 async def signup(request: web.Request) -> web.Response:
-    if await verify_user(request, admin=False, redirect=False, scopes=None, needs_authorization=True) is True:
+    if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
         return web.HTTPFound("/dashboard")
 
+    invite_code = request["querystring"].get("code", "")
+
     if request.method == "POST":
-        status, ret = await create_user(request, template="onboarding.html", extra_ctx={"type": "signup"})
+        status, ret = await create_user(request, template="onboarding.html", extra_ctx={"type": "signup", "invite_code": invite_code})
         if status is Status.ERROR:
             return ret
 
         return await login_user(request, ret)
 
-    return await render_template_async("onboarding.html", request, {"type": "signup"})
+    return await render_template_async("onboarding.html", request, {"type": "signup", "invite_code": invite_code})
 
 
 @bp.route("/login", methods=["GET", "POST"])
 async def login(request: web.Request) -> web.Response:
-    if await verify_user(request, admin=False, redirect=False, scopes=None, needs_authorization=True) is True:
+    if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
         return web.HTTPFound("/dashboard")
 
     if request.method == "POST":
@@ -102,14 +116,14 @@ async def login(request: web.Request) -> web.Response:
 
         # email is right password is wrong
         return await render_template_async(
-            "onboarding.html", request, {"password_error": ["Invalid password"], "email": args["email"]}
+            "onboarding.html", request, {"password_error": ["Invalid password"], "email": args["email"]}, status=401
         )
 
     return await render_template_async("onboarding.html", request, {"type": "login"})
 
 
 @bp.get("/logout")
-@requires_auth(redirect=True, needs_authorization=False)
+@requires_auth(redirect=True)
 async def logout(request: web.Request) -> web.Response:
     token = request.cookies.get("_session")
     res = web.HTTPFound("/")

@@ -54,9 +54,9 @@ async def main():
         await pool.close()
         return
     print("Created user", user_id)
-    await pool.execute("UPDATE users SET authorized = True, admin = True WHERE id = $1", user_id)
+    await pool.execute("UPDATE users SET admin = True WHERE id = $1", user_id)
 
-    print(f"Updated user {user_id} to be authorized with admin permissions")
+    print(f"Updated user {user_id} to have admin permissions")
 
     await pool.close()
 

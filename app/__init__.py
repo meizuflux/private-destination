@@ -25,7 +25,7 @@ def truncate(text: str, limit: int):
 
 
 async def handle_errors(request: web.Request, error: web.HTTPException):
-    if not str(request.rel_url).startswith("/api") and error.status in {403, 404, 499, 500}:
+    if not str(request.rel_url).startswith("/api") and error.status in {403, 404, 500}:
         return await aiohttp_jinja2.render_template_async(
             f"errors/{error.status}.html", request, {}, status=error.status
         )
@@ -45,7 +45,6 @@ async def authentication_middleware(request: web.Request, handler):
             admin=fn.auth["admin"],
             redirect=fn.auth["redirect"],
             scopes=fn.auth["scopes"],
-            needs_authorization=fn.auth["needs_authorization"],
         )
         if isinstance(error, web.HTTPException):
             return await handle_errors(request, error)
@@ -79,13 +78,15 @@ async def app_factory():
     # has to go last since it has a catch-all
     app.router.add_routes(blueprints.base.bp)
 
+    app.router.add_static("/static", "dist")
+
     setup_aiohttp_apispec(
         app=app,
         title="Documentation",
         version="v1",
-        url="/api/docs/swagger.json",
-        swagger_path="/api/docs",
-        in_place=True,
+        url=None,
+        swagger_path=None,
+        in_place=False,
     )
 
     aiohttp_jinja2.setup(
@@ -95,7 +96,7 @@ async def app_factory():
         context_processors=[aiohttp_jinja2.request_processor, user_processor],
     )
     env = aiohttp_jinja2.get_env(app)
-    env.globals.update(enumerate=enumerate, len=len, truncate=truncate)
+    env.globals.update(len=len, truncate=truncate)
 
     app["dev"] = "adev" in argv[0]
     with open("config.yml") as f:
@@ -106,7 +107,6 @@ async def app_factory():
         else:
             config = loaded["prod"]
 
-    app.router.add_static("/static", "dist")
 
     app["config"] = config
 

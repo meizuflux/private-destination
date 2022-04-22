@@ -33,30 +33,6 @@
                     <p class="help is-danger">{{email_error[0]}}</p>
                 {% endif %}
             </div>
-
-            <div class="field">
-                <label class="label">Authorized</label>
-                {% if is_self is true %}
-                    <input name="authorized" value="{{user['authorized']}}" type="hidden">
-                    <label class="radio" disabled>
-                        <input type="radio" name="authorized" value="True" {% if authorized == True %}checked{% endif%} disabled>
-                        True
-                    </label>
-                    <label class="radio" disabled>
-                        <input type="radio" name="authorized" value="False" {% if authorized != True %}checked{% endif%} disabled>
-                        False
-                    </label>
-                {% else %}
-                    <label class="radio">
-                        <input type="radio" name="authorized" value="True" {% if authorized == True %}checked{% endif%}>
-                        True
-                    </label>
-                    <label class="radio">
-                        <input type="radio" name="authorized" value="False" {% if authorized != True %}checked{% endif%}>
-                        False
-                    </label>
-                {% endif %}
-            </div>
             
             <div class="field">
                 <div class="buttons">

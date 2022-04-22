@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS invites (
+    code UUID NOT NULL PRIMARY KEY DEFAULT (gen_random_uuid()),
+    owner BIGINT REFERENCES users (id) ON DELETE CASCADE,
+    used_by BIGINT REFERENCES users (id) ON DELETE CASCADE DEFAULT null UNIQUE,
+    required_email TEXT DEFAULT null,
+    creation_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
+);

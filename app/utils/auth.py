@@ -39,31 +39,35 @@ def requires_auth(
     admin: bool = False,
     redirect: bool = False,
     scopes: Scopes = None,
-    needs_authorization: bool = True,
 ):
     if scopes is not None:
         if isinstance(scopes, str):
             scopes = [scopes]
-    else:
-        scopes = []
-    if not (len(scopes) == 1 and scopes[0] == "*"):
+
+    if admin is True:
         if admin is True:
-            scopes.append("admin")
-        scopes.append("authorized")
+            if scopes is None:
+                scopes = ["admin"]
+            elif scopes[0] != "*":
+                scopes.append("admin")
 
     def deco(fn):
         setattr(fn, "requires_auth", True)
         setattr(
             fn,
             "auth",
-            {"admin": admin, "redirect": redirect, "scopes": scopes, "needs_authorization": needs_authorization},
+            {
+                "admin": admin,
+                "redirect": redirect,
+                "scopes": scopes
+            },
         )
         return fn
 
     return deco
 
 
-async def verify_user(request: web.Request, *, admin: bool, redirect: bool, scopes: Scopes, needs_authorization: bool):
+async def verify_user(request: web.Request, *, admin: bool, redirect: bool, scopes: Scopes):
     async def by_session():
         session = request.cookies.get("_session")
         if session is not None:
@@ -84,13 +88,9 @@ async def verify_user(request: web.Request, *, admin: bool, redirect: bool, scop
 
     if not user:
         if redirect is True:
-            return web.HTTPFound("/auth/login")
+            return web.HTTPFound("/")
         return web.HTTPUnauthorized()
     if scopes is not None:
-        if needs_authorization is True:
-            if user["authorized"] is False:
-                return web.Response(status=499, reason="Pending Authorization")
-
         if admin is True and user["admin"] is False:
             return web.HTTPForbidden()
 
@@ -109,7 +109,9 @@ async def create_user(
     except ValidationError as e:
         ctx = {
             "email_error": e.messages.get("email"),
+            "invite_code_error": e.messages.get("invite_code"),
             "email": e.data.get("email"),
+            "invite_code": e.data.get("invite_code"),
             "password": e.data.get("password"),
         }
         ctx.update(extra_ctx)
@@ -118,16 +120,34 @@ async def create_user(
             template,
             request,
             ctx,
+            status=400
         )
 
     try:
         async with request.app["db"].acquire() as conn:
+            invite = await conn.fetchrow("SELECT used_by, required_email FROM invites WHERE code = $1", args["invite_code"])
+            if invite["used_by"] is not None:
+                ctx = {
+                    "invite_code_error": ["This invite code has already been used"]
+                }
+                ctx.update(extra_ctx)
+                return Status.ERROR, await render_template_async(template, request, ctx, status=409)
+
+            if invite["required_email"] is not None and invite["required_email"] != args["email"]:
+                ctx = {
+                    "invite_code_error": ["Your email does not match the email specified by the owner of the invite code"]
+                }
+                ctx.update(extra_ctx)
+                return Status.ERROR, await render_template_async(template, request, ctx, status=409)
+
             user_id = await insert_user(
                 conn,
                 email=args["email"],
                 api_key=await generate_api_key(conn),
                 hashed_password=pbkdf2_sha512.hash(args["password"]),
             )
+
+            await conn.execute("UPDATE invites SET used_by = $1 WHERE code = $2", user_id, args["invite_code"])
     except UniqueViolationError:
         ctx = {
             "email_error": ["A user with this email already exists"],
@@ -135,12 +155,8 @@ async def create_user(
             "password": args["password"],
         }
         ctx.update(extra_ctx)
+        return Status.ERROR, await render_template_async(template, request, ctx, status=409)
 
-        return Status.ERROR, await render_template_async(
-            template,
-            request,
-            ctx,
-        )
     return Status.OK, user_id
 
 
@@ -158,7 +174,6 @@ async def edit_user(
             "email_error": e.messages.get("email"),
             "id": old_user["id"],
             "email": e.data.get("email"),
-            "authorized": old_user["authorized"],
             "admin": old_user["admin"],
             "joined": old_user["joined"],
         }
@@ -176,14 +191,12 @@ async def edit_user(
             request.app["db"],
             user_id=old_user["id"],
             email=args["email"],
-            authorized=args["authorized"],
         )
     except UniqueViolationError as e:
         ctx = {
             "email_error": ["A user with this email already exists"],
             "id": old_user["id"],
             "email": args["email"],
-            "authorized": old_user["authorized"],
             "admin": old_user["admin"],
             "joined": old_user["joined"],
         }

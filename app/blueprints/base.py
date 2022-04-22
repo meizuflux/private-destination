@@ -10,11 +10,12 @@ from app.routing import Blueprint
 from app.utils.auth import requires_auth, verify_user
 from app.utils.db import (
     add_short_url_click,
-    select_short_url_count,
+    select_short_urls_count,
     select_short_url_destination,
     select_total_sessions_count,
-    select_total_short_url_count,
+    select_total_short_urls_count,
     select_total_users_count,
+    select_total_notes_count
 )
 
 bp = Blueprint()
@@ -22,17 +23,17 @@ bp = Blueprint()
 
 @bp.get("/")
 async def login(request: web.Request) -> web.Response:
-    if await verify_user(request, admin=False, redirect=False, scopes=None, needs_authorization=True) is True:
+    if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
         return web.HTTPFound("/dashboard")
 
     return await aiohttp_jinja2.render_template_async("index.html", request, {})
 
 
 @bp.get("/dashboard")
-@requires_auth(redirect=True, scopes=["id", "admin"], needs_authorization=False)
+@requires_auth(redirect=True, scopes=["id", "admin"])
 @aiohttp_jinja2.template("dashboard/index.html")
 async def index(request: web.Request):
-    url_count = await select_short_url_count(request.app["db"], owner=request["user"]["id"])
+    url_count = await select_short_urls_count(request.app["db"], owner=request["user"]["id"])
     return {"url_count": url_count}
 
 
@@ -40,12 +41,18 @@ async def index(request: web.Request):
 @aiohttp_jinja2.template("admin/index.html")
 async def home(request: web.Request):
     async with request.app["db"].acquire() as conn:
-        urls_count = await select_total_short_url_count(conn)
+        urls_count = await select_total_short_urls_count(conn)
         users_count = await select_total_users_count(conn)
         sessions_count = await select_total_sessions_count(conn)
+        notes_count = await select_total_notes_count(conn)
 
     return {
-        "counters": {"urls": urls_count, "users": users_count, "sessions": sessions_count},
+        "counters": {
+            "urls": urls_count,
+            "users": users_count,
+            "sessions": sessions_count,
+            "notes": notes_count
+        },
         "stats": {"cpu_percent": psutil.cpu_percent(), "memory_percent": psutil.virtual_memory()[2]},
     }
 

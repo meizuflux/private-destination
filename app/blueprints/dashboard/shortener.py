@@ -20,7 +20,7 @@ from app.utils.db import (
     delete_short_url,
     insert_short_url,
     select_short_url,
-    select_short_url_count,
+    select_short_urls_count,
     select_short_urls,
     update_short_url,
 )
@@ -47,7 +47,7 @@ async def shortener(request: web.Request):
             owner=request["user"]["id"],
             offset=current_page * 50,
         )
-        urls_count = await select_short_url_count(conn, owner=request["user"]["id"])
+        urls_count = await select_short_urls_count(conn, owner=request["user"]["id"])
 
     max_pages = ceil(urls_count / 50)
 

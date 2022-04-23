@@ -27,7 +27,7 @@ def truncate(text: str, limit: int):
 async def handle_errors(request: web.Request, error: web.HTTPException):
     if not str(request.rel_url).startswith("/api") and error.status in {403, 404, 500}:
         return await aiohttp_jinja2.render_template_async(
-            f"errors/{error.status}.html", request, {}, status=error.status
+            f"errors/{error.status}.html.jinja", request, {}, status=error.status
         )
 
     raise error
@@ -92,7 +92,7 @@ async def app_factory():
     aiohttp_jinja2.setup(
         app,
         enable_async=True,
-        loader=FileSystemLoader("./views"),
+        loader=FileSystemLoader("./templates"),
         context_processors=[aiohttp_jinja2.request_processor, user_processor],
     )
     env = aiohttp_jinja2.get_env(app)

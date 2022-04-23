@@ -1,0 +1,16 @@
+{% extends 'dashboard/settings/layout.html.jinja' %}
+
+{% block title %}
+    Deleting account
+{% endblock title %}
+
+{% block main2 %}
+    <p class="mb-3">Are you sure that you want to delete your account?</p>
+    <p class="mb-3">This will delete all data associated with your account. You cannot undo this action.</p>
+
+    <form method="POST">
+        <div class="field">
+            <button class="button is-danger" type="submit">Yes, I want to delete my account</button>
+        </div>
+    </form>
+{% endblock %}

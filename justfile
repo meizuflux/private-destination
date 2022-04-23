@@ -14,7 +14,7 @@ build:
     node scripts/build.mjs
 
 watch:
-    yarn run chokidar "static/**/*.*" "views/*.html" -c "node scripts/build.mjs" --initial
+    yarn run chokidar "static/**/*.*" "templates/*.html.jinja" -c "node scripts/build.mjs" --initial
 
 install:
     pip install -r requirements.txt && pip install -r requirements-dev.txt

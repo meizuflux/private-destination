@@ -1,0 +1,38 @@
+{% extends 'dashboard/settings/layout.html.jinja' %}
+
+{% block name %}
+    Sessions
+{% endblock %}
+
+{% block main2 %}
+    <div class="table-container">
+        <table class="table is-striped is-hoverable is-fullwidth is-bordered is-narrow">
+            <thead>
+                <tr>
+                    <th>Token</th>
+                    <th>Created</th>
+                    <th>Browser</th>
+                    <th>OS</th>
+                    <th>IP</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for session in sessions %}
+                    <tr>
+                        <td><code>{{session["token"]}}</code></td>
+                        <td>{{session["created"].strftime("%d %B %Y at %H:%M")}}</td>
+                        <td>{{session["browser"]}}</td>
+                        <td>{{session["os"]}}</td>
+                        <td>{{session["ip"]}}</td>
+                        <td>
+                            <form method="POST" action="/dashboard/settings/sessions/{{session['token']}}/delete">
+                                <button class="button is-danger is-small" type="submit" {% if current_session == session["token"]|string() %}disabled title="This is your current session, if you want to delete it, simply logout."{% endif %}>Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock  %}

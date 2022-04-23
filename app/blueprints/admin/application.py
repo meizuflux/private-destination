@@ -76,7 +76,7 @@ bp = Blueprint("/admin/application")
 
 
 @bp.get("")
-@template("admin/application.html")
+@template("admin/application.html.jinja")
 async def index(request: web.Request):
     ctx = {
         "packages": packages,

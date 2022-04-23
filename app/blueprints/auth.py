@@ -68,13 +68,13 @@ async def signup(request: web.Request) -> web.Response:
     invite_code = request["querystring"].get("code", "")
 
     if request.method == "POST":
-        status, ret = await create_user(request, template="onboarding.html", extra_ctx={"type": "signup", "invite_code": invite_code})
+        status, ret = await create_user(request, template="onboarding.html.jinja", extra_ctx={"type": "signup", "invite_code": invite_code})
         if status is Status.ERROR:
             return ret
 
         return await login_user(request, ret)
 
-    return await render_template_async("onboarding.html", request, {"type": "signup", "invite_code": invite_code})
+    return await render_template_async("onboarding.html.jinja", request, {"type": "signup", "invite_code": invite_code})
 
 
 @bp.route("/login", methods=["GET", "POST"])
@@ -87,7 +87,7 @@ async def login(request: web.Request) -> web.Response:
             args = await parser.parse(LoginSchema(), request, locations=["form"])
         except ValidationError as e:
             return await render_template_async(
-                "onboarding.html",
+                "onboarding.html.jinja",
                 request,
                 {
                     "email_error": e.messages.get("email"),
@@ -102,7 +102,7 @@ async def login(request: web.Request) -> web.Response:
         row = await get_hash_and_id_by_email(request.app["db"], email=args["email"])
         if row is None:
             return await render_template_async(
-                "onboarding.html",
+                "onboarding.html.jinja",
                 request,
                 {
                     "email_error": ["We could not find a user with that email"],
@@ -116,10 +116,10 @@ async def login(request: web.Request) -> web.Response:
 
         # email is right password is wrong
         return await render_template_async(
-            "onboarding.html", request, {"password_error": ["Invalid password"], "email": args["email"]}, status=401
+            "onboarding.html.jinja", request, {"password_error": ["Invalid password"], "email": args["email"]}, status=401
         )
 
-    return await render_template_async("onboarding.html", request, {"type": "login"})
+    return await render_template_async("onboarding.html.jinja", request, {"type": "login"})
 
 
 @bp.get("/logout")

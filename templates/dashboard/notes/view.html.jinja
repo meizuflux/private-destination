@@ -1,0 +1,52 @@
+{% extends 'base.html.jinja' %}
+
+{% block title %}
+    Viewing Secure Note
+{% endblock title %}
+
+{% block body %}
+    <div class="container mt-4">
+        <div class="columns is-flex is-vcentered is-centered">
+            <div class="column is-9">
+                <div class="box">
+                    {% if has_pw is none %}
+                        <p class="title is-4">Unknown note</p>
+                    {% else %}
+                        <p class="title is-4">
+                            View note with ID <code>{{id}}</code>
+                        </p>
+                        <form method="POST">
+                            {% if has_pw is true %}
+                                <div class="field">
+                                    <label class="label">Password</label>
+                                    <div class="control">
+                                        <input class="input {{'is-danger' if password_error else ''}}" type="password" id="password" placeholder="Password for the note" name="password">
+                                        {% if password_error %}
+                                            <p class="help is-danger">{{password_error[0]}}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <div class="control">
+                                        <label class="checkbox">
+                                            <input type="checkbox" id="show-password">
+                                            <span id="show-password-text">Show</span> Password
+                                        </label>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="field">
+                                <div class="control">
+                                    <button class="button is-link" type="submit">Go</button>
+                                </div>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    
+    {% if has_pw is true %}
+        <script src="/static/js/show-pw.js"></script>
+    {% endif %}
+{% endblock %}

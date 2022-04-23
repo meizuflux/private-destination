@@ -1,0 +1,85 @@
+{% extends "dashboard/shortener/layout.html.jinja" %}
+
+{% block title %}
+    URL Shortener
+{% endblock title %}
+
+{% block main2 %}
+    <form class="mb-3">
+        <label class="label">Sort By</label>
+        <div class="field has-addons">
+            <div class="control">
+                <div class="select">
+                    <select name="sortby" title="Sort By">
+                        <option value="alias" {% if sortby == "alias" %}selected{% endif %}>Alias</option>
+                        <option value="destination" {% if sortby == "destination" %}selected{% endif %}>Destination</option>
+                        <option value="clicks" {% if sortby == "clicks" %}selected{% endif %}>Clicks</option>
+                        <option value="creation_date" {% if sortby == "creation_date" or not sortby %}selected{% endif %}>Creation date</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control">
+                <div class="select">
+                    <select name="direction" title="Direction">
+                        <option value="desc" {% if direction == "desc" or not direction %}selected{% endif %}>Descending</option>
+                        <option value="asc" {% if direction == "asc" %}selected{% endif %}>Ascending</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control">
+                <button class="button is-info" type="submit">Go</button>
+            </div>
+        </div>
+    </form>
+    
+    <div class="table-container">
+        <table class="table is-striped is-hoverable is-fullwidth is-bordered is-narrow">
+            <thead>
+                <tr>
+                    <th>Alias</th>
+                    <th>Destination</th>
+                    <th>Clicks</th>
+                    <th>Creation Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for url in values %}
+                    <tr>
+                        <td><a href="/{{url['alias']}}" id="{{url['alias']}}-alias" value="{{url['alias']}}" target="_blank" rel="noopener noreferrer">{{truncate(url["alias"], 15)}}</a></td>
+                        <td><a href="{{url['destination']}}" target="_blank" rel="noopener noreferrer">{{truncate(url['destination'], 43)}}</a></td>
+                        <td><code>{{url['clicks']}}</code></td>
+                        <td>{{url["creation_date"].strftime("%d %B %Y at %H:%M")}}</td>
+                        <td>
+                            <div class="buttons">
+                                <button class="button is-info is-small copy-btn" data-target="{{url['alias']}}-alias">Copy</button>
+                                <a href="/dashboard/shortener/{{url['alias']}}/edit" class="button is-warning is-small">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <nav class="pagination is-centered">
+        <ul class="pagination-list">
+            {% if current_page != 1 %}
+                <li><a class="pagination-link" href="/dashboard/shortener">1</a></li>
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+                {% if current_page != 2 %}
+                    <li><a class="pagination-link" href="/dashboard/shortener?page={{current_page - 1}}">{{current_page - 1}}</a></li>
+                {% endif %}
+            {% endif %}
+            <li><a class="pagination-link is-current">{{current_page}}</a></li>
+            {% if current_page != max_pages %}
+                {% if current_page != max_pages - 1 %}
+                    <li><a class="pagination-link" href="/dashboard/shortener?page={{current_page + 1}}">{{current_page + 1}}</a></li>
+                {% endif %}
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+                <li><a class="pagination-link" href="/dashboard/shortener?page={{max_pages}}">{{max_pages}}</a></li>
+            {% endif %}
+            </ul>
+    </nav>
+    <script src="/static/js/shortener.js" type="module"></script>
+    
+{% endblock %}

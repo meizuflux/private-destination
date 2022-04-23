@@ -34,7 +34,7 @@ bp = Blueprint("/dashboard/settings")
 
 @bp.get("")
 @bp.get("/account")
-@template("dashboard/settings/account.html")
+@template("dashboard/settings/account.html.jinja")
 @requires_auth(redirect=True, scopes=["id", "api_key", "admin"])
 async def account_settings(request: web.Request):
     user = await select_user(request.app["db"], user_id=request["user"]["id"])
@@ -49,7 +49,7 @@ async def account_settings(request: web.Request):
 
 @bp.get("/api_key")
 @requires_auth(redirect=False, scopes=["api_key", "admin"])
-@template("dashboard/settings/api_key/index.html")
+@template("dashboard/settings/api_key/index.html.jinja")
 async def api_key_settings(_: web.Request):
     return {}
 
@@ -63,11 +63,11 @@ async def regen_api_key(request: web.Request) -> web.Response:
 
         return web.HTTPFound("/dashboard/settings/api_key")
 
-    return await render_template_async("/dashboard/settings/api_key/regen.html", request, {})
+    return await render_template_async("/dashboard/settings/api_key/regen.html.jinja", request, {})
 
 
 @bp.get("/sessions")
-@template("dashboard/settings/sessions.html")
+@template("dashboard/settings/sessions.html.jinja")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def sessions_settings(request: web.Request):
     user_sessions = await select_sessions(request.app["db"], user_id=request["user"]["id"])
@@ -84,7 +84,7 @@ async def delete_session_(request: web.Request) -> web.Response:
 
 
 @bp.get("/shortener")
-@template("dashboard/settings/shortener.html")
+@template("dashboard/settings/shortener.html.jinja")
 @requires_auth(redirect=True, scopes="admin")
 async def shortener_settings(_: web.Request):
     return {}
@@ -99,7 +99,7 @@ async def edit_self(request: web.Request):
         status, ret = await edit_user(
             request,
             old_user=user,
-            template="dashboard/settings/edit.html",
+            template="dashboard/settings/edit.html.jinja",
         )
         if status is Status.ERROR:
             return ret
@@ -107,7 +107,7 @@ async def edit_self(request: web.Request):
         return web.HTTPFound("/dashboard/settings")
 
     return await render_template_async(
-        "dashboard/settings/edit.html",
+        "dashboard/settings/edit.html.jinja",
         request,
         {
             "id": user["id"],
@@ -129,14 +129,14 @@ async def edit_self(request: web.Request):
         return res
 
     return await render_template_async(
-        "dashboard/settings/delete.html",
+        "dashboard/settings/delete.html.jinja",
         request,
         {},
     )
 
 @bp.get("/invites")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-@template("dashboard/settings/invites.html")
+@template("dashboard/settings/invites.html.jinja")
 async def invites_manager(request: web.Request):
     # sourcery skip: assign-if-exp, boolean-if-exp-identity, introduce-default-else, remove-unnecessary-cast
     invites = await request.app["db"].fetch("SELECT code, used_by, required_email, creation_date FROM invites WHERE owner = $1 ORDER BY creation_date DESC", request["user"]["id"])
@@ -162,7 +162,7 @@ async def create_invite(request: web.Request) -> web.Response:
         if len(invites) > 5 and request["user"]["admin"] is False:
             can_create = False
         return await render_template_async(
-            "dashboard/settings/invites.html",
+            "dashboard/settings/invites.html.jinja",
             request,
             {
                 "email_error": e.messages.get("required_email"),

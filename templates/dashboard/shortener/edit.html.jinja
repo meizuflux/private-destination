@@ -1,0 +1,22 @@
+{% extends 'dashboard/shortener/layout.html.jinja' %}
+
+{% block title %}
+    Edit Short Url
+{% endblock title %}
+
+{% block main2 %}
+    {% if error %}
+        <article class="message is-warning">
+            <div class="message-header">
+                <p>{{error["title"]}}</p>
+            </div>
+            <div class="message-body">
+                {{error["message"]}}
+            </div>
+        </article>
+    {% else %}
+        {% with type = "edit" %}
+            {% include "dashboard/shortener/partial_form.html.jinja" %}
+        {% endwith %}
+    {% endif %}
+{% endblock main2 %}

@@ -1,0 +1,11 @@
+{% extends 'dashboard/shortener/layout.html.jinja' %}
+
+{% block title %}
+    Create a Short URL
+{% endblock title %}
+
+{% block main2 %}
+    {% with type = "create" %}
+        {% include "dashboard/shortener/partial_form.html.jinja" %}
+    {% endwith %}
+{% endblock main2 %}

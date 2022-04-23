@@ -12,7 +12,7 @@ bp = Blueprint("/admin/users")
 
 
 @bp.get("")
-@template("admin/users/index.html")
+@template("admin/users/index.html.jinja")
 @querystring_schema(UsersFilterSchema())
 @requires_auth(admin=True, redirect=True)
 async def users(request: web.Request):
@@ -33,7 +33,7 @@ async def edit_user_(request: web.Request) -> web.Response:
 
     if user is None:
         return await render_template_async(
-            "admin/users/edit.html",
+            "admin/users/edit.html.jinja",
             request,
             {"error": {"title": "Unknown User", "message": "Could not locate user"}},
             status=404,
@@ -43,7 +43,7 @@ async def edit_user_(request: web.Request) -> web.Response:
         status, ret = await edit_user(
             request,
             old_user=user,
-            template="admin/users/edit.html",
+            template="admin/users/edit.html.jinja",
             extra_ctx={
                 "is_self": is_self,
             },
@@ -54,7 +54,7 @@ async def edit_user_(request: web.Request) -> web.Response:
         return web.HTTPFound("/admin/users")
 
     return await render_template_async(
-        "admin/users/edit.html",
+        "admin/users/edit.html.jinja",
         request,
         {
             "id": user["id"],
@@ -75,7 +75,7 @@ async def delete_user_(request: web.Request) -> web.Response:
 
     if user is None:
         return await render_template_async(
-            "admin/users/delete.html",
+            "admin/users/delete.html.jinja",
             request,
             {"error": {"title": "Unknown User", "message": "Could not locate user"}},
             status=404,
@@ -87,7 +87,7 @@ async def delete_user_(request: web.Request) -> web.Response:
         return web.HTTPFound("/admin/users")
 
     return await render_template_async(
-        "admin/users/delete.html",
+        "admin/users/delete.html.jinja",
         request,
         {"id": user["id"], "email": user["email"]},
     )
@@ -97,10 +97,10 @@ async def delete_user_(request: web.Request) -> web.Response:
 @requires_auth(admin=True, redirect=True)
 async def create_user_(request: web.Request) -> web.Response:
     if request.method == "POST":
-        status, ret = await create_user(request, template="onboarding.html", extra_ctx={"type": "signup"})
+        status, ret = await create_user(request, template="onboarding.html.jinja", extra_ctx={"type": "signup"})
         if status is Status.ERROR:
             return ret
 
         return web.HTTPFound("/admin/users")
 
-    return await render_template_async("admin/users/create.html", request, {})
+    return await render_template_async("admin/users/create.html.jinja", request, {})

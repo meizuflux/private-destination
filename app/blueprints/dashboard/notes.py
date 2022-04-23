@@ -65,7 +65,7 @@ bp = Blueprint("")
 @bp.get("/dashboard/notes")
 @querystring_schema(NotesFilterSchema())
 @requires_auth(redirect=True, scopes=["id", "admin"])
-@template("dashboard/notes/index.html")
+@template("dashboard/notes/index.html.jinja")
 async def index(request: web.Request):
     current_page = request["querystring"].get("page", 1) - 1
     direction = request["querystring"].get("direction", "desc")
@@ -95,7 +95,7 @@ async def index(request: web.Request):
 
 
 @bp.get("/dashboard/notes/create")
-@template("dashboard/notes/create.html")
+@template("dashboard/notes/create.html.jinja")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def create_note(request):
     return {"errors": {}}
@@ -107,7 +107,7 @@ async def create_note_form(request: web.Request) -> web.Response:
     try:
         args = await parser.parse(NoteSchema(), request, locations=["form"])
     except ValidationError as e:
-        return await render_template_async("/dashboard/notes/create.html", request, {"errors": e.messages}, status=400)
+        return await render_template_async("/dashboard/notes/create.html.jinja", request, {"errors": e.messages}, status=400)
 
     name = args["name"]
     content = args["content"]
@@ -144,7 +144,7 @@ VALUES ($1, $2, $3, $4, $5, $6) returning id
 @bp.get("/notes/{note_id}")
 @match_info_schema(IdSchema())
 @querystring_schema(PasswordIncorrectSchema())
-@template("dashboard/notes/view.html")
+@template("dashboard/notes/view.html.jinja")
 async def view_note(request: web.Request):
     note_id = request["match_info"]["note_id"]
     try:
@@ -217,5 +217,5 @@ async def view_note_form(request: web.Request) -> web.Response:
     )
 
     return await render_template_async(
-        "dashboard/notes/view_stylized.html", request, {"name": note["name"], "email": email, "content": decoded}
+        "dashboard/notes/view_stylized.html.jinja", request, {"name": note["name"], "email": email, "content": decoded}
     )

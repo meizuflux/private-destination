@@ -33,7 +33,7 @@ bp = Blueprint("/dashboard/shortener")
 @bp.get("")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @querystring_schema(ShortenerFilterSchema())
-@template("dashboard/shortener/index.html")
+@template("dashboard/shortener/index.html.jinja")
 async def shortener(request: web.Request):
     current_page = request["querystring"].get("page", 1) - 1
     direction = request["querystring"].get("direction", "desc")
@@ -70,7 +70,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
             args = await parser.parse(ShortenerCreateSchema(), request, locations=["form"])
         except ValidationError as e:
             return await render_template_async(
-                "dashboard/shortener/create.html",
+                "dashboard/shortener/create.html.jinja",
                 request,
                 {
                     "alias_error": e.messages.get("alias"),
@@ -91,7 +91,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
             await insert_short_url(request.app["db"], owner=request["user"]["id"], alias=alias, destination=destination)
         except UniqueViolationError:
             return await render_template_async(
-                "dashboard/shortener/create.html",
+                "dashboard/shortener/create.html.jinja",
                 request,
                 {
                     "alias_error": ["A shortened URL with this alias already exists"],
@@ -105,7 +105,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
         return web.HTTPFound("/dashboard/shortener")
 
     return await render_template_async(
-        "dashboard/shortener/create.html", request, {"domain": f"https://{request.app['config']['domain']}/"}
+        "dashboard/shortener/create.html.jinja", request, {"domain": f"https://{request.app['config']['domain']}/"}
     )
 
 
@@ -118,7 +118,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
     short_url = await select_short_url(request.app["db"], alias=alias)
     if short_url is None:
         return await render_template_async(
-            "dashboard/shortener/edit.html",
+            "dashboard/shortener/edit.html.jinja",
             request,
             {
                 "error": {"title": "Unknown Short URL", "message": "Could not locate short URL"},
@@ -128,7 +128,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
 
     if short_url["owner"] != request["user"]["id"]:
         return await render_template_async(
-            "dashboard/shortener/edit.html",
+            "dashboard/shortener/edit.html.jinja",
             request,
             {
                 "error": {"title": "Missing Permissions", "message": "You aren't the owner of this short URL"},
@@ -141,7 +141,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
             args = await parser.parse(ShortenerEditSchema(), request, locations=["form"])
         except ValidationError as e:
             return await render_template_async(
-                "dashboard/shortener/edit.html",
+                "dashboard/shortener/edit.html.jinja",
                 request,
                 {
                     "alias_error": e.messages.get("alias"),
@@ -168,7 +168,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
             )
         except UniqueViolationError as e:
             return await render_template_async(
-                "dashboard/shortener/edit.html",
+                "dashboard/shortener/edit.html.jinja",
                 request,
                 {
                     "alias_error": ["A shortened URL with this alias already exists"],
@@ -183,7 +183,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
         return web.HTTPFound("/dashboard/shortener")
 
     return await render_template_async(
-        "dashboard/shortener/edit.html",
+        "dashboard/shortener/edit.html.jinja",
         request,
         {
             "alias": short_url["alias"],
@@ -203,7 +203,7 @@ async def delete_short_url_(request: web.Request) -> web.Response:
     short_url = await select_short_url(request.app["db"], alias=alias)
     if short_url is None:
         return await render_template_async(
-            "dashboard/shortener/delete.html",
+            "dashboard/shortener/delete.html.jinja",
             request,
             {"error": {"title": "Unknown Short URL", "message": "Could not locate short URL"}},
             status=404,
@@ -211,7 +211,7 @@ async def delete_short_url_(request: web.Request) -> web.Response:
 
     if short_url["owner"] != request["user"]["id"]:
         return await render_template_async(
-            "dashboard/shortener/delete.html",
+            "dashboard/shortener/delete.html.jinja",
             request,
             {"error": {"title": "Missing Permissions", "message": "You aren't the owner of this short URL"}},
             status=409,
@@ -223,7 +223,7 @@ async def delete_short_url_(request: web.Request) -> web.Response:
         return web.HTTPFound("/dashboard/shortener")
 
     return await render_template_async(
-        "dashboard/shortener/delete.html",
+        "dashboard/shortener/delete.html.jinja",
         request,
         {"alias": short_url["alias"], "destination": short_url["destination"], "clicks": short_url["clicks"]},
     )

@@ -1,0 +1,20 @@
+{% extends "base.html.jinja" %}
+
+{% block title %}
+Login
+{% endblock %}
+
+{% block body %}
+    <div class="container has-text-centered">
+        <div class="column is-4 is-offset-4">
+            <div class="buttons is-centered">
+                <a class="button is-link is-vertical" href="/auth/login">
+                    Log in
+                </a>
+                <a class="button is-link is-vertical" href="/auth/signup">
+                    Sign Up
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

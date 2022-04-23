@@ -22,6 +22,7 @@ for f in Path("./").rglob("*.*"):
         or str(f).startswith(".git")
         or str(f).startswith("node_modules")
         or str(f).startswith("dist")
+        or str(f).startswith(".vscode")
         or str(f).endswith(".pyc")
         or str(f).replace("\\", "/") == "static/css/bulma.css" # windows has paths with \ instad of /
     ):

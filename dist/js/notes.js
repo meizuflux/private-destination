@@ -1,0 +1,2 @@
+for(let e of document.getElementsByClassName("copy-btn"))e.addEventListener("click",async()=>{await navigator.clipboard.writeText(document.getElementById(e.getAttribute("data-target")).href).then(()=>{e.innerText="Copied!",e.classList.add("is-success"),e.classList.remove("is-info"),setTimeout(()=>{e.innerText="Copy",e.classList.remove("is-success"),e.classList.add("is-info")},1e3)},t=>alert(`Could not copy note value:
+`+t.toString()))});

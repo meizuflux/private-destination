@@ -1,0 +1,1 @@
+var e=document.getElementById("password"),t=document.getElementById("show-password"),s=document.getElementById("show-password-text");t.addEventListener("click",()=>{t.checked===!1?(e.type="password",s.innerText="Show"):(e.type="text",s.innerText="Hide")});

@@ -1,0 +1,2 @@
+var i=document.getElementById.bind(document),t=i("api-key"),s=i("toggle-show-api-key");s.addEventListener("click",()=>{t.type==="password"?(t.type="text",s.innerText="Hide"):(t.type="password",s.innerText="Show")});var e=i("copy-api-key");e.addEventListener("click",async()=>{await navigator.clipboard.writeText(t.value).then(()=>{e.innerText="Copied!",e.classList.add("is-success"),e.classList.remove("is-info"),setTimeout(()=>{e.innerText="Copy",e.classList.remove("is-success"),e.classList.add("is-info")},1e3)},n=>alert(`Could not copy API Key:
+`+n.toString()))});

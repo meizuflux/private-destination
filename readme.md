@@ -16,12 +16,7 @@ first create tables
 $ psql [options] < schema.sql
 ```
 
-then run `scripts/admin.py [--dev]` and follow the prompt. this will create an admin user with the credentials you provide
-
-# http codes
-`401` is for when the user is not logged in
-
-`403` is for when the user is logged in but not allowed to view the resource
+then run `scripts/admin.py [--production]` and follow the prompt. this will create an admin user with the credentials you provide
 
 # todo list
 email with `sendinblue`

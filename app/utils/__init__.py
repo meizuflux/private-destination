@@ -1,7 +1,8 @@
 from enum import Enum
-from typing import List, Union
+from typing import Iterable, List, Union
 
-Scopes = Union[List[str], None, str]
+Scopes = list[str] | None | str
+QueryScopes = list[str] | str
 
 
 class Status(Enum):

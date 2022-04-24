@@ -40,7 +40,7 @@ async def edit_user_(request: web.Request) -> web.Response:
         )
 
     if request.method == "POST":
-        status, ret = await edit_user(
+        ret = await edit_user(
             request,
             old_user=user,
             template="admin/users/edit.html.jinja",
@@ -48,8 +48,8 @@ async def edit_user_(request: web.Request) -> web.Response:
                 "is_self": is_self,
             },
         )
-        if status is Status.ERROR:
-            return ret
+        if ret[0] is Status.ERROR:
+            return ret[1]
 
         return web.HTTPFound("/admin/users")
 
@@ -97,9 +97,9 @@ async def delete_user_(request: web.Request) -> web.Response:
 @requires_auth(admin=True, redirect=True)
 async def create_user_(request: web.Request) -> web.Response:
     if request.method == "POST":
-        status, ret = await create_user(request, template="onboarding.html.jinja", extra_ctx={"type": "signup"})
-        if status is Status.ERROR:
-            return ret
+        ret = await create_user(request, template="onboarding.html.jinja", extra_ctx={"type": "signup"})
+        if ret[0] is Status.ERROR:
+            return ret[1]
 
         return web.HTTPFound("/admin/users")
 

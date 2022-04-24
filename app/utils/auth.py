@@ -1,4 +1,3 @@
-from ctypes import Union
 from secrets import choice
 from string import ascii_letters, digits
 from typing import Literal, Tuple
@@ -26,10 +25,10 @@ from app.utils.forms import parser
 API_KEY_VALID_CHARS = ascii_letters + digits + "!@%^&?<>:;+=-_~"
 
 
-async def generate_api_key(db: ConnOrPool) -> str:
+async def generate_api_key(database: ConnOrPool) -> str:
     while True:
         api_key = "".join(choice(API_KEY_VALID_CHARS) for _ in range(256))
-        if await select_api_key_exists(db, api_key=api_key) is False:
+        if await select_api_key_exists(database, api_key=api_key) is False:
             break
     return api_key
 
@@ -51,18 +50,14 @@ def requires_auth(
             elif scopes[0] != "*":
                 scopes.append("admin")
 
-    def deco(fn):
-        setattr(fn, "requires_auth", True)
+    def deco(function):
+        setattr(function, "requires_auth", True)
         setattr(
-            fn,
+            function,
             "auth",
-            {
-                "admin": admin,
-                "redirect": redirect,
-                "scopes": scopes
-            },
+            {"admin": admin, "redirect": redirect, "scopes": scopes},
         )
-        return fn
+        return function
 
     return deco
 
@@ -103,39 +98,36 @@ async def create_user(
     *,
     template: str,
     extra_ctx: dict,
-) -> Tuple[Literal[Status.OK], None] | Tuple[Literal[Status.ERROR], web.Response]:
+) -> Tuple[Literal[Status.OK], int] | Tuple[Literal[Status.ERROR], web.Response]:
     try:
         args = await parser.parse(SignUpSchema(), request, locations=["form"])
-    except ValidationError as e:
+    except ValidationError as error:
         ctx = {
-            "email_error": e.messages.get("email"),
-            "invite_code_error": e.messages.get("invite_code"),
-            "email": e.data.get("email"),
-            "invite_code": e.data.get("invite_code"),
-            "password": e.data.get("password"),
+            "email_error": error.messages.get("email"),
+            "invite_code_error": error.messages.get("invite_code"),
+            "email": error.data.get("email"),
+            "invite_code": error.data.get("invite_code"),
+            "password": error.data.get("password"),
         }
         ctx.update(extra_ctx)
 
-        return Status.ERROR, await render_template_async(
-            template,
-            request,
-            ctx,
-            status=400
-        )
+        return Status.ERROR, await render_template_async(template, request, ctx, status=400)
 
     try:
         async with request.app["db"].acquire() as conn:
-            invite = await conn.fetchrow("SELECT used_by, required_email FROM invites WHERE code = $1", args["invite_code"])
+            invite = await conn.fetchrow(
+                "SELECT used_by, required_email FROM invites WHERE code = $1", args["invite_code"]
+            )
             if invite["used_by"] is not None:
-                ctx = {
-                    "invite_code_error": ["This invite code has already been used"]
-                }
+                ctx = {"invite_code_error": ["This invite code has already been used"]}
                 ctx.update(extra_ctx)
                 return Status.ERROR, await render_template_async(template, request, ctx, status=409)
 
             if invite["required_email"] is not None and invite["required_email"] != args["email"]:
                 ctx = {
-                    "invite_code_error": ["Your email does not match the email specified by the owner of the invite code"]
+                    "invite_code_error": [
+                        "Your email does not match the email specified by the owner of the invite code"
+                    ]
                 }
                 ctx.update(extra_ctx)
                 return Status.ERROR, await render_template_async(template, request, ctx, status=409)
@@ -169,11 +161,11 @@ async def edit_user(
 ) -> Tuple[Literal[Status.OK], None] | Tuple[Literal[Status.ERROR], web.Response]:
     try:
         args = await parser.parse(UsersEditSchema(), request, locations=["form"])
-    except ValidationError as e:
+    except ValidationError as error:
         ctx = {
-            "email_error": e.messages.get("email"),
+            "email_error": error.messages.get("email"),
             "id": old_user["id"],
-            "email": e.data.get("email"),
+            "email": error.data.get("email"),
             "admin": old_user["admin"],
             "joined": old_user["joined"],
         }
@@ -192,7 +184,7 @@ async def edit_user(
             user_id=old_user["id"],
             email=args["email"],
         )
-    except UniqueViolationError as e:
+    except UniqueViolationError:
         ctx = {
             "email_error": ["A user with this email already exists"],
             "id": old_user["id"],

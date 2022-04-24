@@ -3,7 +3,7 @@ from marshmallow import Schema, fields, validate
 
 class LoginSchema(Schema):
     email = fields.Email(required=True)
-    password = fields.Field(required=True, validate=validate.Length(min=5, max=1024)) 
+    password = fields.Field(required=True, validate=validate.Length(min=5, max=1024))
 
 
 class SignUpSchema(LoginSchema):

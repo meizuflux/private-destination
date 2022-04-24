@@ -107,7 +107,6 @@ async def app_factory():
         else:
             config = loaded["prod"]
 
-
     app["config"] = config
 
     app["db"] = await create_pool(dsn=app["config"]["postgres_dsn"])

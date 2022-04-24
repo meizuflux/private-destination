@@ -8,7 +8,6 @@ from app.models.auth import SessionSchema
 from app.routing import Blueprint
 from app.utils import Status
 from app.utils.auth import edit_user, generate_api_key, requires_auth
-from app.utils.forms import parser
 from app.utils.db import (
     delete_session,
     delete_user,
@@ -17,8 +16,10 @@ from app.utils.db import (
     select_user,
     update_api_key,
 )
+from app.utils.forms import parser
 
-def email_or_none(value):
+
+def email_or_none(value: str):
     if value == "":
         return None
     try:
@@ -26,8 +27,10 @@ def email_or_none(value):
     except ValidationError:
         return None
 
+
 class CreateInviteSchema(Schema):
     required_email = fields.String(validate=email_or_none)
+
 
 bp = Blueprint("/dashboard/settings")
 
@@ -96,13 +99,13 @@ async def edit_self(request: web.Request):
     user = await select_user(request.app["db"], user_id=request["user"]["id"])
 
     if request.method == "POST":
-        status, ret = await edit_user(
+        ret = await edit_user(
             request,
             old_user=user,
             template="dashboard/settings/edit.html.jinja",
         )
-        if status is Status.ERROR:
-            return ret
+        if ret[0] is Status.ERROR:
+            return ret[1]
 
         return web.HTTPFound("/dashboard/settings")
 
@@ -120,7 +123,7 @@ async def edit_self(request: web.Request):
 
 @bp.route("/account/delete", methods=["GET", "POST"])
 @requires_auth(redirect=True, scopes=["id", "admin"])
-async def edit_self(request: web.Request):
+async def delete_account(request: web.Request):
     if request.method == "POST":
         await delete_user(request.app["db"], user_id=request["user"]["id"])
 
@@ -134,12 +137,16 @@ async def edit_self(request: web.Request):
         {},
     )
 
+
 @bp.get("/invites")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @template("dashboard/settings/invites.html.jinja")
 async def invites_manager(request: web.Request):
     # sourcery skip: assign-if-exp, boolean-if-exp-identity, introduce-default-else, remove-unnecessary-cast
-    invites = await request.app["db"].fetch("SELECT code, used_by, required_email, creation_date FROM invites WHERE owner = $1 ORDER BY creation_date DESC", request["user"]["id"])
+    invites = await request.app["db"].fetch(
+        "SELECT code, used_by, required_email, creation_date FROM invites WHERE owner = $1 ORDER BY creation_date DESC",
+        request["user"]["id"],
+    )
     can_create = True
     if len(invites) > 5 and request["user"]["admin"] is False:
         can_create = False
@@ -156,8 +163,11 @@ async def create_invite(request: web.Request) -> web.Response:
     # sourcery skip: assign-if-exp, boolean-if-exp-identity, introduce-default-else, remove-unnecessary-cast
     try:
         args = await parser.parse(CreateInviteSchema(), request, locations=["form"])
-    except ValidationError as e:
-        invites = await request.app["db"].fetch("SELECT code, used_by, required_email, creation_date FROM invites WHERE owner = $1 ORDER BY creation_date DESC", request["user"]["id"])
+    except ValidationError as error:
+        invites = await request.app["db"].fetch(
+            "SELECT code, used_by, required_email, creation_date FROM invites WHERE owner = $1 ORDER BY creation_date DESC",
+            request["user"]["id"],
+        )
         can_create = True
         if len(invites) > 5 and request["user"]["admin"] is False:
             can_create = False
@@ -165,11 +175,11 @@ async def create_invite(request: web.Request) -> web.Response:
             "dashboard/settings/invites.html.jinja",
             request,
             {
-                "email_error": e.messages.get("required_email"),
+                "email_error": error.messages.get("required_email"),
                 "invites": invites,
                 "can_create": can_create,
             },
-            status=400
+            status=400,
         )
 
     async with request.app["db"].acquire() as conn:
@@ -178,7 +188,9 @@ async def create_invite(request: web.Request) -> web.Response:
             return web.HTTPForbidden(reason="You can only create 5 invites")
 
         email = args["required_email"] if args["required_email"] != "" else None
-        
-        invite_code = await conn.fetchval("INSERT INTO invites (owner, required_email) VALUES ($1, $2) RETURNING code", request["user"]["id"], email)
+
+        await conn.fetchval(
+            "INSERT INTO invites (owner, required_email) VALUES ($1, $2) RETURNING code", request["user"]["id"], email
+        )
 
     return web.HTTPFound("/dashboard/settings/invites")

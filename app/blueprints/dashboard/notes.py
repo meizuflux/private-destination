@@ -3,12 +3,11 @@ import base64
 import binascii
 import os
 import uuid
-from contextlib import suppress
 from math import ceil
 
 from aiohttp import web
 from aiohttp_apispec import match_info_schema, querystring_schema
-from aiohttp_jinja2 import render_string_async, render_template_async, template
+from aiohttp_jinja2 import render_template_async, template
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -17,7 +16,7 @@ from marshmallow import Schema, ValidationError, fields, validate
 
 from app.routing import Blueprint
 from app.utils.auth import requires_auth, verify_user
-from app.utils.db import select_notes_count, select_notes, select_user
+from app.utils.db import select_notes, select_notes_count, select_user
 from app.utils.forms import parser
 
 
@@ -33,9 +32,7 @@ class NotesFilterSchema(Schema):
     page = fields.Integer(validate=validate.Range(min=1, error="Page must be greater than or equal to 1"))
     direction = fields.String(validate=validate.OneOf({"desc", "asc"}))
     sortby = fields.String(
-        validate=validate.OneOf(
-            {"id", "name", "has_password", "share_email", "private", "clicks", "creation_date"}
-        )
+        validate=validate.OneOf({"id", "name", "has_password", "share_email", "private", "clicks", "creation_date"})
     )
 
 
@@ -45,6 +42,7 @@ class ViewNoteSchema(Schema):
 
 class IdSchema(Schema):
     note_id = fields.Str(required=True)
+
 
 class PasswordIncorrectSchema(Schema):
     incorrect_password = fields.Boolean()
@@ -97,7 +95,7 @@ async def index(request: web.Request):
 @bp.get("/dashboard/notes/create")
 @template("dashboard/notes/create.html.jinja")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-async def create_note(request):
+async def create_note(_: web.Request):
     return {"errors": {}}
 
 
@@ -106,8 +104,10 @@ async def create_note(request):
 async def create_note_form(request: web.Request) -> web.Response:
     try:
         args = await parser.parse(NoteSchema(), request, locations=["form"])
-    except ValidationError as e:
-        return await render_template_async("/dashboard/notes/create.html.jinja", request, {"errors": e.messages}, status=400)
+    except ValidationError as error:
+        return await render_template_async(
+            "/dashboard/notes/create.html.jinja", request, {"errors": error.messages}, status=400
+        )
 
     name = args["name"]
     content = args["content"]
@@ -152,15 +152,14 @@ async def view_note(request: web.Request):
     except (ValueError, binascii.Error):
         return web.Response(text="Invalid Note ID", status=400)
 
-    has_pw = await request.app["db"].fetchval(
-        "SELECT has_password FROM notes WHERE id = $1",
-        as_uuid
-    )
+    has_pw = await request.app["db"].fetchval("SELECT has_password FROM notes WHERE id = $1", as_uuid)
 
     return {
         "id": note_id,
         "has_pw": has_pw,
-        "password_error": ["This password is incorrect"] if request["querystring"].get("incorrect_password") is True else None
+        "password_error": ["This password is incorrect"]
+        if request["querystring"].get("incorrect_password") is True
+        else None,
     }
 
 
@@ -169,8 +168,8 @@ async def view_note(request: web.Request):
 async def view_note_form(request: web.Request) -> web.Response:
     try:
         args = await parser.parse(ViewNoteSchema(), request, locations=["form"])
-    except ValidationError as e:
-        return web.json_response({"error": e.messages}, status=400)
+    except ValidationError as error:
+        return web.json_response({"error": error.messages}, status=400)
 
     note_id = request["match_info"]["note_id"]
     try:
@@ -179,8 +178,7 @@ async def view_note_form(request: web.Request) -> web.Response:
         return web.Response(text="Invalid Note ID", status=400)
 
     note = await request.app["db"].fetchrow(
-        "SELECT has_password, content, owner, name, share_email, private FROM notes WHERE id = $1",
-        as_uuid
+        "SELECT has_password, content, owner, name, share_email, private FROM notes WHERE id = $1", as_uuid
     )
     if note is None:
         return web.Response(text="Note not found", status=404)
@@ -210,10 +208,7 @@ async def view_note_form(request: web.Request) -> web.Response:
         email = (await select_user(request.app["db"], user_id=note["owner"])).get("email")
 
     asyncio.get_event_loop().create_task(
-        request.app["db"].execute(
-            "UPDATE notes SET clicks = clicks + 1 WHERE id = $1",
-            as_uuid
-        )
+        request.app["db"].execute("UPDATE notes SET clicks = clicks + 1 WHERE id = $1", as_uuid)
     )
 
     return await render_template_async(

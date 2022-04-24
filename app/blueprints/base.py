@@ -10,12 +10,12 @@ from app.routing import Blueprint
 from app.utils.auth import requires_auth, verify_user
 from app.utils.db import (
     add_short_url_click,
-    select_short_urls_count,
     select_short_url_destination,
+    select_short_urls_count,
+    select_total_notes_count,
     select_total_sessions_count,
     select_total_short_urls_count,
     select_total_users_count,
-    select_total_notes_count
 )
 
 bp = Blueprint()
@@ -47,12 +47,7 @@ async def home(request: web.Request):
         notes_count = await select_total_notes_count(conn)
 
     return {
-        "counters": {
-            "urls": urls_count,
-            "users": users_count,
-            "sessions": sessions_count,
-            "notes": notes_count
-        },
+        "counters": {"urls": urls_count, "users": users_count, "sessions": sessions_count, "notes": notes_count},
         "stats": {"cpu_percent": psutil.cpu_percent(), "memory_percent": psutil.virtual_memory()[2]},
     }
 

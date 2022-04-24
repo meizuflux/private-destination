@@ -3,12 +3,12 @@ from uuid import UUID
 
 from asyncpg import Connection, Pool, Record
 
-from app.utils import Scopes
+from app.utils import QueryScopes, Scopes
 
 ConnOrPool = Union[Connection, Pool]
 
 
-def form_scopes(scopes: Scopes) -> str:
+def form_scopes(scopes: QueryScopes) -> str:
     return scopes if isinstance(scopes, str) else ", ".join(scopes)
 
 
@@ -28,6 +28,7 @@ async def select_notes(conn: ConnOrPool, *, sortby: str, direction: str, owner: 
 
 async def select_notes_count(conn: ConnOrPool, *, owner: int) -> int:
     return await conn.fetchval("SELECT count(id) FROM notes WHERE owner = $1", owner)
+
 
 async def select_total_notes_count(conn: ConnOrPool) -> int:
     return await conn.fetchval("SELECT count(id) FROM notes")
@@ -130,6 +131,7 @@ async def select_total_users_count(conn: ConnOrPool):
 async def select_user(conn: ConnOrPool, *, user_id: int):
     return await conn.fetchrow("SELECT * FROM users WHERE id = $1", user_id)
 
+
 async def get_hash_and_id_by_email(conn: ConnOrPool, *, email: str):
     return await conn.fetchrow("SELECT id, password FROM users WHERE email = $1", email)
 
@@ -160,7 +162,7 @@ async def select_total_unique_sessions_count(conn: ConnOrPool):
     return await conn.fetchval("SELECT count(DISTINCT user_id) FROM sessions")
 
 
-async def select_user_by_session(conn: ConnOrPool, *, token: UUID, scopes: Scopes):
+async def select_user_by_session(conn: ConnOrPool, *, token: UUID, scopes: QueryScopes):
     return await conn.fetchrow(
         f"SELECT {form_scopes(scopes)} FROM users WHERE id = (SELECT user_id FROM sessions WHERE token = $1);",
         token,
@@ -181,5 +183,5 @@ async def update_api_key(conn: ConnOrPool, *, user_id: int, api_key: str):
     return await conn.execute("UPDATE users SET api_key = $2 WHERE id = $1", user_id, api_key)
 
 
-async def select_user_by_api_key(conn: ConnOrPool, *, api_key: str, scopes: Scopes):
+async def select_user_by_api_key(conn: ConnOrPool, *, api_key: str, scopes: QueryScopes):
     return await conn.fetchrow(f"SELECT {form_scopes(scopes)} FROM users WHERE api_key = $1", api_key)

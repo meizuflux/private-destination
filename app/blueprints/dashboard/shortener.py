@@ -20,8 +20,8 @@ from app.utils.db import (
     delete_short_url,
     insert_short_url,
     select_short_url,
-    select_short_urls_count,
     select_short_urls,
+    select_short_urls_count,
     update_short_url,
 )
 from app.utils.forms import parser
@@ -68,16 +68,16 @@ async def create_short_url_(request: web.Request) -> web.Response:
     if request.method == "POST":
         try:
             args = await parser.parse(ShortenerCreateSchema(), request, locations=["form"])
-        except ValidationError as e:
+        except ValidationError as error:
             return await render_template_async(
                 "dashboard/shortener/create.html.jinja",
                 request,
                 {
-                    "alias_error": e.messages.get("alias"),
-                    "url_error": e.messages.get("destination"),
+                    "alias_error": error.messages.get("alias"),
+                    "url_error": error.messages.get("destination"),
                     "domain": f"https://{request.app['config']['domain']}/",
-                    "alias": e.data.get("alias"),
-                    "destination": e.data.get("destination"),
+                    "alias": error.data.get("alias"),
+                    "destination": error.data.get("destination"),
                 },
                 status=400,
             )
@@ -139,16 +139,16 @@ async def edit_short_url_(request: web.Request) -> web.Response:
     if request.method == "POST":
         try:
             args = await parser.parse(ShortenerEditSchema(), request, locations=["form"])
-        except ValidationError as e:
+        except ValidationError as error:
             return await render_template_async(
                 "dashboard/shortener/edit.html.jinja",
                 request,
                 {
-                    "alias_error": e.messages.get("alias"),
-                    "destination_error": e.messages.get("destination"),
+                    "alias_error": error.messages.get("alias"),
+                    "destination_error": error.messages.get("destination"),
                     "domain": f"https://{request.app['config']['domain']}/",
-                    "alias": e.data.get("alias"),
-                    "destination": e.data.get("destination"),
+                    "alias": error.data.get("alias"),
+                    "destination": error.data.get("destination"),
                 },
                 status=400,
             )
@@ -166,7 +166,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
                 destination=destination,
                 reset_clicks=args.get("reset_clicks", False),
             )
-        except UniqueViolationError as e:
+        except UniqueViolationError:
             return await render_template_async(
                 "dashboard/shortener/edit.html.jinja",
                 request,

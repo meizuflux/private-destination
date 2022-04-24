@@ -17,16 +17,15 @@ from app.utils.db import (
 
 files = lines = characters = classes = functions = coroutines = comments = 0
 for f in Path("./").rglob("*.*"):
-    if (
-        str(f).startswith("venv")
-        or str(f).startswith(".git")
-        or str(f).startswith("node_modules")
-        or str(f).startswith("dist")
-        or str(f).startswith(".vscode")
-        or str(f).endswith(".pyc")
-        or str(f).replace("\\", "/") == "static/css/bulma.css" # windows has paths with \ instad of /
-    ):
+    # no idea how do do this with glob so I'm just gonna do this
+    # docs: https://docs.python.org/3/library/fnmatch.html#fnmatch.fnmatch
+    ignored_folders = ("venv", "node_modules", "dist", ".git", ".vscode", ".mypy_cache")
+    ignored_extensions = (".pyc",)
+    if any(str(f).startswith(folder) for folder in ignored_folders):
         continue
+    if any(str(f).endswith(ext) for ext in ignored_extensions):
+        continue
+
     files += 1
     with f.open(encoding="utf-8") as of:
         _lines = of.readlines()
@@ -100,8 +99,8 @@ async def index(request: web.Request):
     }
     mem = psutil.virtual_memory()
     ctx["memory"] = {
-        "total": "{:,.2f} GB".format(mem.total / 1024 / 1024 / 1024),
-        "used": "{:,.2f} GB".format(mem.used / 1024 / 1024 / 1024),
+        "total": f"{mem.total / 1024 / 1024 / 1024:,.2f} GB",
+        "used": f"{mem.used / 1024 / 1024 / 1024:,.2f} GB",
         "percent": mem.percent,
     }
     drives = []
@@ -128,11 +127,11 @@ async def index(request: web.Request):
         },
     }
 
-    p = psutil.Process()
-    with p.oneshot():
+    proc = psutil.Process()
+    with proc.oneshot():
         ctx["process"] = {
-            "memory": "{:,.2f} MB".format(p.memory_full_info().uss / 1024 / 1024),
+            "memory": f"{proc.memory_full_info().uss / 1024 / 1024:,.2f} MB",
         }
-        ctx["process"].update(p.as_dict(attrs=["pid", "username", "cwd", "exe", "cmdline"]))
+        ctx["process"].update(proc.as_dict(attrs=["pid", "username", "cwd", "exe", "cmdline"]))
 
     return ctx

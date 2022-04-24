@@ -1,4 +1,3 @@
-import base64
 from uuid import UUID
 
 from aiohttp import web
@@ -23,20 +22,23 @@ class InviteCodeSchema(Schema):
 async def login_user(request: web.Request, user_id: int) -> web.Response:
     metadata = user_agent_parser.Parse(request.headers.getone("User-Agent"))
     browser = metadata["user_agent"]["family"]
-    os = metadata["os"]["family"]
+    operating_system = metadata["os"]["family"]
 
     # get ip from forwarded for header or remote address
-    ip = request.headers.getone("X-Forwarded-For", None)
-    if ip is None:
-        peername = request.transport.get_extra_info("peername")
-        if peername is not None:
-            ip, _ = peername
+    ip_address = request.headers.getone("X-Forwarded-For", None)
+    if ip_address is None:
+        transport = request.transport
+        if transport is not None:
+            peername = transport.get_extra_info("peername")
+            if peername is not None:
+                ip_address, _ = peername
 
-    split = ip.split(",")  # for some reason the ip might have a comma
-    if len(split) > 0:
-        ip = split[0]  # no idea why this happens but it does
+    if ip_address is not None:
+        split = ip_address.split(",")  # for some reason the ip might have a comma
+        if len(split) > 0:
+            ip_address = split[0]  # no idea why this happens but it does
 
-    uuid = await insert_session(request.app["db"], user_id=user_id, browser=browser, os=os, ip=ip)
+    uuid = await insert_session(request.app["db"], user_id=user_id, browser=browser, os=operating_system, ip=ip_address)
 
     res = web.HTTPFound("/dashboard")
     res.set_cookie(
@@ -90,16 +92,16 @@ async def login(request: web.Request) -> web.Response:
     if request.method == "POST":
         try:
             args = await parser.parse(LoginSchema(), request, locations=["form"])
-        except ValidationError as e:
+        except ValidationError as error:
             return await render_template_async(
                 "onboarding.html.jinja",
                 request,
                 {
-                    "email_error": e.messages.get("email"),
-                    "password_error": e.messages.get("password"),
+                    "email_error": error.messages.get("email"),
+                    "password_error": error.messages.get("password"),
                     "type": "login",
-                    "email": e.data.get("email"),
-                    "password": e.data.get("password"),
+                    "email": error.data.get("email"),
+                    "password": error.data.get("password"),
                 },
                 status=400,
             )

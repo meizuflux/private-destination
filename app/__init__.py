@@ -56,8 +56,8 @@ async def authentication_middleware(request: web.Request, handler):
 async def exception_middleware(request: web.Request, handler):
     try:
         return await handler(request)
-    except web.HTTPException as e:  # handle exceptions here
-        return await handle_errors(request, e)
+    except web.HTTPException as error:  # handle exceptions here
+        return await handle_errors(request, error)
 
 
 async def user_processor(request: web.Request):
@@ -68,15 +68,15 @@ async def app_factory():
     app = web.Application(middlewares=[authentication_middleware, validation_middleware, exception_middleware])
 
     # blueprints
-    app.router.add_routes(blueprints.auth.bp)
-    app.router.add_routes(blueprints.dashboard.settings.bp)
-    app.router.add_routes(blueprints.dashboard.shortener.bp)
-    app.router.add_routes(blueprints.dashboard.notes.bp)
-    app.router.add_routes(blueprints.admin.users.bp)
-    app.router.add_routes(blueprints.admin.application.bp)
+    app.add_routes(blueprints.auth.bp)
+    app.add_routes(blueprints.dashboard.settings.bp)
+    app.add_routes(blueprints.dashboard.shortener.bp)
+    app.add_routes(blueprints.dashboard.notes.bp)
+    app.add_routes(blueprints.admin.users.bp)
+    app.add_routes(blueprints.admin.application.bp)
 
     # has to go last since it has a catch-all
-    app.router.add_routes(blueprints.base.bp)
+    app.add_routes(blueprints.base.bp)
 
     app.router.add_static("/static", "dist")
 

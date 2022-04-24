@@ -3,7 +3,7 @@ from uuid import UUID
 
 from asyncpg import Connection, Pool, Record
 
-from app.utils import QueryScopes, Scopes
+from app.utils import QueryScopes
 
 ConnOrPool = Union[Connection, Pool]
 
@@ -136,9 +136,14 @@ async def get_hash_and_id_by_email(conn: ConnOrPool, *, email: str):
     return await conn.fetchrow("SELECT id, password FROM users WHERE email = $1", email)
 
 
-async def insert_session(conn: ConnOrPool, *, user_id: int, browser: str, os: str, ip: str):
+async def insert_session(conn: ConnOrPool, *, user_id: int, browser: str, os: str, ip: str | None):
+    query = """
+        INSERT INTO sessions (token, user_id, browser, os, ip) 
+        VALUES (SELECT gen_random_uuid(), $1, $2, $3, $4) 
+        RETURNING token;
+    """
     return await conn.fetchval(
-        "INSERT INTO sessions (token, user_id, browser, os, ip) (SELECT gen_random_uuid(), $1, $2, $3, $4) RETURNING token;",
+        query,
         user_id,
         browser,
         os,

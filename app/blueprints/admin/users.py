@@ -15,7 +15,7 @@ bp = Blueprint("/admin/users")
 @template("admin/users/index.html.jinja")
 @querystring_schema(UsersFilterSchema())
 @requires_auth(admin=True, redirect=True)
-async def users(request: web.Request):
+async def list_users(request: web.Request):
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "joined")
 

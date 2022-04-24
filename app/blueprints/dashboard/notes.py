@@ -57,10 +57,88 @@ def derive_salt_and_content(stored):
     return stored[:32], stored[32:]
 
 
-bp = Blueprint("")
+sub_bp = Blueprint("/notes")
 
 
-@bp.get("/dashboard/notes")
+@sub_bp.get("/{note_id}")
+@match_info_schema(IdSchema())
+@querystring_schema(PasswordIncorrectSchema())
+@template("dashboard/notes/view.html.jinja")
+async def view_note(request: web.Request):
+    note_id = request["match_info"]["note_id"]
+    try:
+        as_uuid = uuid.UUID(base64.urlsafe_b64decode(note_id).decode("utf-8"))
+    except (ValueError, binascii.Error):
+        return web.Response(text="Invalid Note ID", status=400)
+
+    has_pw = await request.app["db"].fetchval("SELECT has_password FROM notes WHERE id = $1", as_uuid)
+
+    return {
+        "id": note_id,
+        "has_pw": has_pw,
+        "password_error": ["This password is incorrect"]
+        if request["querystring"].get("incorrect_password") is True
+        else None,
+    }
+
+
+@sub_bp.post("/{note_id}")
+@match_info_schema(IdSchema())
+async def view_note_form(request: web.Request) -> web.Response:
+    try:
+        args = await parser.parse(ViewNoteSchema(), request, locations=["form"])
+    except ValidationError as error:
+        return web.json_response({"error": error.messages}, status=400)
+
+    note_id = request["match_info"]["note_id"]
+    try:
+        as_uuid = uuid.UUID(base64.urlsafe_b64decode(note_id).decode("utf-8"))
+    except (ValueError, binascii.Error):
+        return web.Response(text="Invalid Note ID", status=400)
+
+    note = await request.app["db"].fetchrow(
+        "SELECT has_password, content, owner, name, share_email, private FROM notes WHERE id = $1", as_uuid
+    )
+    if note is None:
+        return web.Response(text="Note not found", status=404)
+
+    if note["private"] is True:
+        user = await verify_user(request, scopes=["id"], admin=False, redirect=False)
+        if isinstance(user, web.HTTPException):
+            return web.Response(text="Note is private", status=403)
+        if user["id"] != note["owner"]:
+            return web.Response(text="Note is private", status=403)
+
+    if note["has_password"] is True:
+        password = args.get("password")
+        if password is None:
+            return web.Response(text="Password required", status=401)
+        salt, encrypted_content = derive_salt_and_content(note["content"])
+        fernet = create_fernet(salt, password.encode())
+        try:
+            decoded = fernet.decrypt(encrypted_content).decode("utf-8")
+        except InvalidToken:
+            return web.HTTPFound(f"/notes/{note_id}?incorrect_password=True")
+    else:
+        decoded = note["content"].decode("utf-8")
+
+    email = None
+    if note["share_email"] is True:
+        email = (await select_user(request.app["db"], user_id=note["owner"])).get("email")
+
+    asyncio.get_event_loop().create_task(
+        request.app["db"].execute("UPDATE notes SET clicks = clicks + 1 WHERE id = $1", as_uuid)
+    )
+
+    return await render_template_async(
+        "dashboard/notes/view_stylized.html.jinja", request, {"name": note["name"], "email": email, "content": decoded}
+    )
+
+
+bp = Blueprint("/dashboard/notes", subblueprints=[sub_bp])
+
+
+@bp.get("")
 @querystring_schema(NotesFilterSchema())
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @template("dashboard/notes/index.html.jinja")
@@ -92,14 +170,14 @@ async def index(request: web.Request):
     }
 
 
-@bp.get("/dashboard/notes/create")
+@bp.get("/create")
 @template("dashboard/notes/create.html.jinja")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def create_note(_: web.Request):
     return {"errors": {}}
 
 
-@bp.post("/dashboard/notes/create")
+@bp.post("/create")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def create_note_form(request: web.Request) -> web.Response:
     try:
@@ -139,78 +217,3 @@ VALUES ($1, $2, $3, $4, $5, $6) returning id
     id_ = base64.urlsafe_b64encode(str(id_).encode())
 
     return web.HTTPFound("/dashboard/notes")
-
-
-@bp.get("/notes/{note_id}")
-@match_info_schema(IdSchema())
-@querystring_schema(PasswordIncorrectSchema())
-@template("dashboard/notes/view.html.jinja")
-async def view_note(request: web.Request):
-    note_id = request["match_info"]["note_id"]
-    try:
-        as_uuid = uuid.UUID(base64.urlsafe_b64decode(note_id).decode("utf-8"))
-    except (ValueError, binascii.Error):
-        return web.Response(text="Invalid Note ID", status=400)
-
-    has_pw = await request.app["db"].fetchval("SELECT has_password FROM notes WHERE id = $1", as_uuid)
-
-    return {
-        "id": note_id,
-        "has_pw": has_pw,
-        "password_error": ["This password is incorrect"]
-        if request["querystring"].get("incorrect_password") is True
-        else None,
-    }
-
-
-@bp.post("/notes/{note_id}")
-@match_info_schema(IdSchema())
-async def view_note_form(request: web.Request) -> web.Response:
-    try:
-        args = await parser.parse(ViewNoteSchema(), request, locations=["form"])
-    except ValidationError as error:
-        return web.json_response({"error": error.messages}, status=400)
-
-    note_id = request["match_info"]["note_id"]
-    try:
-        as_uuid = uuid.UUID(base64.urlsafe_b64decode(note_id).decode("utf-8"))
-    except (ValueError, binascii.Error):
-        return web.Response(text="Invalid Note ID", status=400)
-
-    note = await request.app["db"].fetchrow(
-        "SELECT has_password, content, owner, name, share_email, private FROM notes WHERE id = $1", as_uuid
-    )
-    if note is None:
-        return web.Response(text="Note not found", status=404)
-
-    if note["private"] is True:
-        user = await verify_user(request, scopes=["id"], admin=False, redirect=False)
-        if isinstance(user, web.HTTPException):
-            return web.Response(text="Not logged in and note is private", status=403)
-        if user["id"] != note["owner"]:
-            return web.Response(text="Note is private", status=403)
-
-    if note["has_password"] is True:
-        password = args.get("password")
-        if password is None:
-            return web.Response(text="Password required", status=401)
-        salt, encrypted_content = derive_salt_and_content(note["content"])
-        fernet = create_fernet(salt, password.encode())
-        try:
-            decoded = fernet.decrypt(encrypted_content).decode("utf-8")
-        except InvalidToken:
-            return web.HTTPFound(f"/notes/{note_id}?incorrect_password=True")
-    else:
-        decoded = note["content"].decode("utf-8")
-
-    email = None
-    if note["share_email"] is True:
-        email = (await select_user(request.app["db"], user_id=note["owner"])).get("email")
-
-    asyncio.get_event_loop().create_task(
-        request.app["db"].execute("UPDATE notes SET clicks = clicks + 1 WHERE id = $1", as_uuid)
-    )
-
-    return await render_template_async(
-        "dashboard/notes/view_stylized.html.jinja", request, {"name": note["name"], "email": email, "content": decoded}
-    )

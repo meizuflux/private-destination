@@ -12,6 +12,7 @@ from app.utils.db import (
     add_short_url_click,
     select_short_url_destination,
     select_short_urls_count,
+    select_notes_count,
     select_total_notes_count,
     select_total_sessions_count,
     select_total_short_urls_count,
@@ -33,8 +34,10 @@ async def login(request: web.Request) -> web.Response:
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @aiohttp_jinja2.template("dashboard/index.html.jinja")
 async def index(request: web.Request):
-    url_count = await select_short_urls_count(request.app["db"], owner=request["user"]["id"])
-    return {"url_count": url_count}
+    async with request.app["db"].acquire() as conn:
+        url_count = await select_short_urls_count(conn, owner=request["user"]["id"])
+        notes_count = await select_notes_count(conn, owner=request["user"]["id"])
+    return {"url_count": url_count, "notes_count": notes_count}
 
 
 @bp.get("/admin")

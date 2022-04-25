@@ -139,9 +139,10 @@ async def get_hash_and_id_by_email(conn: ConnOrPool, *, email: str):
 async def insert_session(conn: ConnOrPool, *, user_id: int, browser: str, os: str, ip: str | None):
     query = """
         INSERT INTO sessions (token, user_id, browser, os, ip) 
-        VALUES (SELECT gen_random_uuid(), $1, $2, $3, $4) 
+        (SELECT gen_random_uuid(), $1, $2, $3, $4) 
         RETURNING token;
-    """
+    """ # don't add VALUES before the values, it breaks it
+    # I have no idea why but this works
     return await conn.fetchval(
         query,
         user_id,

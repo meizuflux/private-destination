@@ -8,6 +8,7 @@ from asyncpg import create_pool
 from jinja2 import FileSystemLoader
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from yaml import safe_load
+from app.routing import register_blueprint
 
 from app.utils.auth import verify_user
 
@@ -67,16 +68,18 @@ async def user_processor(request: web.Request):
 async def app_factory():
     app = web.Application(middlewares=[authentication_middleware, validation_middleware, exception_middleware])
 
-    # blueprints
-    app.add_routes(blueprints.auth.bp)
-    app.add_routes(blueprints.dashboard.settings.bp)
-    app.add_routes(blueprints.dashboard.shortener.bp)
-    app.add_routes(blueprints.dashboard.notes.bp)
-    app.add_routes(blueprints.admin.users.bp)
-    app.add_routes(blueprints.admin.application.bp)
+    bps = (
+        blueprints.auth.bp,
+        blueprints.dashboard.settings.bp,
+        blueprints.dashboard.shortener.bp,
+        blueprints.dashboard.notes.bp,
+        blueprints.admin.users.bp,
+        blueprints.admin.application.bp,
+        blueprints.base.bp, # this has to go last
+    )
 
-    # has to go last since it has a catch-all
-    app.add_routes(blueprints.base.bp)
+    for bp in bps:
+        register_blueprint(app, bp)
 
     app.router.add_static("/static", "dist")
 

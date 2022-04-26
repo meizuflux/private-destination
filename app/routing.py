@@ -1,55 +1,42 @@
 """Module for custom routing"""
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Any, Iterable, Iterator, List, overload
+from typing import Any, Iterable, List
 
-from aiohttp import hdrs
+from aiohttp import hdrs, web
 from aiohttp.web_routedef import AbstractRouteDef, RouteDef, _Deco, _HandlerType
 
-
-# source: https://github.com/aio-libs/aiohttp/blob/a0454809e3fd15f70c95d794addf005d9bd95b23/aiohttp/web_routedef.py#L154-L215
-class Blueprint(Sequence[AbstractRouteDef]):
-    """Container for routes"""
-
-    def __init__(
-        self, prefix: str = "", subblueprints: Iterable[Blueprint] = []
-    ):  # pylint: disable=dangerous-default-value
-        self.prefix: str = prefix
-        self._items: List[AbstractRouteDef] = []
+class Blueprint:
+    def __init__(self, prefix: str = "", *, subblueprints: Iterable[Blueprint] = []): # pylint: disable=dangerous-default-value
+        self.__prefix: str = prefix
+        self.__route_table = web.RouteTableDef()
         for blueprint in subblueprints:
-            for route in blueprint:
-                self._items.append(route)
+            self.__route_table._items.extend(blueprint.routes)
 
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} count={len(self._items)}>"
+    def add_subblueprint(self, blueprint: Blueprint):
+        """Add a subblueprint"""
+        self.__route_table._items.extend(blueprint.routes) # pylint: disable=protected-access
 
-    @overload
-    def __getitem__(self, index: int) -> AbstractRouteDef:
-        ...
+    @property
+    def prefix(self) -> str:
+        """Route prefix"""
+        return self.__prefix
 
-    @overload
-    def __getitem__(self, index: slice) -> List[AbstractRouteDef]:
-        ...
+    @property
+    def route_table(self) -> web.RouteTableDef:
+        """Route table"""
+        return self.__route_table
 
-    def __getitem__(self, index):
-        return self._items[index]
-
-    def __iter__(self) -> Iterator[AbstractRouteDef]:
-        return iter(self._items)
-
-    def __len__(self) -> int:
-        return len(self._items)
-
-    def __contains__(self, item: object) -> bool:
-        return item in self._items
+    @property
+    def routes(self) -> List[AbstractRouteDef]:
+        """Route table items"""
+        return self.__route_table._items # pylint: disable=protected-access
 
     def route(self, path: str, *, methods: List[str], **kwargs: Any) -> _Deco:
         """Add a route"""
-
         def decorator(handler: _HandlerType) -> _HandlerType:
             for method in methods:
-                self._items.append(RouteDef(method, self.prefix + path, handler, kwargs))
+                self.__route_table._items.append(RouteDef(method, self.__prefix + path, handler, kwargs)) # pylint: disable=protected-access
             return handler
 
         return decorator
@@ -77,3 +64,8 @@ class Blueprint(Sequence[AbstractRouteDef]):
     def delete(self, path: str, **kwargs: Any) -> _Deco:
         """Add DELETE route"""
         return self.route(path, methods=[hdrs.METH_DELETE], **kwargs)
+
+
+def register_blueprint(app: web.Application, blueprint: Blueprint) -> None:
+    """Register routes"""
+    app.router.add_routes(blueprint.route_table)

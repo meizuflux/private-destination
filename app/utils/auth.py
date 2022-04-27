@@ -98,7 +98,7 @@ async def create_user(
     *,
     template: str,
     extra_ctx: dict,
-) -> Tuple[Literal[Status.OK], int] | Tuple[Literal[Status.ERROR], web.Response]:
+) -> Tuple[Literal[Status.OK], int, str] | Tuple[Literal[Status.ERROR], web.Response]:
     try:
         args = await parser.parse(SignUpSchema(), request, locations=["form"])
     except ValidationError as error:
@@ -149,7 +149,7 @@ async def create_user(
         ctx.update(extra_ctx)
         return Status.ERROR, await render_template_async(template, request, ctx, status=409)
 
-    return Status.OK, user_id
+    return Status.OK, user_id, args["admin"]
 
 
 async def edit_user(

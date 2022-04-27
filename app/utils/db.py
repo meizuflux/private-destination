@@ -136,10 +136,10 @@ async def get_hash_and_id_by_email(conn: ConnOrPool, *, email: str):
     return await conn.fetchrow("SELECT id, password FROM users WHERE email = $1", email)
 
 
-async def insert_session(conn: ConnOrPool, *, user_id: int, browser: str, os: str, ip: str | None):
+async def insert_session(conn: ConnOrPool, *, user_id: int, browser: str, os: str):
     query = """
-        INSERT INTO sessions (token, user_id, browser, os, ip) 
-        (SELECT gen_random_uuid(), $1, $2, $3, $4) 
+        INSERT INTO sessions (token, user_id, browser, os) 
+        (SELECT gen_random_uuid(), $1, $2, $3) 
         RETURNING token;
     """ # don't add VALUES before the values, it breaks it
     # I have no idea why but this works
@@ -147,8 +147,7 @@ async def insert_session(conn: ConnOrPool, *, user_id: int, browser: str, os: st
         query,
         user_id,
         browser,
-        os,
-        ip,
+        os
     )
 
 
@@ -177,7 +176,7 @@ async def select_user_by_session(conn: ConnOrPool, *, token: UUID, scopes: Query
 
 async def select_sessions(conn: ConnOrPool, *, user_id: int):
     return await conn.fetch(
-        "SELECT token, created, browser, os, ip FROM sessions WHERE user_id = $1 ORDER BY created DESC", user_id
+        "SELECT token, created, browser, os FROM sessions WHERE user_id = $1 ORDER BY created DESC", user_id
     )
 
 

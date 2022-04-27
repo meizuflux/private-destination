@@ -13,7 +13,6 @@
                     <th>Created</th>
                     <th>Browser</th>
                     <th>OS</th>
-                    <th>IP</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -24,7 +23,6 @@
                         <td>{{session["created"].strftime("%d %B %Y at %H:%M")}}</td>
                         <td>{{session["browser"]}}</td>
                         <td>{{session["os"]}}</td>
-                        <td>{{session["ip"]}}</td>
                         <td>
                             <form method="POST" action="/dashboard/settings/sessions/{{session['token']}}/delete">
                                 <button class="button is-danger is-small" type="submit" {% if current_session == session["token"]|string() %}disabled title="This is your current session, if you want to delete it, simply logout."{% endif %}>Delete</button>

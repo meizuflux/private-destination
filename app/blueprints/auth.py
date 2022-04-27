@@ -19,26 +19,12 @@ class InviteCodeSchema(Schema):
     code = fields.UUID()
 
 
-async def login_user(request: web.Request, user_id: int) -> web.Response:
+async def login_user(request: web.Request, user_id: int, email: str) -> web.Response:
     metadata = user_agent_parser.Parse(request.headers.getone("User-Agent"))
     browser = metadata["user_agent"]["family"]
     operating_system = metadata["os"]["family"]
 
-    # get ip from forwarded for header or remote address
-    ip_address = request.headers.getone("X-Forwarded-For", None)
-    if ip_address is None:
-        transport = request.transport
-        if transport is not None:
-            peername = transport.get_extra_info("peername")
-            if peername is not None:
-                ip_address, _ = peername
-
-    if ip_address is not None:
-        split = ip_address.split(",")  # for some reason the ip might have a comma
-        if len(split) > 0:
-            ip_address = split[0]  # no idea why this happens but it does
-
-    uuid = await insert_session(request.app["db"], user_id=user_id, browser=browser, os=operating_system, ip=ip_address)
+    uuid = await insert_session(request.app["db"], user_id=user_id, browser=browser, os=operating_system)
 
     res = web.HTTPFound("/dashboard")
     res.set_cookie(
@@ -48,6 +34,14 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
         httponly=True,
         secure=not request.app["dev"],
         samesite="strict",  # using this lets me not need to setup csrf and whatnot
+    )
+    res.set_cookie(
+        name="email",
+        value=email,
+        max_age=60 * 60 * 24 * 365, # one year
+        httponly=True,
+        secure=not request.app["dev"],
+        samesite="strict"
     )
 
     return res
@@ -79,7 +73,7 @@ async def signup(request: web.Request) -> web.Response:
         if ret[0] is Status.ERROR:
             return ret[1]
 
-        return await login_user(request, ret[1])
+        return await login_user(request, ret[1], ret[2])
 
     return await render_template_async("onboarding.html.jinja", request, {"type": "signup", "invite_code": invite_code})
 
@@ -119,7 +113,7 @@ async def login(request: web.Request) -> web.Response:
             )
 
         if pbkdf2_sha512.verify(args["password"], row["password"]) is True:
-            return await login_user(request, row["id"])
+            return await login_user(request, row["id"], args["email"])
 
         # email is right password is wrong
         return await render_template_async(
@@ -129,7 +123,13 @@ async def login(request: web.Request) -> web.Response:
             status=401,
         )
 
-    return await render_template_async("onboarding.html.jinja", request, {"type": "login"})
+    return await render_template_async(
+        "onboarding.html.jinja",
+        request,
+        {
+            "type": "login",
+            "email": request.cookies.get("email")
+        })
 
 
 @bp.get("/logout", name="logout")

@@ -24,7 +24,7 @@
                     <div class="field">
                         <label class="label">Email</label>
                         <div class="control">
-                            <input id="email" name="email" class="input {{'is-danger' if email_error else ''}}" type="text" placeholder="Your email" value="{{email|d('')}}">
+                            <input id="email" name="email" class="input {{'is-danger' if email_error else ''}}" type="email" placeholder="Your email" value="{{email if email}}">
                             {% if email_error %}
                                 <p class="help is-danger">{{email_error[0]}}</p>
                             {% endif %}

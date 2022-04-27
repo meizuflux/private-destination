@@ -19,10 +19,10 @@ from app.utils.db import (
     select_total_users_count,
 )
 
-bp = Blueprint()
+bp = Blueprint(name="base")
 
 
-@bp.get("/")
+@bp.get("/", name="index")
 async def login(request: web.Request) -> web.Response:
     if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
         return web.HTTPFound("/dashboard")
@@ -30,7 +30,7 @@ async def login(request: web.Request) -> web.Response:
     return await aiohttp_jinja2.render_template_async("index.html.jinja", request, {})
 
 
-@bp.get("/dashboard")
+@bp.get("/dashboard", name="dashboard")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @aiohttp_jinja2.template("dashboard/index.html.jinja")
 async def index(request: web.Request):
@@ -40,7 +40,7 @@ async def index(request: web.Request):
     return {"url_count": url_count, "notes_count": notes_count}
 
 
-@bp.get("/admin")
+@bp.get("/admin", name="admin")
 @aiohttp_jinja2.template("admin/index.html.jinja")
 async def home(request: web.Request):
     async with request.app["db"].acquire() as conn:
@@ -55,7 +55,7 @@ async def home(request: web.Request):
     }
 
 
-@bp.get("/{alias}")
+@bp.get("/{alias}", name="shortener")
 @match_info_schema(ShortenerAliasSchema)
 async def shortener(request: web.Request) -> web.Response:
     alias = request["match_info"]["alias"]

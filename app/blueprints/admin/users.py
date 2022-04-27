@@ -8,10 +8,10 @@ from app.utils import Status
 from app.utils.auth import create_user, edit_user, requires_auth
 from app.utils.db import delete_user, select_user, select_users
 
-bp = Blueprint("/admin/users")
+bp = Blueprint("/admin/users", name="users")
 
 
-@bp.get("")
+@bp.get("", name="index")
 @template("admin/users/index.html.jinja")
 @querystring_schema(UsersFilterSchema())
 @requires_auth(admin=True, redirect=True)
@@ -23,7 +23,7 @@ async def list_users(request: web.Request):
     return {"users": users, "sortby": sortby, "direction": direction}
 
 
-@bp.route("/{user_id}/edit", methods=["GET", "POST"])
+@bp.route("/{user_id}/edit", methods=["GET", "POST"], name="edit")
 @match_info_schema(UserIDSchema)
 @requires_auth(admin=True, redirect=True, scopes="id")
 async def edit_user_(request: web.Request) -> web.Response:
@@ -66,7 +66,7 @@ async def edit_user_(request: web.Request) -> web.Response:
     )
 
 
-@bp.route("/{user_id}/delete", methods=["GET", "POST"])
+@bp.route("/{user_id}/delete", methods=["GET", "POST"], name="delete")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @match_info_schema(UserIDSchema)
 async def delete_user_(request: web.Request) -> web.Response:
@@ -93,7 +93,7 @@ async def delete_user_(request: web.Request) -> web.Response:
     )
 
 
-@bp.route("/create", methods=["GET", "POST"])
+@bp.route("/create", methods=["GET", "POST"], name="create")
 @requires_auth(admin=True, redirect=True)
 async def create_user_(request: web.Request) -> web.Response:
     if request.method == "POST":

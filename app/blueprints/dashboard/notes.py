@@ -57,10 +57,10 @@ def derive_salt_and_content(stored):
     return stored[:32], stored[32:]
 
 
-sub_bp = Blueprint("/notes")
+sub_bp = Blueprint("/notes", name="notes")
 
 
-@sub_bp.get("/{note_id}")
+@sub_bp.get("/{note_id}", name="view")
 @match_info_schema(IdSchema())
 @querystring_schema(PasswordIncorrectSchema())
 @template("dashboard/notes/view.html.jinja")
@@ -135,10 +135,10 @@ async def view_note_form(request: web.Request) -> web.Response:
     )
 
 
-bp = Blueprint("/dashboard/notes", subblueprints=[sub_bp])
+bp = Blueprint("/dashboard/notes", name="notes", subblueprints=[sub_bp])
 
 
-@bp.get("")
+@bp.get("", name="index")
 @querystring_schema(NotesFilterSchema())
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @template("dashboard/notes/index.html.jinja")
@@ -170,7 +170,7 @@ async def index(request: web.Request):
     }
 
 
-@bp.get("/create")
+@bp.get("/create", name="create")
 @template("dashboard/notes/create.html.jinja")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def create_note(_: web.Request):

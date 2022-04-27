@@ -72,10 +72,10 @@ git_stats = {
     "commit_url": f"https://github.com/{'/'.join(remote.split('/')[-2:]).removesuffix('.git')}/commit/{revision}",
 }
 
-bp = Blueprint("/admin/application")
+bp = Blueprint("/admin/application", name="application")
 
 
-@bp.get("")
+@bp.get("", name="index")
 @template("admin/application.html.jinja")
 async def index(request: web.Request):
     ctx = {

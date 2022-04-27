@@ -11,13 +11,13 @@
     <div class="columns is-multiline">
         <div class="column is-4">
             <article class="box">
-                <p class="title"><a href="/dashboard/shortener">URL Shortener</a></p>
+                <p class="title"><a href="{{ url_for('shortener.index') }}">URL Shortener</a></p>
                 <p class="subtitle">You have {{url_count}} shortened URLs</p>
             </article>
         </div>
         <div class="column is-4">
             <article class="box">
-                <p class="title"><a href="/dashboard/notes">Secure Notes</a></p>
+                <p class="title"><a href="{{ url_for('notes.index') }}">Secure Notes</a></p>
                 <p class="subtitle">You have {{notes_count}} secure notes</p>
             </article>
         </div>

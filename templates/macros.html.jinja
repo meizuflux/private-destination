@@ -1,0 +1,15 @@
+{% macro active_link(url, text, type="startswith", class="") %}
+    {% if type == "startswith" %}
+        <a href="{{ url }}" class="{{'is-active' if request.rel_url.path.startswith(url)}} {{class}}">{{text}}</a>
+    {% else %}
+        <a href="{{ url }}" class="{{'is-active' if request.rel_url.path == url}} {{class}}">{{text}}</a>
+    {% endif %}
+{% endmacro %}
+
+{% macro active_tab(url, text, type="startswith", class="") %}
+    {% if type == "startswith" %}
+        <li class="{{'is-active' if request.rel_url.path.startswith(url)}} {{class}}"><a href="{{ url }}">{{text}}</a></li>
+    {% else %}
+        <li class="{{'is-active' if request.rel_url.path == url}} {{class}}"><a href="{{ url }}">{{text}}</a></li>
+    {% endif %}
+{% endmacro %}

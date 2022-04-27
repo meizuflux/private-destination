@@ -46,14 +46,14 @@
             <tbody>
                 {% for url in values %}
                     <tr>
-                        <td><a href="/{{url['alias']}}" id="{{url['alias']}}-alias" value="{{url['alias']}}" target="_blank" rel="noopener noreferrer">{{truncate(url["alias"], 15)}}</a></td>
+                        <td><a href="{{ url_for('base.shortener', alias=url['alias']) }}" id="{{url['alias']}}-alias" value="{{url['alias']}}" target="_blank" rel="noopener noreferrer">{{truncate(url["alias"], 15)}}</a></td>
                         <td><a href="{{url['destination']}}" target="_blank" rel="noopener noreferrer">{{truncate(url['destination'], 43)}}</a></td>
                         <td><code>{{url['clicks']}}</code></td>
                         <td>{{url["creation_date"].strftime("%d %B %Y at %H:%M")}}</td>
                         <td>
                             <div class="buttons">
                                 <button class="button is-info is-small copy-btn" data-target="{{url['alias']}}-alias">Copy</button>
-                                <a href="/dashboard/shortener/{{url['alias']}}/edit" class="button is-warning is-small">Edit</a>
+                                <a href="{{ url_for('shortener.edit', alias=url['alias']) }}" class="button is-warning is-small">Edit</a>
                             </div>
                         </td>
                     </tr>
@@ -64,21 +64,21 @@
     <nav class="pagination is-centered">
         <ul class="pagination-list">
             {% if current_page != 1 %}
-                <li><a class="pagination-link" href="/dashboard/shortener">1</a></li>
+                <li><a class="pagination-link" href="{{ url_for('shortener.index') }}">1</a></li>
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
                 {% if current_page != 2 %}
-                    <li><a class="pagination-link" href="/dashboard/shortener?page={{current_page - 1}}">{{current_page - 1}}</a></li>
+                    <li><a class="pagination-link" href="{{ url_for('shortener.index', query={'page': current_page - 1}) }}">{{current_page - 1}}</a></li>
                 {% endif %}
             {% endif %}
             <li><a class="pagination-link is-current">{{current_page}}</a></li>
             {% if current_page != max_pages %}
                 {% if current_page != max_pages - 1 %}
-                    <li><a class="pagination-link" href="/dashboard/shortener?page={{current_page + 1}}">{{current_page + 1}}</a></li>
+                    <li><a class="pagination-link" href="{{ url_for('shortener.index', query={'page': current_page + 1}) }}">{{current_page + 1}}</a></li>
                 {% endif %}
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
-                <li><a class="pagination-link" href="/dashboard/shortener?page={{max_pages}}">{{max_pages}}</a></li>
+                <li><a class="pagination-link" href="{{ url_for('shortener.index', query={'page': max_pages}) }}">{{max_pages}}</a></li>
             {% endif %}
-            </ul>
+        </ul>
     </nav>
     <script src="/static/js/shortener.js" type="module"></script>
     

@@ -53,10 +53,10 @@ async def login_user(request: web.Request, user_id: int) -> web.Response:
     return res
 
 
-bp = Blueprint("/auth")
+bp = Blueprint("/auth", name="auth")
 
 
-@bp.get("/invite/{code}")
+@bp.get("/invite/{code}", name="invite")
 @match_info_schema(InviteCodeSchema())
 async def invite(request: web.Request) -> web.Response:
     if await verify_user(request, admin=False, redirect=False, scopes=None):
@@ -64,7 +64,7 @@ async def invite(request: web.Request) -> web.Response:
     return web.HTTPFound(f"/auth/login?code={request['match_info']['code']}")
 
 
-@bp.route("/signup", methods=["GET", "POST"])
+@bp.route("/signup", methods=["GET", "POST"], name="signup")
 @querystring_schema(InviteCodeSchema())
 async def signup(request: web.Request) -> web.Response:
     if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
@@ -84,7 +84,7 @@ async def signup(request: web.Request) -> web.Response:
     return await render_template_async("onboarding.html.jinja", request, {"type": "signup", "invite_code": invite_code})
 
 
-@bp.route("/login", methods=["GET", "POST"])
+@bp.route("/login", methods=["GET", "POST"], name="login")
 async def login(request: web.Request) -> web.Response:
     if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
         return web.HTTPFound("/dashboard")
@@ -132,7 +132,7 @@ async def login(request: web.Request) -> web.Response:
     return await render_template_async("onboarding.html.jinja", request, {"type": "login"})
 
 
-@bp.get("/logout")
+@bp.get("/logout", name="logout")
 @requires_auth(redirect=True)
 async def logout(request: web.Request) -> web.Response:
     token = request.cookies.get("_session")

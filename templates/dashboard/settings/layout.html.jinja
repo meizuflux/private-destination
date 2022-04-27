@@ -1,5 +1,7 @@
 {% extends 'dashboard/layout.html.jinja' %}
 
+{% import "macros.html.jinja" as macros with context %}
+
 {% block name %}
 {% endblock name %}
 
@@ -13,10 +15,10 @@
     <div class="tabs mb-3">
         <ul>
             <li class="{{'is-active' if request.rel_url.path == '/dashboard/settings' or request.rel_url.path.startswith('/dashboard/settings/account')}}"><a href="/dashboard/settings">Account</a></li>
-            <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/sessions')}}"><a href="/dashboard/settings/sessions">Sessions</a></li>
-            <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/api_key')}}"><a href="/dashboard/settings/api_key">API Key</a></li>
-            <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/shortener')}}"><a href="/dashboard/settings/shortener">Shortener</a></li>
-            <li class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings/invites')}}"><a href="/dashboard/settings/invites">Invites</a></li>
+            {{macros.active_tab(url_for("settings.sessions"), "Sessions")}}            
+            {{macros.active_tab(url_for("settings.api_key"), "API Key")}}  
+            {{macros.active_tab(url_for("settings.shortener"), "URL Shortener")}}  
+            {{macros.active_tab(url_for("settings.invites"), "Invites")}}  
         </ul>
     </div>
 

@@ -5,24 +5,36 @@
 {% endblock %}
 
 {% block main2 %}
-    <form novalidate>
+    <form method="POST">
         <div class="field">
             <label class="label">User ID</label>
-            <input class="input" type="text" value="{{id}}" disabled>
+            <div class="control">
+                <input class="input" type="text" value="{{id}}" disabled>
+            </div>
         </div>
 
         <div class="field">
             <label class="label">Joined</label>
-            <input class="input" type="text" value="{{joined.strftime('%d %B %Y at %H:%M')}}" disabled>
+            <div class="control">
+                <input class="input" type="text" value="{{joined.strftime('%d %B %Y at %H:%M')}}" disabled>
+            </div>
         </div>
 
         <div class="field">
             <label class="label">Email</label>
-            <input class="input" type="email" value="{{email}}" name="email" disabled>
+            <div class="control">
+                <input class="input {{'is-danger' if email_error else ''}}" type="email" value="{{email}}" name="email">
+                {% if email_error %}
+                    <p class="help is-danger">{{email_error[0]}}</p>
+                {% endif %}
+            </div>
         </div>
-        <div class="buttons">
-            <a href="/dashboard/settings/account/edit" class="button is-warning">Edit</a>
-            <a href="/dashboard/settings/account/delete" class="button is-danger">Delete</a>
+        
+        <div class="field">
+            <div class="buttons">
+                <button class="button is-info" type="submit">Save</button>
+                <a href="{{ url_for('settings.delete_account') }}" class="button is-danger">Delete</a>
+            </div>
         </div>
     </form>
 {% endblock %}

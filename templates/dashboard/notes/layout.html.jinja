@@ -9,8 +9,8 @@
 
     <div class="tabs mb-3">
         <ul>
-            <li class="{{'is-active' if request.rel_url.path == '/dashboard/notes' }}"><a href="/dashboard/notes">View All</a></li>
-            <li class="{{'is-active' if request.rel_url.path == '/dashboard/notes/create' }}"><a href="/dashboard/notes/create">Create</a></li>
+            <li class="{{'is-active' if request.rel_url.path == url_for('notes.index') }}"><a href="{{ url_for('notes.index') }}">View All</a></li>
+            <li class="{{'is-active' if request.rel_url.path == url_for('notes.create') }}"><a href="{{ url_for('notes.create') }}">Create</a></li>
             {% if name %}
                 {% if request.rel_url.path == "/dashboard/notes/" + notes + "/edit" %}
                     <li class="is-active"><a>Edit</a></li>

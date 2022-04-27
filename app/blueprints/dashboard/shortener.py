@@ -27,10 +27,10 @@ from app.utils.db import (
 from app.utils.forms import parser
 from app.utils.shortener import generate_url_alias
 
-bp = Blueprint("/dashboard/shortener")
+bp = Blueprint("/dashboard/shortener", name="shortener")
 
 
-@bp.get("")
+@bp.get("", name="index")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @querystring_schema(ShortenerFilterSchema())
 @template("dashboard/shortener/index.html.jinja")
@@ -62,7 +62,7 @@ async def shortener(request: web.Request):
     }
 
 
-@bp.route("/create", methods=["GET", "POST"])
+@bp.route("/create", methods=["GET", "POST"], name="create")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def create_short_url_(request: web.Request) -> web.Response:
     if request.method == "POST":
@@ -109,7 +109,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
     )
 
 
-@bp.route("/{alias}/edit", methods=["GET", "POST"])
+@bp.route("/{alias}/edit", methods=["GET", "POST"], name="edit")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @match_info_schema(ShortenerAliasSchema())
 async def edit_short_url_(request: web.Request) -> web.Response:
@@ -194,7 +194,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
     )
 
 
-@bp.route("/{alias}/delete", methods=["GET", "POST"])
+@bp.route("/{alias}/delete", methods=["GET", "POST"], name="delete")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @match_info_schema(ShortenerAliasSchema)
 async def delete_short_url_(request: web.Request) -> web.Response:
@@ -229,7 +229,7 @@ async def delete_short_url_(request: web.Request) -> web.Response:
     )
 
 
-@bp.get("/sharex")
+@bp.get("/sharex", name="sharex")
 @requires_auth(redirect=False, scopes=["api_key"])
 async def shortener_sharex_config(request: web.Request) -> web.Response:
     data = {

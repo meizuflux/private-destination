@@ -1,26 +1,28 @@
 {% extends "base.html.jinja" %}
+{% import "macros.html.jinja" as macros with context %}
+
 {% block body %}
     <div class="m-4">
         <div class="columns">
             <div class="column is-narrow">
                 <aside class="menu">
-                    <ul class="menu-list"><li><a href="/dashboard" class="{{'is-active' if request.rel_url.path == '/dashboard' else ''}}">Home</a></li></ul>
+                    <ul class="menu-list"><li>{{macros.active_link(url_for("base.dashboard"), "Home", type="equals")}}</li></ul>
                     <p class="menu-label">
                         Services
                     </p>
                     <ul class="menu-list">
-                        <li><a href="/dashboard/shortener" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/shortener') else ''}}">URL Shortener</a></li>
-                        <li><a href="/dashboard/notes" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/notes') else ''}}">Secure Notes</a></li>
+                        <li>{{macros.active_link(url_for("shortener.index"), "URL Shortener")}}</li>
+                        <li>{{macros.active_link(url_for("notes.index"), "Secure Notes")}}</li>
                         {% if user["admin"] is true %}
-                            <li><a href="/admin">Admin Dashboard</a></li>
+                            <li><a href="{{ url_for('base.admin') }}">Admin Dashboard</a></li>
                         {% endif %}
                     </ul>
                     <p class="menu-label">
                         User
                     </p>
                     <ul class="menu-list">
-                        <li><a href="/dashboard/settings" class="{{'is-active' if request.rel_url.path.startswith('/dashboard/settings') else ''}}">Settings</a></li>
-                        <li><a class="has-text-danger" href="/auth/logout">Logout</a></li>
+                        <li>{{macros.active_link(url_for("settings.index"), "Settings")}}</li>
+                        <li><a class="has-text-danger" href="{{  url_for('auth.logout')  }}">Logout</a></li>
                     </ul>
                 </aside>
             </div>

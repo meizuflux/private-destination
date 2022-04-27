@@ -9,7 +9,7 @@
     <div class="buttons">
         <button class="button is-primary" id="toggle-show-api-key">Show</button>
         <button class="button is-info" id="copy-api-key">Copy</button>
-        <a class="button is-danger" href="/dashboard/settings/api_key/regenerate">Regenerate</a>
+        <a class="button is-danger" href="{{ url_for('settings.regenerate_api_key') }}">Regenerate</a>
     </div>
 
     <script src="/static/js/settings.js" type="module"></script>

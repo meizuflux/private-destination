@@ -48,7 +48,7 @@ Manage Users
                         <td><code>{{u["id"]}}</code></a></td>
                         <td>{{u["joined"].strftime("%d %B %Y at %H:%M")}}</td>
                         <td>
-                            <a href="/admin/users/{{u['id']}}/edit" class="button is-warning is-small">Edit</a>
+                            <a href="{{ url_for('users.edit', user_id=u['id']) }}" class="button is-warning is-small">Edit</a>
                         </td>
                     </tr>
                 {% endfor %}

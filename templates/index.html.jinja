@@ -8,10 +8,10 @@ Login
     <div class="container has-text-centered">
         <div class="column is-4 is-offset-4">
             <div class="buttons is-centered">
-                <a class="button is-link is-vertical" href="/auth/login">
+                <a class="button is-link is-vertical" href="{{ url_for('auth.login') }}">
                     Log in
                 </a>
-                <a class="button is-link is-vertical" href="/auth/signup">
+                <a class="button is-link is-vertical" href="{{ url_for('auth.signup') }}">
                     Sign Up
                 </a>
             </div>

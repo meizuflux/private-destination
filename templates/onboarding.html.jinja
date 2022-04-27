@@ -53,9 +53,9 @@
                     </div>
                     <footer class="is-underlined">
                         {% if type == "signup" %}
-                            <a href="/auth/login">I already have an account</a>
+                            <a href="{{ url_for('auth.login') }}">I already have an account</a>
                         {% else %}
-                            <a href="/auth/signup">Create an account</a>
+                            <a href="{{ url_for('auth.signup') }}">Create an account</a>
                         {% endif %}
                     </footer>
                 </form>

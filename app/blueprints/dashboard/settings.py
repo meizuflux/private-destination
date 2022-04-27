@@ -32,32 +32,17 @@ class CreateInviteSchema(Schema):
     required_email = fields.String(validate=email_or_none)
 
 
-bp = Blueprint("/dashboard/settings")
+bp = Blueprint("/dashboard/settings", name="settings")
 
 
-@bp.get("")
-@bp.get("/account")
-@template("dashboard/settings/account.html.jinja")
-@requires_auth(redirect=True, scopes=["id", "api_key", "admin"])
-async def account_settings(request: web.Request):
-    user = await select_user(request.app["db"], user_id=request["user"]["id"])
-
-    return {
-        "id": user["id"],
-        "email": user["email"],
-        "admin": user["admin"],
-        "joined": user["joined"],
-    }
-
-
-@bp.get("/api_key")
+@bp.get("/api_key", name="api_key")
 @requires_auth(redirect=False, scopes=["api_key", "admin"])
 @template("dashboard/settings/api_key/index.html.jinja")
 async def api_key_settings(_: web.Request):
     return {}
 
 
-@bp.route("/api_key/regenerate", methods=["GET", "POST"])
+@bp.route("/api_key/regenerate", methods=["GET", "POST"], name="regenerate_api_key")
 @requires_auth(redirect=False, scopes=["id", "api_key", "admin"])
 async def regen_api_key(request: web.Request) -> web.Response:
     if request.method == "POST":
@@ -69,7 +54,7 @@ async def regen_api_key(request: web.Request) -> web.Response:
     return await render_template_async("/dashboard/settings/api_key/regen.html.jinja", request, {})
 
 
-@bp.get("/sessions")
+@bp.get("/sessions", name="sessions")
 @template("dashboard/settings/sessions.html.jinja")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def sessions_settings(request: web.Request):
@@ -77,7 +62,7 @@ async def sessions_settings(request: web.Request):
     return {"sessions": user_sessions, "current_session": request.cookies.get("_session")}
 
 
-@bp.post("/sessions/{token}/delete")
+@bp.post("/sessions/{token}/delete", name="delete_session")
 @requires_auth(redirect=True, scopes=["id"])
 @match_info_schema(SessionSchema)
 async def delete_session_(request: web.Request) -> web.Response:
@@ -86,14 +71,16 @@ async def delete_session_(request: web.Request) -> web.Response:
     return web.HTTPFound("/dashboard/settings/sessions")
 
 
-@bp.get("/shortener")
+@bp.get("/shortener", name="shortener")
 @template("dashboard/settings/shortener.html.jinja")
 @requires_auth(redirect=True, scopes="admin")
 async def shortener_settings(_: web.Request):
     return {}
 
 
-@bp.route("/account/edit", methods=["GET", "POST"])
+@bp.route("/account/edit", methods=["GET", "POST"], name="edit_account")
+@bp.route("", methods=["GET", "POST"], name="index")
+@bp.route("/account", methods=["GET", "POST"], name="account_settings")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def edit_self(request: web.Request):
     user = await select_user(request.app["db"], user_id=request["user"]["id"])
@@ -102,7 +89,7 @@ async def edit_self(request: web.Request):
         ret = await edit_user(
             request,
             old_user=user,
-            template="dashboard/settings/edit.html.jinja",
+            template="dashboard/settings/account.html.jinja",
         )
         if ret[0] is Status.ERROR:
             return ret[1]
@@ -110,7 +97,7 @@ async def edit_self(request: web.Request):
         return web.HTTPFound("/dashboard/settings")
 
     return await render_template_async(
-        "dashboard/settings/edit.html.jinja",
+        "dashboard/settings/account.html.jinja",
         request,
         {
             "id": user["id"],
@@ -121,7 +108,7 @@ async def edit_self(request: web.Request):
     )
 
 
-@bp.route("/account/delete", methods=["GET", "POST"])
+@bp.route("/account/delete", methods=["GET", "POST"], name="delete_account")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def delete_account(request: web.Request):
     if request.method == "POST":
@@ -138,7 +125,7 @@ async def delete_account(request: web.Request):
     )
 
 
-@bp.get("/invites")
+@bp.get("/invites", name="invites")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 @template("dashboard/settings/invites.html.jinja")
 async def invites_manager(request: web.Request):
@@ -157,7 +144,7 @@ async def invites_manager(request: web.Request):
     }
 
 
-@bp.post("/invites")
+@bp.post("/invites", name="create_invite")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def create_invite(request: web.Request) -> web.Response:
     # sourcery skip: assign-if-exp, boolean-if-exp-identity, introduce-default-else, remove-unnecessary-cast

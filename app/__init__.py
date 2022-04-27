@@ -8,7 +8,8 @@ from asyncpg import create_pool
 from jinja2 import FileSystemLoader
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from yaml import safe_load
-from app.routing import register_blueprint
+from app.routing import register_blueprint, url_for
+import jinja2
 
 from app.utils.auth import verify_user
 
@@ -60,15 +61,21 @@ async def exception_middleware(request: web.Request, handler):
     except web.HTTPException as error:  # handle exceptions here
         return await handle_errors(request, error)
 
+@jinja2.pass_context
+def __url_for(context, *args, **kwargs) -> str:
+    return url_for(context["app"], *args, **kwargs)
 
-async def user_processor(request: web.Request):
-    return {"user": request.get("user")}
+async def custom_processor(request: web.Request):
+    """Inject custom variables into jinja2 environment"""
+    return {
+        "user": request.get("user"),
+    }
 
 
 async def app_factory():
     app = web.Application(middlewares=[authentication_middleware, validation_middleware, exception_middleware])
 
-    bps = (
+    _blueprints = (
         blueprints.auth.bp,
         blueprints.dashboard.settings.bp,
         blueprints.dashboard.shortener.bp,
@@ -78,8 +85,8 @@ async def app_factory():
         blueprints.base.bp, # this has to go last
     )
 
-    for bp in bps:
-        register_blueprint(app, bp)
+    for _blueprint in _blueprints:
+        register_blueprint(app, _blueprint)
 
     app.router.add_static("/static", "dist")
 
@@ -96,13 +103,14 @@ async def app_factory():
         app,
         enable_async=True,
         loader=FileSystemLoader("./templates"),
-        context_processors=[aiohttp_jinja2.request_processor, user_processor],
+        context_processors=[aiohttp_jinja2.request_processor, custom_processor],
+        default_helpers=False
     )
     env = aiohttp_jinja2.get_env(app)
-    env.globals.update(len=len, truncate=truncate)
+    env.globals.update(len=len, truncate=truncate, url_for=__url_for)
 
     app["dev"] = "adev" in argv[0]
-    with open("config.yml") as f:
+    with open("config.yml", encoding="utf-8") as f:
         loaded = safe_load(f)
 
         if app["dev"] is True:

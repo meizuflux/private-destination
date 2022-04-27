@@ -1,16 +1,18 @@
 {% extends "base.html.jinja" %}
+{% import "macros.html.jinja" as macros with context %}
+
 {% block body %}
     <div class="m-4">
         <div class="columns">
             <div class="column is-narrow">
                 <aside class="menu">
                     <ul class="menu-list">
-                        <li><a href="/admin" class="{{'is-active' if request.rel_url.path == '/admin' else ''}}">Home</a></li>
-                        <li><a href="/admin/shortener">URL Shortener</a></li>
-                        <li><a href="/admin/notes">Notes</a></li>
-                        <li><a href="/admin/users" class="{{'is-active' if request.rel_url.path.startswith('/admin/users') else ''}}">Users</a></li>
-                        <li><a href="/admin/application"  class="{{'is-active' if request.rel_url.path.startswith('/admin/application') else ''}}">Application</a></li>
-                        <li><a href="/dashboard">Dashboard</a></li>
+                        <li>{{macros.active_link(url_for("base.admin"), "Home", type="equals")}}</li>
+                        <li><a>URL Shortener</a></li>
+                        <li><a>Notes</a></li>
+                        <li>{{macros.active_link(url_for("users.index"), "Users")}}</li>
+                        <li>{{macros.active_link(url_for("application.index"), "Application")}}</li>
+                        <li><a href="{{ url_for('base.dashboard') }}">Dashboard</a></li>
                     </ul>
                 </aside>
             </div>

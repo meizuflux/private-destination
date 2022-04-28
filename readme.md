@@ -34,4 +34,3 @@ email with `sendinblue`
 - polls service
 - remove need for email (make it optional) and allow password reset via a secure secret that is shown once
 - make account ids similar to mullvad instead of email
-- configure how long a session should last (15 minutes, 30 minutes, 1 hour, 6 hours, 1 day, 1 week, 1 month) or maybe something to have the user input it like a dual input {number} {unit}

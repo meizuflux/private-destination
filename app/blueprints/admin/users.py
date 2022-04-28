@@ -1,6 +1,7 @@
 from aiohttp import web
 from aiohttp_apispec import match_info_schema, querystring_schema
 from aiohttp_jinja2 import render_template_async, template
+from app.utils.time import get_amount_and_unit
 
 from app.models.auth import UserIDSchema, UsersFilterSchema
 from app.routing import Blueprint
@@ -39,10 +40,13 @@ async def edit_user_(request: web.Request) -> web.Response:
             status=404,
         )
 
+    session_duration = get_amount_and_unit(user["session_duration"])
+
     if request.method == "POST":
         ret = await edit_user(
             request,
             old_user=user,
+            session_duration=session_duration,
             template="admin/users/edit.html.jinja",
             extra_ctx={
                 "is_self": is_self,

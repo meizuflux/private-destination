@@ -17,6 +17,7 @@ from app.utils.db import (
     update_api_key,
 )
 from app.utils.forms import parser
+from app.utils.time import get_amount_and_unit
 
 
 def email_or_none(value: str):
@@ -26,7 +27,6 @@ def email_or_none(value: str):
         return validate.Email()(value)
     except ValidationError:
         return None
-
 
 class CreateInviteSchema(Schema):
     required_email = fields.String(validate=email_or_none)
@@ -81,20 +81,24 @@ async def shortener_settings(_: web.Request):
 @bp.route("/account/edit", methods=["GET", "POST"], name="edit_account")
 @bp.route("", methods=["GET", "POST"], name="index")
 @bp.route("/account", methods=["GET", "POST"], name="account_settings")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(redirect=True, scopes=["id", "admin", "email", "joined", "session_duration"])
 async def edit_self(request: web.Request):
-    user = await select_user(request.app["db"], user_id=request["user"]["id"])
+    user = request["user"]
+    session_duration = get_amount_and_unit(user["session_duration"])
 
     if request.method == "POST":
         ret = await edit_user(
             request,
             old_user=user,
+            session_duration=session_duration,
             template="dashboard/settings/account.html.jinja",
         )
         if ret[0] is Status.ERROR:
             return ret[1]
 
         return web.HTTPFound("/dashboard/settings")
+
+    print(session_duration)
 
     return await render_template_async(
         "dashboard/settings/account.html.jinja",
@@ -104,6 +108,10 @@ async def edit_self(request: web.Request):
             "email": user["email"],
             "admin": user["admin"],
             "joined": user["joined"],
+            "session_duration": {
+                "amount": session_duration[0],
+                "unit": session_duration[1]
+            }
         },
     )
 

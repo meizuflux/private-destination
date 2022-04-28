@@ -8,6 +8,7 @@ from aiohttp_jinja2 import render_template_async
 from asyncpg import Record, UniqueViolationError
 from marshmallow import ValidationError
 from passlib.hash import pbkdf2_sha512
+from app.utils.time import get_seconds
 
 from app.models.auth import SignUpSchema, UsersEditSchema
 from app.utils import Scopes, Status
@@ -156,19 +157,28 @@ async def edit_user(
     request: web.Request,
     *,
     old_user: Record,
+    session_duration: tuple[int, str],
     template: str,
     extra_ctx: dict = {},
 ) -> Tuple[Literal[Status.OK], None] | Tuple[Literal[Status.ERROR], web.Response]:
     try:
         args = await parser.parse(UsersEditSchema(), request, locations=["form"])
     except ValidationError as error:
+        print(error.messages, type(error.normalized_messages()))
         ctx = {
             "email_error": error.messages.get("email"),
+            "session_duration_amount_error": error.messages.get("session_duration_amount"),
+            "session_duration_unit_error": error.messages.get("session_duration_unit"),
             "id": old_user["id"],
             "email": error.data.get("email"),
             "admin": old_user["admin"],
             "joined": old_user["joined"],
+            "session_duration": {
+                "amount": session_duration[0],
+                "unit": session_duration[1]
+            }
         }
+
         ctx.update(extra_ctx)
 
         return Status.ERROR, await render_template_async(
@@ -182,6 +192,7 @@ async def edit_user(
         await update_user(
             request.app["db"],
             user_id=old_user["id"],
+            session_duration=get_seconds(args["session_duration_amount"], args["session_duration_unit"]),
             email=args["email"],
         )
     except UniqueViolationError:

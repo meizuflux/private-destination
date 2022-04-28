@@ -19,7 +19,7 @@ class InviteCodeSchema(Schema):
     code = fields.UUID()
 
 
-async def login_user(request: web.Request, user_id: int, email: str) -> web.Response:
+async def login_user(request: web.Request, user_id: int, email: str, session_duration: int) -> web.Response:
     metadata = user_agent_parser.Parse(request.headers.getone("User-Agent"))
     browser = metadata["user_agent"]["family"]
     operating_system = metadata["os"]["family"]
@@ -30,7 +30,7 @@ async def login_user(request: web.Request, user_id: int, email: str) -> web.Resp
     res.set_cookie(
         name="_session",
         value=str(uuid),
-        max_age=60 * 60 * 24,  # one day
+        max_age=session_duration,
         httponly=True,
         secure=not request.app["dev"],
         samesite="strict",  # using this lets me not need to setup csrf and whatnot
@@ -73,7 +73,7 @@ async def signup(request: web.Request) -> web.Response:
         if ret[0] is Status.ERROR:
             return ret[1]
 
-        return await login_user(request, ret[1], ret[2])
+        return await login_user(request, ret[1], ret[2], 86400) # one day
 
     return await render_template_async("onboarding.html.jinja", request, {"type": "signup", "invite_code": invite_code})
 
@@ -100,7 +100,7 @@ async def login(request: web.Request) -> web.Response:
                 status=400,
             )
 
-        row = await get_hash_and_id_by_email(request.app["db"], email=args["email"])
+        row = await request.app["db"].fetchrow("SELECT id, password, session_duration FROM users WHERE email = $1", args["email"])
         if row is None:
             return await render_template_async(
                 "onboarding.html.jinja",
@@ -113,7 +113,7 @@ async def login(request: web.Request) -> web.Response:
             )
 
         if pbkdf2_sha512.verify(args["password"], row["password"]) is True:
-            return await login_user(request, row["id"], args["email"])
+            return await login_user(request, row["id"], args["email"], row["session_duration"])
 
         # email is right password is wrong
         return await render_template_async(

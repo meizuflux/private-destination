@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT UNIQUE,
     password TEXT,
     api_key TEXT,
+    session_duration BIGINT NOT NULL DEFAULT 86400,
 	admin BOOLEAN DEFAULT false,
     joined TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
 );

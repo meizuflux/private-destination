@@ -99,13 +99,13 @@ async def insert_user(conn: ConnOrPool, *, email: str, api_key: str, hashed_pass
     return await conn.fetchval(query, email, hashed_password, api_key)
 
 
-async def update_user(conn: ConnOrPool, *, user_id: int, email: str):
+async def update_user(conn: ConnOrPool, *, user_id: int, email: str, session_duration: int):
     query = """
         UPDATE users
-        SET email = $1
-        WHERE id = $2
+        SET email = $2, session_duration = $3
+        WHERE id = $1
     """
-    return await conn.execute(query, email, user_id)
+    return await conn.execute(query, user_id, email, session_duration)
 
 
 async def delete_user(conn: ConnOrPool, *, user_id: int):

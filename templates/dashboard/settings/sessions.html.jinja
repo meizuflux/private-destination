@@ -24,7 +24,7 @@
                         <td>{{session["browser"]}}</td>
                         <td>{{session["os"]}}</td>
                         <td>
-                            <form method="POST" action="/dashboard/settings/sessions/{{session['token']}}/delete">
+                            <form method="POST" action="{{ url_for('settings.delete_session', token=session['token']) }}">
                                 <button class="button is-danger is-small" type="submit" {% if current_session == session["token"]|string() %}disabled title="This is your current session, if you want to delete it, simply logout."{% endif %}>Delete</button>
                             </form>
                         </td>

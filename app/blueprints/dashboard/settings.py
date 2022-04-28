@@ -80,7 +80,7 @@ async def shortener_settings(_: web.Request):
 
 @bp.route("/account/edit", methods=["GET", "POST"], name="edit_account")
 @bp.route("", methods=["GET", "POST"], name="index")
-@bp.route("/account", methods=["GET", "POST"], name="account_settings")
+@bp.route("/account", methods=["GET", "POST"], name="account")
 @requires_auth(redirect=True, scopes=["id", "admin", "email", "joined", "session_duration"])
 async def edit_self(request: web.Request):
     user = request["user"]

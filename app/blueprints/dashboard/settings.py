@@ -166,11 +166,12 @@ async def create_invite(request: web.Request) -> web.Response:
         can_create = True
         if len(invites) > 5 and request["user"]["admin"] is False:
             can_create = False
+        messages = error.normalized_messages()
         return await render_template_async(
             "dashboard/settings/invites.html.jinja",
             request,
             {
-                "email_error": error.messages.get("required_email"),
+                "email_error": messages.get("required_email"),
                 "invites": invites,
                 "can_create": can_create,
             },

@@ -87,12 +87,13 @@ async def login(request: web.Request) -> web.Response:
         try:
             args = await parser.parse(LoginSchema(), request, locations=["form"])
         except ValidationError as error:
+            messages = error.normalized_messages()
             return await render_template_async(
                 "onboarding.html.jinja",
                 request,
                 {
-                    "email_error": error.messages.get("email"),
-                    "password_error": error.messages.get("password"),
+                    "email_error": messages.get("email"),
+                    "password_error": messages.get("password"),
                     "type": "login",
                     "email": error.data.get("email"),
                     "password": error.data.get("password"),

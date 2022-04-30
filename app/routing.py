@@ -2,23 +2,24 @@
 from __future__ import annotations
 
 from typing import Any, Iterable, List
-import functools
-import weakref
 
 from aiohttp import hdrs, web
 from aiohttp.web_routedef import AbstractRouteDef, RouteDef, _Deco, _HandlerType
 
+
 class Blueprint:
-    def __init__(self, prefix: str = "", *, name: str = None, subblueprints: Iterable[Blueprint] = []): # pylint: disable=dangerous-default-value
+    def __init__(
+        self, prefix: str = "", *, name: str = None, subblueprints: Iterable[Blueprint] = []
+    ) -> None:  # pylint: disable=dangerous-default-value
         self.__prefix: str = prefix
         self.__name = name
         self.__route_table = web.RouteTableDef()
         for blueprint in subblueprints:
             self.__route_table._items.extend(blueprint.routes)
 
-    def add_subblueprint(self, blueprint: Blueprint):
+    def add_subblueprint(self, blueprint: Blueprint) -> None:
         """Add a subblueprint"""
-        self.__route_table._items.extend(blueprint.routes) # pylint: disable=protected-access
+        self.__route_table._items.extend(blueprint.routes)  # pylint: disable=protected-access
 
     @property
     def prefix(self) -> str:
@@ -38,14 +39,15 @@ class Blueprint:
     @property
     def routes(self) -> List[AbstractRouteDef]:
         """Route table items"""
-        return self.__route_table._items # pylint: disable=protected-access
+        return self.__route_table._items  # pylint: disable=protected-access
 
     def route(self, path: str, *, methods: List[str], **kwargs: Any) -> _Deco:
         """Add a route"""
+
         def decorator(handler: _HandlerType) -> _HandlerType:
-            #name = kwargs.get("name")
-            #if name is None:
-                #kwargs["name"] = handler.__name__
+            # name = kwargs.get("name")
+            # if name is None:
+            # kwargs["name"] = handler.__name__
 
             if self.__name is not None:
                 name = kwargs.get("name")
@@ -54,7 +56,9 @@ class Blueprint:
                         kwargs["name"] = f"{self.__name}.{name}"
 
             for method in methods:
-                self.__route_table._items.append(RouteDef(method, self.__prefix + path, handler, kwargs)) # pylint: disable=protected-access
+                self.__route_table._items.append(  # pylint: disable=protected-access
+                    RouteDef(method, self.__prefix + path, handler, kwargs)
+                )  # pylint: disable=protected-access
             return handler
 
         return decorator
@@ -88,11 +92,13 @@ def register_blueprint(app: web.Application, blueprint: Blueprint) -> None:
     """Register routes"""
     app.router.add_routes(blueprint.route_table)
 
+
 cached_urls: dict[str, str] = {}
+
 
 def url_for(app: web.Application, name: str, *, query: dict[str, str] = None, **match_info: str | int) -> str:
     """Finds the url for a named route"""
-    cache_key = name+str(query)+str(match_info)
+    cache_key = name + str(query) + str(match_info)
     cached_url = cached_urls.get(cache_key)
     if cached_url is not None:
         return cached_url

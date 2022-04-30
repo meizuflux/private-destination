@@ -2,16 +2,16 @@ from uuid import UUID
 
 from aiohttp import web
 from aiohttp_apispec import match_info_schema, querystring_schema
-from aiohttp_jinja2 import render_template_async
 from marshmallow import Schema, ValidationError, fields
 from passlib.hash import pbkdf2_sha512
 from ua_parser import user_agent_parser
 
 from app.models.auth import LoginSchema
 from app.routing import Blueprint
+from app.templating import render_template
 from app.utils import Status
 from app.utils.auth import create_user, requires_auth, verify_user
-from app.utils.db import delete_session, get_hash_and_id_by_email, insert_session
+from app.utils.db import delete_session, insert_session
 from app.utils.forms import parser
 
 
@@ -38,10 +38,10 @@ async def login_user(request: web.Request, user_id: int, email: str, session_dur
     res.set_cookie(
         name="email",
         value=email,
-        max_age=60 * 60 * 24 * 365, # one year
+        max_age=60 * 60 * 24 * 365,  # one year
         httponly=True,
         secure=not request.app["dev"],
-        samesite="strict"
+        samesite="strict",
     )
 
     return res
@@ -68,14 +68,14 @@ async def signup(request: web.Request) -> web.Response:
 
     if request.method == "POST":
         ret = await create_user(
-            request, template="onboarding.html.jinja", extra_ctx={"type": "signup", "invite_code": invite_code}
+            request, template="onboarding", extra_ctx={"type": "signup", "invite_code": invite_code}
         )
         if ret[0] is Status.ERROR:
             return ret[1]
 
-        return await login_user(request, ret[1], ret[2], 86400) # one day
+        return await login_user(request, ret[1], ret[2], 86400)  # one day
 
-    return await render_template_async("onboarding.html.jinja", request, {"type": "signup", "invite_code": invite_code})
+    return await render_template("onboarding", request, {"type": "signup", "invite_code": invite_code})
 
 
 @bp.route("/login", methods=["GET", "POST"], name="login")
@@ -88,8 +88,8 @@ async def login(request: web.Request) -> web.Response:
             args = await parser.parse(LoginSchema(), request, locations=["form"])
         except ValidationError as error:
             messages = error.normalized_messages()
-            return await render_template_async(
-                "onboarding.html.jinja",
+            return await render_template(
+                "onboarding",
                 request,
                 {
                     "email_error": messages.get("email"),
@@ -101,10 +101,12 @@ async def login(request: web.Request) -> web.Response:
                 status=400,
             )
 
-        row = await request.app["db"].fetchrow("SELECT id, password, session_duration FROM users WHERE email = $1", args["email"])
+        row = await request.app["db"].fetchrow(
+            "SELECT id, password, session_duration FROM users WHERE email = $1", args["email"]
+        )
         if row is None:
-            return await render_template_async(
-                "onboarding.html.jinja",
+            return await render_template(
+                "onboarding",
                 request,
                 {
                     "email_error": ["We could not find a user with that email"],
@@ -117,20 +119,14 @@ async def login(request: web.Request) -> web.Response:
             return await login_user(request, row["id"], args["email"], row["session_duration"])
 
         # email is right password is wrong
-        return await render_template_async(
-            "onboarding.html.jinja",
+        return await render_template(
+            "onboarding",
             request,
             {"password_error": ["Invalid password"], "email": args["email"]},
             status=401,
         )
 
-    return await render_template_async(
-        "onboarding.html.jinja",
-        request,
-        {
-            "type": "login",
-            "email": request.cookies.get("email")
-        })
+    return await render_template("onboarding", request, {"type": "login", "email": request.cookies.get("email")})
 
 
 @bp.get("/logout", name="logout")

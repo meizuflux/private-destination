@@ -7,7 +7,6 @@ aiohttp
 aiohttp-apispec
 marshmallow
 sentry_sdk
-aiohttp_jinja2
 passlib
 psutil
 cryptography

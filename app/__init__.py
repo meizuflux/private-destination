@@ -1,16 +1,16 @@
 from sys import argv
+from typing import Any
 
-import aiohttp_jinja2
+import jinja2
 import sentry_sdk
 from aiohttp import ClientSession, web
 from aiohttp_apispec import setup_aiohttp_apispec, validation_middleware
 from asyncpg import create_pool
-from jinja2 import FileSystemLoader
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from yaml import safe_load
-from app.routing import register_blueprint, url_for
-import jinja2
 
+from app import blueprints, templating
+from app.routing import register_blueprint, url_for
 from app.utils.auth import verify_user
 
 sentry_sdk.init(
@@ -19,34 +19,30 @@ sentry_sdk.init(
     send_default_pii=True,
 )
 
-from app import blueprints
 
-
-def truncate(text: str, limit: int):
+def truncate(text: str, limit: int) -> str:
     return f"{text[:limit - 3]}..." if len(text) > limit else text
 
 
-async def handle_errors(request: web.Request, error: web.HTTPException):
+async def handle_errors(request: web.Request, error: web.HTTPException) -> web.Response:
     if not str(request.rel_url).startswith("/api") and error.status in {403, 404, 500}:
-        return await aiohttp_jinja2.render_template_async(
-            f"errors/{error.status}.html.jinja", request, {}, status=error.status
-        )
+        return await templating.render_template(f"errors/{error.status}", request, status=error.status)
 
     raise error
 
 
 @web.middleware
 async def authentication_middleware(request: web.Request, handler):
-    fn = handler
+    function = handler
     if hasattr(handler, request.method.lower()):
-        fn = getattr(handler, request.method.lower())
+        function = getattr(handler, request.method.lower())
 
-    if hasattr(fn, "requires_auth"):
+    if hasattr(function, "requires_auth"):
         error = await verify_user(
             request,
-            admin=fn.auth["admin"],
-            redirect=fn.auth["redirect"],
-            scopes=fn.auth["scopes"],
+            admin=function.auth["admin"],
+            redirect=function.auth["redirect"],
+            scopes=function.auth["scopes"],
         )
         if isinstance(error, web.HTTPException):
             return await handle_errors(request, error)
@@ -61,11 +57,13 @@ async def exception_middleware(request: web.Request, handler):
     except web.HTTPException as error:  # handle exceptions here
         return await handle_errors(request, error)
 
+
 @jinja2.pass_context
 def __url_for(context, *args, **kwargs) -> str:
     return url_for(context["app"], *args, **kwargs)
 
-async def custom_processor(request: web.Request):
+
+async def custom_processor(request: web.Request) -> dict[str, Any]:
     """Inject custom variables into jinja2 environment"""
     return {
         "user": request.get("user"),
@@ -82,7 +80,7 @@ async def app_factory():
         blueprints.dashboard.notes.bp,
         blueprints.admin.users.bp,
         blueprints.admin.application.bp,
-        blueprints.base.bp, # this has to go last
+        blueprints.base.bp,  # this has to go last
     )
 
     for _blueprint in _blueprints:
@@ -99,19 +97,19 @@ async def app_factory():
         in_place=False,
     )
 
-    aiohttp_jinja2.setup(
+    templating.setup(
         app,
-        enable_async=True,
-        loader=FileSystemLoader("./templates"),
-        context_processors=[aiohttp_jinja2.request_processor, custom_processor],
-        default_helpers=False
+        global_functions={
+            "len": len,
+            "truncate": truncate,
+            "url_for": __url_for,
+        },
+        context_processors=[custom_processor],
     )
-    env = aiohttp_jinja2.get_env(app)
-    env.globals.update(len=len, truncate=truncate, url_for=__url_for)
 
     app["dev"] = "adev" in argv[0]
-    with open("config.yml", encoding="utf-8") as f:
-        loaded = safe_load(f)
+    with open("config.yml", encoding="utf-8") as config_file:
+        loaded = safe_load(config_file)
 
         if app["dev"] is True:
             config = loaded["dev"]
@@ -123,24 +121,24 @@ async def app_factory():
     app["db"] = await create_pool(dsn=app["config"]["postgres_dsn"])
     app["session"] = ClientSession()
 
-    async def security_signal(request: web.Request, response: web.Response):
+    async def security_signal(_: web.Request, response: web.Response) -> None:
         response.headers[
             "Permissions-Policy"
-        ] = "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(self), display-capture=(), document-domain=(), encrypted-media=(self), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(self), geolocation=(), gyroscope=(), keyboard-map=*, magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(self), publickey-credentials-get=(self), screen-wake-lock=(self), sync-xhr=*, usb=(), web-share=(), xr-spatial-tracking=(), clipboard-read=(), clipboard-write=(self), gamepad=(), speaker-selection=(self)"
+        ] = "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(self), display-capture=(), document-domain=(), encrypted-media=(self), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(self), geolocation=(), gyroscope=(), keyboard-map=*, magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(self), publickey-credentials-get=(self), screen-wake-lock=(self), sync-xhr=*, usb=(), web-share=(), xr-spatial-tracking=(), clipboard-read=(), clipboard-write=(self), gamepad=(), speaker-selection=(self)"  # pylint: disable=line-too-long
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers[
             "Content-Security-Policy"
-        ] = "default-src 'self' meizuflux.com *.meizuflux.com; style-src 'self' cdnjs.cloudflare.com"  # TODO: add report-uri
+        ] = "default-src 'self' meizuflux.com *.meizuflux.com; style-src 'self' cdnjs.cloudflare.com"
         if app["dev"] is False:
             response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
 
     app.on_response_prepare.append(security_signal)
 
-    async def close(a):
-        await a["session"].close()
-        await a["db"].close()
+    async def close(_app: web.Application) -> None:
+        await _app["session"].close()
+        await _app["db"].close()
 
     app.on_cleanup.append(close)
 

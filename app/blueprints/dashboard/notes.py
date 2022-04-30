@@ -7,7 +7,6 @@ from math import ceil
 
 from aiohttp import web
 from aiohttp_apispec import match_info_schema, querystring_schema
-from aiohttp_jinja2 import render_template_async, template
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -15,6 +14,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from marshmallow import Schema, ValidationError, fields, validate
 
 from app.routing import Blueprint
+from app.templating import render_template
 from app.utils.auth import requires_auth, verify_user
 from app.utils.db import select_notes, select_notes_count, select_user
 from app.utils.forms import parser
@@ -48,12 +48,12 @@ class PasswordIncorrectSchema(Schema):
     incorrect_password = fields.Boolean()
 
 
-def create_fernet(salt: bytes, password: bytes):
+def create_fernet(salt: bytes, password: bytes) -> Fernet:
     kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100000, backend=default_backend())
     return Fernet(base64.urlsafe_b64encode(kdf.derive(password)))
 
 
-def derive_salt_and_content(stored):
+def derive_salt_and_content(stored: bytes) -> tuple[bytes, bytes]:
     return stored[:32], stored[32:]
 
 
@@ -63,8 +63,7 @@ sub_bp = Blueprint("/notes", name="notes")
 @sub_bp.get("/{note_id}", name="view")
 @match_info_schema(IdSchema())
 @querystring_schema(PasswordIncorrectSchema())
-@template("dashboard/notes/view.html.jinja")
-async def view_note(request: web.Request):
+async def view_note(request: web.Request) -> web.Response:
     note_id = request["match_info"]["note_id"]
     try:
         as_uuid = uuid.UUID(base64.urlsafe_b64decode(note_id).decode("utf-8"))
@@ -73,13 +72,17 @@ async def view_note(request: web.Request):
 
     has_pw = await request.app["db"].fetchval("SELECT has_password FROM notes WHERE id = $1", as_uuid)
 
-    return {
-        "id": note_id,
-        "has_pw": has_pw,
-        "password_error": ["This password is incorrect"]
-        if request["querystring"].get("incorrect_password") is True
-        else None,
-    }
+    return await render_template(
+        "dashboard/notes/view",
+        request,
+        {
+            "id": note_id,
+            "has_pw": has_pw,
+            "password_error": ["This password is incorrect"]
+            if request["querystring"].get("incorrect_password") is True
+            else None,
+        },
+    )
 
 
 @sub_bp.post("/{note_id}")
@@ -130,8 +133,8 @@ async def view_note_form(request: web.Request) -> web.Response:
         request.app["db"].execute("UPDATE notes SET clicks = clicks + 1 WHERE id = $1", as_uuid)
     )
 
-    return await render_template_async(
-        "dashboard/notes/view_stylized.html.jinja", request, {"name": note["name"], "email": email, "content": decoded}
+    return await render_template(
+        "dashboard/notes/view_stylized", request, {"name": note["name"], "email": email, "content": decoded}
     )
 
 
@@ -141,8 +144,7 @@ bp = Blueprint("/dashboard/notes", name="notes", subblueprints=[sub_bp])
 @bp.get("", name="index")
 @querystring_schema(NotesFilterSchema())
 @requires_auth(redirect=True, scopes=["id", "admin"])
-@template("dashboard/notes/index.html.jinja")
-async def index(request: web.Request):
+async def index(request: web.Request) -> web.Response:
     current_page = request["querystring"].get("page", 1) - 1
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "creation_date")
@@ -161,20 +163,23 @@ async def index(request: web.Request):
 
     if max_pages == 0:
         max_pages = 1
-    return {
-        "current_page": current_page + 1,
-        "max_pages": max_pages,
-        "values": notes,
-        "sortby": sortby,
-        "direction": direction,
-    }
+    return await render_template(
+        "dashboard/notes/index",
+        request,
+        {
+            "current_page": current_page + 1,
+            "max_pages": max_pages,
+            "values": notes,
+            "sortby": sortby,
+            "direction": direction,
+        },
+    )
 
 
 @bp.get("/create", name="create")
-@template("dashboard/notes/create.html.jinja")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-async def create_note(_: web.Request):
-    return {"errors": {}}
+async def create_note(_: web.Request) -> web.Response:
+    return await render_template("dashboard/notes/create", _, {"errors": {}})
 
 
 @bp.post("/create")
@@ -183,9 +188,7 @@ async def create_note_form(request: web.Request) -> web.Response:
     try:
         args = await parser.parse(NoteSchema(), request, locations=["form"])
     except ValidationError as error:
-        return await render_template_async(
-            "/dashboard/notes/create.html.jinja", request, {"errors": error.messages}, status=400
-        )
+        return await render_template("/dashboard/notes/create", request, {"errors": error.messages}, status=400)
 
     name = args["name"]
     content = args["content"]

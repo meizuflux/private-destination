@@ -1,16 +1,15 @@
 from secrets import choice
 from string import ascii_letters, digits
-from typing import Literal, Tuple
+from typing import Any, Callable, Literal, Tuple
 from uuid import UUID
 
 from aiohttp import web
-from aiohttp_jinja2 import render_template_async
 from asyncpg import Record, UniqueViolationError
 from marshmallow import ValidationError
 from passlib.hash import pbkdf2_sha512
-from app.utils.time import get_seconds
 
 from app.models.auth import SignUpSchema, UsersEditSchema
+from app.templating import render_template
 from app.utils import Scopes, Status
 from app.utils.db import (
     ConnOrPool,
@@ -22,6 +21,7 @@ from app.utils.db import (
     update_user,
 )
 from app.utils.forms import parser
+from app.utils.time import get_seconds
 
 API_KEY_VALID_CHARS = ascii_letters + digits + "!@%^&?<>:;+=-_~"
 
@@ -39,7 +39,7 @@ def requires_auth(
     admin: bool = False,
     redirect: bool = False,
     scopes: Scopes = None,
-):
+) -> Callable[[Any], Any]:  # TODO: type hint this and deco
     if scopes is not None:
         if isinstance(scopes, str):
             scopes = [scopes]
@@ -63,7 +63,9 @@ def requires_auth(
     return deco
 
 
-async def verify_user(request: web.Request, *, admin: bool, redirect: bool, scopes: Scopes):
+async def verify_user(
+    request: web.Request, *, admin: bool, redirect: bool, scopes: Scopes
+) -> dict[str, str | int | bool] | bool | web.Response:
     async def by_session():
         session = request.cookies.get("_session")
         if session is not None:
@@ -113,7 +115,7 @@ async def create_user(
         }
         ctx.update(extra_ctx)
 
-        return Status.ERROR, await render_template_async(template, request, ctx, status=400)
+        return Status.ERROR, await render_template(template, request, ctx, status=400)
 
     try:
         async with request.app["db"].acquire() as conn:
@@ -123,7 +125,7 @@ async def create_user(
             if invite["used_by"] is not None:
                 ctx = {"invite_code_error": ["This invite code has already been used"]}
                 ctx.update(extra_ctx)
-                return Status.ERROR, await render_template_async(template, request, ctx, status=409)
+                return Status.ERROR, await render_template(template, request, ctx, status=409)
 
             if invite["required_email"] is not None and invite["required_email"] != args["email"]:
                 ctx = {
@@ -132,7 +134,7 @@ async def create_user(
                     ]
                 }
                 ctx.update(extra_ctx)
-                return Status.ERROR, await render_template_async(template, request, ctx, status=409)
+                return Status.ERROR, await render_template(template, request, ctx, status=409)
 
             user_id = await insert_user(
                 conn,
@@ -149,7 +151,7 @@ async def create_user(
             "password": args["password"],
         }
         ctx.update(extra_ctx)
-        return Status.ERROR, await render_template_async(template, request, ctx, status=409)
+        return Status.ERROR, await render_template(template, request, ctx, status=409)
 
     return Status.OK, user_id, args["admin"]
 
@@ -174,15 +176,12 @@ async def edit_user(
             "email": error.data.get("email"),
             "admin": old_user["admin"],
             "joined": old_user["joined"],
-            "session_duration": {
-                "amount": session_duration[0],
-                "unit": session_duration[1]
-            }
+            "session_duration": {"amount": session_duration[0], "unit": session_duration[1]},
         }
 
         ctx.update(extra_ctx)
 
-        return Status.ERROR, await render_template_async(
+        return Status.ERROR, await render_template(
             template,
             request,
             ctx,
@@ -205,7 +204,7 @@ async def edit_user(
             "joined": old_user["joined"],
         }
         ctx.update(extra_ctx)
-        return Status.ERROR, await render_template_async(
+        return Status.ERROR, await render_template(
             template,
             request,
             ctx,

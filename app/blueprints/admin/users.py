@@ -1,27 +1,28 @@
 from aiohttp import web
 from aiohttp_apispec import match_info_schema, querystring_schema
-from aiohttp_jinja2 import render_template_async, template
-from app.utils.time import get_amount_and_unit
 
 from app.models.auth import UserIDSchema, UsersFilterSchema
 from app.routing import Blueprint
+from app.templating import render_template
 from app.utils import Status
 from app.utils.auth import create_user, edit_user, requires_auth
 from app.utils.db import delete_user, select_user, select_users
+from app.utils.time import get_amount_and_unit
 
 bp = Blueprint("/admin/users", name="users")
 
 
 @bp.get("", name="index")
-@template("admin/users/index.html.jinja")
 @querystring_schema(UsersFilterSchema())
 @requires_auth(admin=True, redirect=True)
-async def list_users(request: web.Request):
+async def list_users(request: web.Request) -> web.Response:
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "joined")
 
     users = await select_users(request.app["db"], sortby=sortby, direction=direction)
-    return {"users": users, "sortby": sortby, "direction": direction}
+    return await render_template(
+        "admin/users/index", request, {"users": users, "sortby": sortby, "direction": direction}
+    )
 
 
 @bp.route("/{user_id}/edit", methods=["GET", "POST"], name="edit")
@@ -33,8 +34,8 @@ async def edit_user_(request: web.Request) -> web.Response:
     is_self = user_id == request["user"]["id"]
 
     if user is None:
-        return await render_template_async(
-            "admin/users/edit.html.jinja",
+        return await render_template(
+            "admin/users/edit",
             request,
             {"error": {"title": "Unknown User", "message": "Could not locate user"}},
             status=404,
@@ -47,7 +48,7 @@ async def edit_user_(request: web.Request) -> web.Response:
             request,
             old_user=user,
             session_duration=session_duration,
-            template="admin/users/edit.html.jinja",
+            template="admin/users/edit",
             extra_ctx={
                 "is_self": is_self,
             },
@@ -57,8 +58,8 @@ async def edit_user_(request: web.Request) -> web.Response:
 
         return web.HTTPFound("/admin/users")
 
-    return await render_template_async(
-        "admin/users/edit.html.jinja",
+    return await render_template(
+        "admin/users/edit",
         request,
         {
             "id": user["id"],
@@ -78,8 +79,8 @@ async def delete_user_(request: web.Request) -> web.Response:
     user = await select_user(request.app["db"], user_id=user_id)
 
     if user is None:
-        return await render_template_async(
-            "admin/users/delete.html.jinja",
+        return await render_template(
+            "admin/users/delete",
             request,
             {"error": {"title": "Unknown User", "message": "Could not locate user"}},
             status=404,
@@ -90,8 +91,8 @@ async def delete_user_(request: web.Request) -> web.Response:
 
         return web.HTTPFound("/admin/users")
 
-    return await render_template_async(
-        "admin/users/delete.html.jinja",
+    return await render_template(
+        "admin/users/delete",
         request,
         {"id": user["id"], "email": user["email"]},
     )
@@ -101,10 +102,10 @@ async def delete_user_(request: web.Request) -> web.Response:
 @requires_auth(admin=True, redirect=True)
 async def create_user_(request: web.Request) -> web.Response:
     if request.method == "POST":
-        ret = await create_user(request, template="onboarding.html.jinja", extra_ctx={"type": "signup"})
+        ret = await create_user(request, template="onboarding", extra_ctx={"type": "signup"})
         if ret[0] is Status.ERROR:
             return ret[1]
 
         return web.HTTPFound("/admin/users")
 
-    return await render_template_async("admin/users/create.html.jinja", request, {})
+    return await render_template("admin/users/create", request)

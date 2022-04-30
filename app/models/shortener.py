@@ -1,13 +1,15 @@
+from typing import Callable
+
 from marshmallow import Schema, ValidationError, fields, validate
 
 
-def none_or_len(name: str, min: int, max: int):
-    def validator(string: str):
+def none_or_len(minimum: int, maximum: int) -> Callable[[str], None]:
+    def validator(string: str) -> None:
         if string != "":  # it won't be None, it will be ""
-            if len(string) < min:
-                raise ValidationError(f"Length must be between {min} and {max} or empty")
-            if len(string) > max:
-                raise ValidationError(f"Length must be between {min} and {max} or empty")
+            if len(string) < minimum:
+                raise ValidationError(f"Length must be between {minimum} and {maximum} or empty")
+            if len(string) > maximum:
+                raise ValidationError(f"Length must be between {minimum} and {maximum} or empty")
 
     return validator
 
@@ -23,11 +25,11 @@ class ShortenerFilterSchema(Schema):
 
 
 class ShortenerEditSchema(Schema):
-    alias = fields.String(validate=none_or_len("alias", 3, 64))
+    alias = fields.String(validate=none_or_len(3, 64))
     destination = fields.URL(required=True, schemes={"http", "https"})
     reset_clicks = fields.Boolean()
 
 
 class ShortenerCreateSchema(Schema):
-    alias = fields.String(validate=none_or_len("alias", 3, 64))
+    alias = fields.String(validate=none_or_len(3, 64))
     destination = fields.URL(required=True, schemes={"http", "https"})

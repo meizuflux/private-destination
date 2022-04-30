@@ -141,14 +141,9 @@ async def insert_session(conn: ConnOrPool, *, user_id: int, browser: str, os: st
         INSERT INTO sessions (token, user_id, browser, os) 
         (SELECT gen_random_uuid(), $1, $2, $3) 
         RETURNING token;
-    """ # don't add VALUES before the values, it breaks it
+    """  # don't add VALUES before the values, it breaks it
     # I have no idea why but this works
-    return await conn.fetchval(
-        query,
-        user_id,
-        browser,
-        os
-    )
+    return await conn.fetchval(query, user_id, browser, os)
 
 
 async def delete_session(conn: ConnOrPool, *, token: UUID):

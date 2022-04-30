@@ -1,18 +1,18 @@
 import asyncio
 
-import aiohttp_jinja2
 import psutil
 from aiohttp import web
 from aiohttp_apispec import match_info_schema
 
 from app.models.shortener import ShortenerAliasSchema
 from app.routing import Blueprint
+from app.templating import render_template
 from app.utils.auth import requires_auth, verify_user
 from app.utils.db import (
     add_short_url_click,
+    select_notes_count,
     select_short_url_destination,
     select_short_urls_count,
-    select_notes_count,
     select_total_notes_count,
     select_total_sessions_count,
     select_total_short_urls_count,
@@ -27,32 +27,40 @@ async def login(request: web.Request) -> web.Response:
     if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
         return web.HTTPFound("/dashboard")
 
-    return await aiohttp_jinja2.render_template_async("index.html.jinja", request, {})
+    return await render_template("index", request)
 
 
 @bp.get("/dashboard", name="dashboard")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-@aiohttp_jinja2.template("dashboard/index.html.jinja")
-async def index(request: web.Request):
+async def index(request: web.Request) -> web.Response:
     async with request.app["db"].acquire() as conn:
         url_count = await select_short_urls_count(conn, owner=request["user"]["id"])
         notes_count = await select_notes_count(conn, owner=request["user"]["id"])
-    return {"url_count": url_count, "notes_count": notes_count}
+    return await render_template(
+        "dashboard/index",
+        request,
+        {
+            "url_count": url_count,
+            "notes_count": notes_count,
+        },
+    )
 
 
 @bp.get("/admin", name="admin")
-@aiohttp_jinja2.template("admin/index.html.jinja")
-async def home(request: web.Request):
+async def home(request: web.Request) -> web.Response:
     async with request.app["db"].acquire() as conn:
         urls_count = await select_total_short_urls_count(conn)
         users_count = await select_total_users_count(conn)
         sessions_count = await select_total_sessions_count(conn)
         notes_count = await select_total_notes_count(conn)
-
-    return {
-        "counters": {"urls": urls_count, "users": users_count, "sessions": sessions_count, "notes": notes_count},
-        "stats": {"cpu_percent": psutil.cpu_percent(), "memory_percent": psutil.virtual_memory()[2]},
-    }
+    return await render_template(
+        "admin/index",
+        request,
+        {
+            "counters": {"urls": urls_count, "users": users_count, "sessions": sessions_count, "notes": notes_count},
+            "stats": {"cpu_percent": psutil.cpu_percent(), "memory_percent": psutil.virtual_memory()[2]},
+        },
+    )
 
 
 @bp.get("/{alias}", name="shortener")

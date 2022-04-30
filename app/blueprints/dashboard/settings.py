@@ -1,11 +1,10 @@
 from aiohttp import web
 from aiohttp_apispec import match_info_schema
-from aiohttp_jinja2 import render_template_async, template
 from marshmallow import Schema, ValidationError, fields, validate
-from multidict import MultiDict
 
 from app.models.auth import SessionSchema
 from app.routing import Blueprint
+from app.templating import render_template
 from app.utils import Status
 from app.utils.auth import edit_user, generate_api_key, requires_auth
 from app.utils.db import (
@@ -13,20 +12,20 @@ from app.utils.db import (
     delete_user,
     select_notes_count,
     select_sessions,
-    select_user,
     update_api_key,
 )
 from app.utils.forms import parser
 from app.utils.time import get_amount_and_unit
 
 
-def email_or_none(value: str):
+def email_or_none(value: str) -> None:
     if value == "":
         return None
     try:
-        return validate.Email()(value)
+        return validate.Email()(value)  # type: ignore
     except ValidationError:
         return None
+
 
 class CreateInviteSchema(Schema):
     required_email = fields.String(validate=email_or_none)
@@ -37,9 +36,8 @@ bp = Blueprint("/dashboard/settings", name="settings")
 
 @bp.get("/api_key", name="api_key")
 @requires_auth(redirect=False, scopes=["api_key", "admin"])
-@template("dashboard/settings/api_key/index.html.jinja")
-async def api_key_settings(_: web.Request):
-    return {}
+async def api_key_settings(_: web.Request) -> web.Response:
+    return await render_template("dashboard/settings/api_key/index", _)
 
 
 @bp.route("/api_key/regenerate", methods=["GET", "POST"], name="regenerate_api_key")
@@ -51,38 +49,40 @@ async def regen_api_key(request: web.Request) -> web.Response:
 
         return web.HTTPFound("/dashboard/settings/api_key")
 
-    return await render_template_async("/dashboard/settings/api_key/regen.html.jinja", request, {})
+    return await render_template("/dashboard/settings/api_key/regen", request, {})
 
 
 @bp.get("/sessions", name="sessions")
-@template("dashboard/settings/sessions.html.jinja")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-async def sessions_settings(request: web.Request):
+async def sessions_settings(request: web.Request) -> web.Response:
     user_sessions = await select_sessions(request.app["db"], user_id=request["user"]["id"])
-    return {"sessions": user_sessions, "current_session": request.cookies.get("_session")}
+    return await render_template(
+        "dashboard/settings/sessions",
+        request,
+        {"sessions": user_sessions, "current_session": request.cookies.get("_session")},
+    )
 
 
 @bp.post("/sessions/{token}/delete", name="delete_session")
 @requires_auth(redirect=True, scopes=["id"])
 @match_info_schema(SessionSchema)
 async def delete_session_(request: web.Request) -> web.Response:
-    # we don't need to check ownership since there is an extremely low chance of two uuids ever being the same (ie can't be guessed)
+    # no need for auth since uuids are unique
     await delete_session(request.app["db"], token=request["match_info"]["token"])
     return web.HTTPFound("/dashboard/settings/sessions")
 
 
 @bp.get("/shortener", name="shortener")
-@template("dashboard/settings/shortener.html.jinja")
 @requires_auth(redirect=True, scopes="admin")
-async def shortener_settings(_: web.Request):
-    return {}
+async def shortener_settings(_: web.Request) -> web.Response:
+    return await render_template("dashboard/settings/shortener", _)
 
 
 @bp.route("/account/edit", methods=["GET", "POST"], name="edit_account")
 @bp.route("", methods=["GET", "POST"], name="index")
 @bp.route("/account", methods=["GET", "POST"], name="account")
 @requires_auth(redirect=True, scopes=["id", "admin", "email", "joined", "session_duration"])
-async def edit_self(request: web.Request):
+async def edit_self(request: web.Request) -> web.Response:
     user = request["user"]
     session_duration = get_amount_and_unit(user["session_duration"])
 
@@ -91,7 +91,7 @@ async def edit_self(request: web.Request):
             request,
             old_user=user,
             session_duration=session_duration,
-            template="dashboard/settings/account.html.jinja",
+            template="dashboard/settings/account",
         )
         if ret[0] is Status.ERROR:
             return ret[1]
@@ -100,25 +100,22 @@ async def edit_self(request: web.Request):
 
     print(session_duration)
 
-    return await render_template_async(
-        "dashboard/settings/account.html.jinja",
+    return await render_template(
+        "dashboard/settings/account",
         request,
         {
             "id": user["id"],
             "email": user["email"],
             "admin": user["admin"],
             "joined": user["joined"],
-            "session_duration": {
-                "amount": session_duration[0],
-                "unit": session_duration[1]
-            }
+            "session_duration": {"amount": session_duration[0], "unit": session_duration[1]},
         },
     )
 
 
 @bp.route("/account/delete", methods=["GET", "POST"], name="delete_account")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-async def delete_account(request: web.Request):
+async def delete_account(request: web.Request) -> web.Response:
     if request.method == "POST":
         await delete_user(request.app["db"], user_id=request["user"]["id"])
 
@@ -126,8 +123,8 @@ async def delete_account(request: web.Request):
         res.del_cookie("_session")
         return res
 
-    return await render_template_async(
-        "dashboard/settings/delete.html.jinja",
+    return await render_template(
+        "dashboard/settings/delete",
         request,
         {},
     )
@@ -135,8 +132,7 @@ async def delete_account(request: web.Request):
 
 @bp.get("/invites", name="invites")
 @requires_auth(redirect=True, scopes=["id", "admin"])
-@template("dashboard/settings/invites.html.jinja")
-async def invites_manager(request: web.Request):
+async def invites_manager(request: web.Request) -> web.Response:
     # sourcery skip: assign-if-exp, boolean-if-exp-identity, introduce-default-else, remove-unnecessary-cast
     invites = await request.app["db"].fetch(
         "SELECT code, used_by, required_email, creation_date FROM invites WHERE owner = $1 ORDER BY creation_date DESC",
@@ -146,10 +142,14 @@ async def invites_manager(request: web.Request):
     if len(invites) > 5 and request["user"]["admin"] is False:
         can_create = False
 
-    return {
-        "invites": invites,
-        "can_create": can_create,
-    }
+    return await render_template(
+        "dashboard/settings/invites",
+        request,
+        {
+            "invites": invites,
+            "can_create": can_create,
+        },
+    )
 
 
 @bp.post("/invites", name="create_invite")
@@ -167,8 +167,8 @@ async def create_invite(request: web.Request) -> web.Response:
         if len(invites) > 5 and request["user"]["admin"] is False:
             can_create = False
         messages = error.normalized_messages()
-        return await render_template_async(
-            "dashboard/settings/invites.html.jinja",
+        return await render_template(
+            "dashboard/settings/invites",
             request,
             {
                 "email_error": messages.get("required_email"),

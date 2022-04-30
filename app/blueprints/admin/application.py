@@ -2,12 +2,13 @@ import os
 import subprocess
 from importlib.metadata import version
 from pathlib import Path
+from typing import Any
 
 import psutil
 from aiohttp import web
-from aiohttp_jinja2 import template
 
 from app.routing import Blueprint
+from app.templating import render_template
 from app.utils.db import (
     select_total_sessions_count,
     select_total_short_urls_count,
@@ -15,7 +16,7 @@ from app.utils.db import (
     select_total_users_count,
 )
 
-files = lines = characters = classes = functions = coroutines = comments = 0
+FILES = LINES = CHARACTERS = CLASSES = FUNCTIONS = COROUTINES = COMMENTS = 0
 for f in Path("./").rglob("*.*"):
     # no idea how do do this with glob so I'm just gonna do this
     # docs: https://docs.python.org/3/library/fnmatch.html#fnmatch.fnmatch
@@ -26,31 +27,31 @@ for f in Path("./").rglob("*.*"):
     if any(str(f).endswith(ext) for ext in ignored_extensions):
         continue
 
-    files += 1
+    FILES += 1
     with f.open(encoding="utf-8") as of:
         _lines = of.readlines()
-        lines += len(_lines)
+        LINES += len(_lines)
         for l in _lines:
             l = l.strip()
-            characters += len(l)
+            CHARACTERS += len(l)
             if f.suffix == ".py":
                 if l.startswith("class"):
-                    classes += 1
+                    CLASSES += 1
                 if l.startswith("def"):
-                    functions += 1
+                    FUNCTIONS += 1
                 if l.startswith("async def"):
-                    functions += 1
-                    coroutines += 1
+                    FUNCTIONS += 1
+                    COROUTINES += 1
                 if "#" in l:
-                    comments += 1
+                    COMMENTS += 1
 code_stats = {
-    "files": f"{files:,}",
-    "lines": f"{lines:,}",
-    "characters": f"{characters:,}",
-    "classes": f"{classes:,}",
-    "functions": f"{functions:,}",
-    "coroutines": f"{coroutines:,}",
-    "comments": f"{comments:,}",
+    "files": f"{FILES:,}",
+    "lines": f"{LINES:,}",
+    "characters": f"{CHARACTERS:,}",
+    "classes": f"{CLASSES:,}",
+    "functions": f"{FUNCTIONS:,}",
+    "coroutines": f"{COROUTINES:,}",
+    "comments": f"{COMMENTS:,}",
 }
 
 _pkgs = ["aiohttp", "gunicorn", "asyncpg", "marshmallow", "passlib", "psutil", "jinja2"]
@@ -76,9 +77,8 @@ bp = Blueprint("/admin/application", name="application")
 
 
 @bp.get("", name="index")
-@template("admin/application.html.jinja")
-async def index(request: web.Request):
-    ctx = {
+async def index(request: web.Request) -> web.Response:
+    ctx: dict[str, Any] = {
         "packages": packages,
         "code_stats": code_stats,
         "git": git_stats,
@@ -134,4 +134,4 @@ async def index(request: web.Request):
         }
         ctx["process"].update(proc.as_dict(attrs=["pid", "username", "cwd", "exe", "cmdline"]))
 
-    return ctx
+    return await render_template("admin/application", request, ctx)

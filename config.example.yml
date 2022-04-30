@@ -1,11 +1,7 @@
 dev:
   domain: "mzf.one"
-  show_error_details: true
-  debug: true
   postgres_dsn: ""
     
 prod:
   domain: "mzf.one"
-  show_error_details: true
-  debug: true
   postgres_dsn: ""

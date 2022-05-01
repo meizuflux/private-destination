@@ -1,4 +1,5 @@
 {% extends "dashboard/settings/layout.html.jinja" %}
+{% import "macros.html.jinja" as macros with context %}
 
 {% block name %}
     Account
@@ -23,23 +24,17 @@
         <div class="field">
             <label class="label">Email</label>
             <div class="control">
-                <input class="input {{'is-danger' if email_error else ''}}" type="email" value="{{email}}" name="email">
-                {% if email_error %}
-                    <p class="help is-danger">{{email_error[0]}}</p>
-                {% endif %}
+                <input class="input {{ macros.class_if_error('email') }}" type="email" value="{{email}}" name="email">
+                {{ macros.errors_and_help("email") }}
             </div>
         </div>
 
         <label class="label">Session Duration</label>
         <div class="field has-addons">
             <div class="control">
-                <input class="input {{'is-danger' if session_duration_error else ''}}" type="number" name="session_duration_amount" value="{{session_duration.amount}}" min="1" max="60" required>
-                {% if session_duration_amount_error %}
-                    <p class="help is-danger">{{session_duration_amount_error[0]}}</p>
-                {% endif %}
-                {% if session_duration_unit_error %}
-                    <p class="help is-danger">{{session_duration_unit_error[0]}}</p>
-                {% endif %}
+                <input class="input {{ macros.class_if_error('session_duration_amount') }} {{ macros.class_if_error('session_duration_unit') }}" type="number" name="session_duration_amount" value="{{session_duration.amount}}" min="1" max="60" required>
+                {{ macros.errors_and_help("session_duration_amount") }}
+                {{ macros.errors_and_help("session_duration_unit") }}
             </div>
             <div class="control">
                 <div class="select">

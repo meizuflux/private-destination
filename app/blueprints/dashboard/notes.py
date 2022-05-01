@@ -184,7 +184,7 @@ async def index(request: web.Request) -> web.Response:
 @bp.get("/create", name="create")
 @requires_auth(scopes=["id", "admin"])
 async def create_note(_: web.Request) -> web.Response:
-    return await render_template("dashboard/notes/create", _, {"errors": {}})
+    return await render_template("dashboard/notes/create", _)
 
 
 @bp.post("/create")
@@ -193,7 +193,9 @@ async def create_note_form(request: web.Request) -> web.Response:
     try:
         args = await parser.parse(NoteSchema(), request, locations=["form"])
     except ValidationError as error:
-        return await render_template("/dashboard/notes/create", request, {"errors": error.messages}, status=400)
+        return await render_template(
+            "/dashboard/notes/create", request, {"errors": error.normalized_messages()}, status=400
+        )
 
     name = args["name"]
     content = args["content"]

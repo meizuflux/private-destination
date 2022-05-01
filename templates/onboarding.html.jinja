@@ -1,5 +1,7 @@
 {% extends "base.html.jinja" %}
 
+{% import "macros.html.jinja" as macros with context %}
+
 {% block title %}
 {{"Sign Up" if type == "signup" else "Login"}}
 {% endblock %}
@@ -14,30 +16,24 @@
                         <div class="field">
                             <label class="label">Invite Code</label>
                             <div class="control">
-                                <input name="invite_code" class="input {{'is-danger' if invite_code_error else ''}}" type="text" placeholder="Your invite code" value="{{invite_code|d('')}}">
-                                {% if invite_code_error %}
-                                    <p class="help is-danger">{{invite_code_error[0]}}</p>
-                                {% endif %}
+                                <input name="invite_code" class="input {{ macros.class_if_error('invite_code') }}" type="text" placeholder="Your invite code" value="{{invite_code|d('')}}">
+                                {{ macros.errors_and_help("invite_code") }}
                             </div>
                         </div>
                     {% endif %}
                     <div class="field">
                         <label class="label">Email</label>
                         <div class="control">
-                            <input id="email" name="email" class="input {{'is-danger' if email_error else ''}}" type="email" placeholder="Your email" value="{{email if email}}">
-                            {% if email_error %}
-                                <p class="help is-danger">{{email_error[0]}}</p>
-                            {% endif %}
+                            <input id="email" name="email" class="input {{ macros.class_if_error('email') }}" type="email" placeholder="Your email" value="{{email if email}}">
+                            {{ macros.errors_and_help("email") }}
                         </div>
                     </div>
 
                     <div class="field">
                         <label class="label">Password</label>
                         <div class="control">
-                            <input id="password" name="password" class="input {{'is-danger' if password_error else ''}}" type="password" placeholder="A secure password" value="{{password|d('')}}">
-                            {% if password_error %}
-                                <p class="help is-danger">{{password_error[0]}}</p>
-                            {% endif %}
+                            <input id="password" name="password" class="input {{ macros.class_if_error('password') }}" type="password" placeholder="A secure password" value="{{password|d('')}}">
+                            {{ macros.errors_and_help("password") }}
                         </div>
                     </div>
                     <div class="field">

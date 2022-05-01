@@ -13,3 +13,18 @@
         <li class="{{'is-active' if request.rel_url.path == url}} {{class}}"><a href="{{ url }}">{{text}}</a></li>
     {% endif %}
 {% endmacro %}
+
+{% macro class_if_error(error, class="is-danger") %}
+    {{ class if (errors|d({}))[error] }}
+{% endmacro %}
+
+{% macro errors_and_help(error_name, help=none) %}
+    {% if (errors|d({}))[error_name] %}
+        {% for error in errors[error_name] %}
+            <p class="help is-danger">{{ error }}</p>
+        {% endfor %}
+    {% endif %}
+    {% if help %}
+        <p class="help">{{ help }}</p>
+    {% endif %}
+{% endmacro %}

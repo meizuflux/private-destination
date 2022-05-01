@@ -22,10 +22,7 @@ from app.utils.time import get_amount_and_unit
 def email_or_none(value: str) -> None:
     if value == "":
         return None
-    try:
-        return validate.Email()(value)  # type: ignore
-    except ValidationError:
-        return None
+    return validate.Email()(value)  # type: ignore
 
 
 class CreateInviteSchema(Schema):
@@ -172,6 +169,7 @@ async def create_invite(request: web.Request) -> web.Response:
             "dashboard/settings/invites",
             request,
             {
+                "errors": error.normalized_messages(),
                 "email_error": messages.get("required_email"),
                 "invites": invites,
                 "can_create": can_create,

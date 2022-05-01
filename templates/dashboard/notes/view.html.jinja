@@ -1,4 +1,5 @@
 {% extends 'base.html.jinja' %}
+{% import "macros.html.jinja" as macros with context %}
 
 {% block title %}
     Viewing Secure Note
@@ -20,10 +21,8 @@
                                 <div class="field">
                                     <label class="label">Password</label>
                                     <div class="control">
-                                        <input class="input {{'is-danger' if password_error else ''}}" type="password" id="password" placeholder="Password for the note" name="password">
-                                        {% if password_error %}
-                                            <p class="help is-danger">{{password_error[0]}}</p>
-                                        {% endif %}
+                                        <input class="input {{ macros.class_if_error('password') }}" type="password" id="password" placeholder="Password for the note" name="password">
+                                        {{ macros.errors_and_help("password") }}
                                     </div>
                                 </div>
                                 <div class="field">

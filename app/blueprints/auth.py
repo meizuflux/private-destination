@@ -87,13 +87,11 @@ async def login(request: web.Request) -> web.Response:
         try:
             args = await parser.parse(LoginSchema(), request, locations=["form"])
         except ValidationError as error:
-            messages = error.normalized_messages()
             return await render_template(
                 "onboarding",
                 request,
                 {
-                    "email_error": messages.get("email"),
-                    "password_error": messages.get("password"),
+                    "errors": error.normalized_messages(),
                     "type": "login",
                     "email": error.data.get("email"),
                     "password": error.data.get("password"),

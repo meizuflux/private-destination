@@ -1,24 +1,21 @@
 {% extends 'admin/users/layout.html.jinja' %}
+{% import "macros.html.jinja" as macros with context %}
 
 {% block main2 %}
     <form method="POST">
         <div class="field">
             <label class="label">Email</label>
             <div class="control">
-                <input id="email" name="email" class="input {{'is-danger' if email_error else ''}}" type="text" placeholder="User's email">
-                {% if email_error %}
-                    <p class="help is-danger">{{email_error[0]}}</p>
-                {% endif %}
+                <input id="email" name="email" class="input {{ macros.class_if_error('email') }}" type="text" placeholder="User's email">
+                {{ macros.errors_and_help("email") }}
             </div>
         </div>
 
         <div class="field">
             <label class="label">Password</label>
             <div class="control">
-                <input id="password" name="password" class="input {{'is-danger' if password_error else ''}}" type="password" placeholder="A secure password">
-                {% if password_error %}
-                    <p class="help is-danger">{{password_error[0]}}</p>
-                {% endif %}
+                <input id="password" name="password" class="input {{ macros.class_if_error('password') }}" type="password" placeholder="A secure password">
+                {{ macros.errors_and_help("password") }}
             </div>
         </div>
         <div class="field">

@@ -124,10 +124,8 @@ async def create_user(
     try:
         args = await parser.parse(SignUpSchema(), request, locations=["form"])
     except ValidationError as error:
-        messages = error.normalized_messages()
         ctx = {
-            "email_error": messages.get("email"),
-            "invite_code_error": messages.get("invite_code"),
+            "errors": error.normalized_messages(),
             "email": error.data.get("email"),
             "invite_code": error.data.get("invite_code"),
             "password": error.data.get("password"),
@@ -186,11 +184,8 @@ async def edit_user(
     try:
         args = await parser.parse(UsersEditSchema(), request, locations=["form"])
     except ValidationError as error:
-        messages = error.normalized_messages()
         ctx = {
-            "email_error": messages.get("email"),
-            "session_duration_amount_error": messages.get("session_duration_amount"),
-            "session_duration_unit_error": messages.get("session_duration_unit"),
+            "errors": error.normalized_messages(),
             "id": old_user["id"],
             "email": error.data.get("email"),
             "admin": old_user["admin"],

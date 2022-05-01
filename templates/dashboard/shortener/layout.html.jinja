@@ -7,7 +7,7 @@
 
     <div class="tabs mb-3">
         <ul>
-            {{macros.active_tab(url_for("shortener.index"), "View All")}}
+            {{macros.active_tab(url_for("shortener.index"), "View All", type="equals")}}
             {{macros.active_tab(url_for("shortener.create"), "Create")}}
             {% if alias %}
                 {% if request.rel_url.path == "/dashboard/shortener/" + alias + "/edit" %}

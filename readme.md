@@ -26,7 +26,6 @@ email with `sendinblue`
 - allow use of user password to unlock secure note content
 - migrate to nacl.pwhash.argon2id for password hashing
 - make api key encrypted with user's password - so its not in plaintext
-- make error handling in the templates simpler and less verbose (figure out how to use just a `errors` variable (can maybe inject later on??))
 - pull out common jinja2 html components into a macro or component file
 - migrate users id to use identity
 - add editing and deleting of notes

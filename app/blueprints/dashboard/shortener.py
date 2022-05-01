@@ -73,13 +73,11 @@ async def create_short_url_(request: web.Request) -> web.Response:
         try:
             args = await parser.parse(ShortenerCreateSchema(), request, locations=["form"])
         except ValidationError as error:
-            messages = error.normalized_messages()
             return await render_template(
                 "dashboard/shortener/create",
                 request,
                 {
-                    "alias_error": messages.get("alias"),
-                    "url_error": messages.get("destination"),
+                    "errors": error.normalized_messages(),
                     "domain": f"https://{request.app['config']['domain']}/",
                     "alias": error.data.get("alias"),
                     "destination": error.data.get("destination"),
@@ -145,13 +143,11 @@ async def edit_short_url_(request: web.Request) -> web.Response:
         try:
             args = await parser.parse(ShortenerEditSchema(), request, locations=["form"])
         except ValidationError as error:
-            messages = error.normalized_messages()
             return await render_template(
                 "dashboard/shortener/edit",
                 request,
                 {
-                    "alias_error": messages.get("alias"),
-                    "destination_error": messages.get("destination"),
+                    "errors": error.normalized_messages(),
                     "domain": f"https://{request.app['config']['domain']}/",
                     "alias": error.data.get("alias"),  # type: ignore
                     "destination": error.data.get("destination"),  # type: ignore

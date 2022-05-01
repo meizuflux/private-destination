@@ -18,6 +18,7 @@ from app.templating import render_template
 from app.utils.auth import requires_auth
 from app.utils.db import (
     delete_short_url,
+    get_db,
     insert_short_url,
     select_short_url,
     select_short_urls,
@@ -38,7 +39,7 @@ async def shortener(request: web.Request) -> web.Response:
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "creation_date")
 
-    async with request.app["db"].acquire() as conn:
+    async with get_db(request).acquire() as conn:
         urls = await select_short_urls(
             conn,
             sortby=sortby,
@@ -88,11 +89,11 @@ async def create_short_url_(request: web.Request) -> web.Response:
 
         alias = args.get("alias")
         if alias is None or alias == "":
-            alias = await generate_url_alias(request.app["db"])
+            alias = await generate_url_alias(get_db(request))
         destination = args.get("destination")
 
         try:
-            await insert_short_url(request.app["db"], owner=request["user"]["id"], alias=alias, destination=destination)
+            await insert_short_url(get_db(request), owner=request["user"]["id"], alias=alias, destination=destination)
         except UniqueViolationError:
             return await render_template(
                 "dashboard/shortener/create",
@@ -119,7 +120,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
 async def edit_short_url_(request: web.Request) -> web.Response:
     alias = request["match_info"]["alias"]
 
-    short_url = await select_short_url(request.app["db"], alias=alias)
+    short_url = await select_short_url(get_db(request), alias=alias)
     if short_url is None:
         return await render_template(
             "dashboard/shortener/edit",
@@ -160,12 +161,12 @@ async def edit_short_url_(request: web.Request) -> web.Response:
 
         new_alias = args.get("alias")
         if new_alias is None or new_alias == "":
-            new_alias = await generate_url_alias(request.app["db"])
+            new_alias = await generate_url_alias(get_db(request))
         destination = args["destination"]
 
         try:
             await update_short_url(
-                request.app["db"],
+                get_db(request),
                 alias=alias,
                 new_alias=new_alias,
                 destination=destination,
@@ -205,7 +206,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
 async def delete_short_url_(request: web.Request) -> web.Response:
     alias = request["match_info"]["alias"]
 
-    short_url = await select_short_url(request.app["db"], alias=alias)
+    short_url = await select_short_url(get_db(request), alias=alias)
     if short_url is None:
         return await render_template(
             "dashboard/shortener/delete",
@@ -223,7 +224,7 @@ async def delete_short_url_(request: web.Request) -> web.Response:
         )
 
     if request.method == "POST":
-        await delete_short_url(request.app["db"], alias=alias)
+        await delete_short_url(get_db(request), alias=alias)
 
         return web.HTTPFound("/dashboard/shortener")
 

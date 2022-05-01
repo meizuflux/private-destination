@@ -6,7 +6,7 @@ from app.routing import Blueprint
 from app.templating import render_template
 from app.utils import Status
 from app.utils.auth import create_user, edit_user, requires_auth
-from app.utils.db import delete_user, select_user, select_users
+from app.utils.db import delete_user, get_db, select_user, select_users
 from app.utils.time import get_amount_and_unit
 
 bp = Blueprint("/admin/users", name="users")
@@ -19,7 +19,7 @@ async def list_users(request: web.Request) -> web.Response:
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "joined")
 
-    users = await select_users(request.app["db"], sortby=sortby, direction=direction)
+    users = await select_users(get_db(request), sortby=sortby, direction=direction)
     return await render_template(
         "admin/users/index", request, {"users": users, "sortby": sortby, "direction": direction}
     )
@@ -30,7 +30,7 @@ async def list_users(request: web.Request) -> web.Response:
 @requires_auth(admin=True, redirect=True, scopes="id")
 async def edit_user_(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
-    user = await select_user(request.app["db"], user_id=user_id)
+    user = await select_user(get_db(request), user_id=user_id)
     is_self = user_id == request["user"]["id"]
 
     if user is None:
@@ -76,7 +76,7 @@ async def edit_user_(request: web.Request) -> web.Response:
 @match_info_schema(UserIDSchema)
 async def delete_user_(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
-    user = await select_user(request.app["db"], user_id=user_id)
+    user = await select_user(get_db(request), user_id=user_id)
 
     if user is None:
         return await render_template(
@@ -87,7 +87,7 @@ async def delete_user_(request: web.Request) -> web.Response:
         )
 
     if request.method == "POST":
-        await delete_user(request.app["db"], user_id=user_id)
+        await delete_user(get_db(request), user_id=user_id)
 
         return web.HTTPFound("/admin/users")
 

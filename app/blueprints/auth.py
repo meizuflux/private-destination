@@ -11,7 +11,7 @@ from app.routing import Blueprint
 from app.templating import render_template
 from app.utils import Status
 from app.utils.auth import create_user, requires_auth, verify_user
-from app.utils.db import delete_session, insert_session
+from app.utils.db import delete_session, get_db, insert_session
 from app.utils.forms import parser
 
 
@@ -24,7 +24,7 @@ async def login_user(request: web.Request, user_id: int, email: str, session_dur
     browser = metadata["user_agent"]["family"]
     operating_system = metadata["os"]["family"]
 
-    uuid = await insert_session(request.app["db"], user_id=user_id, browser=browser, os=operating_system)
+    uuid = await insert_session(get_db(request), user_id=user_id, browser=browser, os=operating_system)
 
     res = web.HTTPFound("/dashboard")
     res.set_cookie(
@@ -101,7 +101,7 @@ async def login(request: web.Request) -> web.Response:
                 status=400,
             )
 
-        row = await request.app["db"].fetchrow(
+        row = await get_db(request).fetchrow(
             "SELECT id, password, session_duration FROM users WHERE email = $1", args["email"]
         )
         if row is None:
@@ -135,5 +135,5 @@ async def logout(request: web.Request) -> web.Response:
     token = request.cookies.get("_session")
     res = web.HTTPFound("/")
     res.del_cookie("_session")
-    await delete_session(request.app["db"], token=UUID(token))
+    await delete_session(get_db(request), token=UUID(token))
     return res

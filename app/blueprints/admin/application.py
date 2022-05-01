@@ -10,6 +10,7 @@ from aiohttp import web
 from app.routing import Blueprint
 from app.templating import render_template
 from app.utils.db import (
+    get_db,
     select_total_sessions_count,
     select_total_short_urls_count,
     select_total_unique_sessions_count,
@@ -84,7 +85,7 @@ async def index(request: web.Request) -> web.Response:
         "git": git_stats,
     }
 
-    async with request.app["db"].acquire() as conn:
+    async with get_db(request).acquire() as conn:
         ctx["service"] = {
             "shortener_count": await select_total_short_urls_count(conn),
             "user_count": await select_total_users_count(conn),

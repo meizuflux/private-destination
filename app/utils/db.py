@@ -1,7 +1,8 @@
-from typing import List, Union
+from typing import List, Union, cast
 from uuid import UUID
 
 from asyncpg import Connection, Pool, Record
+from aiohttp import web
 
 from app.utils import QueryScopes
 
@@ -10,6 +11,11 @@ ConnOrPool = Union[Connection, Pool]
 
 def form_scopes(scopes: QueryScopes) -> str:
     return scopes if isinstance(scopes, str) else ", ".join(scopes)
+
+def get_db(request_or_app: web.Request | web.Application) -> Pool:
+    if isinstance(request_or_app, web.Request):
+        app = request_or_app.app
+    return cast(Pool, app["db"])
 
 
 async def select_notes(conn: ConnOrPool, *, sortby: str, direction: str, owner: int, offset: int) -> List[Record]:

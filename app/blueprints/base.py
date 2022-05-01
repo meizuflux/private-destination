@@ -10,6 +10,7 @@ from app.templating import render_template
 from app.utils.auth import requires_auth, verify_user
 from app.utils.db import (
     add_short_url_click,
+    get_db,
     select_notes_count,
     select_short_url_destination,
     select_short_urls_count,
@@ -33,7 +34,7 @@ async def login(request: web.Request) -> web.Response:
 @bp.get("/dashboard", name="dashboard")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def index(request: web.Request) -> web.Response:
-    async with request.app["db"].acquire() as conn:
+    async with get_db(request).acquire() as conn:
         url_count = await select_short_urls_count(conn, owner=request["user"]["id"])
         notes_count = await select_notes_count(conn, owner=request["user"]["id"])
     return await render_template(
@@ -48,7 +49,7 @@ async def index(request: web.Request) -> web.Response:
 
 @bp.get("/admin", name="admin")
 async def home(request: web.Request) -> web.Response:
-    async with request.app["db"].acquire() as conn:
+    async with get_db(request).acquire() as conn:
         urls_count = await select_total_short_urls_count(conn)
         users_count = await select_total_users_count(conn)
         sessions_count = await select_total_sessions_count(conn)
@@ -67,11 +68,11 @@ async def home(request: web.Request) -> web.Response:
 @match_info_schema(ShortenerAliasSchema)
 async def shortener(request: web.Request) -> web.Response:
     alias = request["match_info"]["alias"]
-    destination = await select_short_url_destination(request.app["db"], alias=alias)
+    destination = await select_short_url_destination(get_db(request), alias=alias)
     if destination is None:
         return web.Response(body="No shortened URL with that alias was found.")  # TODO: make a view for this
 
     # run in background so that user can go to destination faster
-    asyncio.get_event_loop().create_task(add_short_url_click(request.app["db"], alias=alias))
+    asyncio.get_event_loop().create_task(add_short_url_click(get_db(request), alias=alias))
 
     return web.HTTPFound(destination)

@@ -16,7 +16,7 @@ from marshmallow import Schema, ValidationError, fields, validate
 from app.routing import Blueprint
 from app.templating import render_template
 from app.utils.auth import requires_auth, verify_user
-from app.utils.db import select_notes, select_notes_count, select_user
+from app.utils.db import get_db, select_notes, select_notes_count, select_user
 from app.utils.forms import parser
 
 
@@ -70,7 +70,7 @@ async def view_note(request: web.Request) -> web.Response:
     except (ValueError, binascii.Error):
         return web.Response(text="Invalid Note ID", status=400)
 
-    has_pw = await request.app["db"].fetchval("SELECT has_password FROM notes WHERE id = $1", as_uuid)
+    has_pw = await get_db(request).fetchval("SELECT has_password FROM notes WHERE id = $1", as_uuid)
 
     return await render_template(
         "dashboard/notes/view",
@@ -99,7 +99,7 @@ async def view_note_form(request: web.Request) -> web.Response:
     except (ValueError, binascii.Error):
         return web.Response(text="Invalid Note ID", status=400)
 
-    note = await request.app["db"].fetchrow(
+    note = await get_db(request).fetchrow(
         "SELECT has_password, content, owner, name, share_email, private FROM notes WHERE id = $1", as_uuid
     )
     if note is None:
@@ -127,10 +127,10 @@ async def view_note_form(request: web.Request) -> web.Response:
 
     email = None
     if note["share_email"] is True:
-        email = (await select_user(request.app["db"], user_id=note["owner"])).get("email")
+        email = (await select_user(get_db(request), user_id=note["owner"])).get("email")
 
     asyncio.get_event_loop().create_task(
-        request.app["db"].execute("UPDATE notes SET clicks = clicks + 1 WHERE id = $1", as_uuid)
+        get_db(request).execute("UPDATE notes SET clicks = clicks + 1 WHERE id = $1", as_uuid)
     )
 
     return await render_template(
@@ -149,7 +149,7 @@ async def index(request: web.Request) -> web.Response:
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "creation_date")
 
-    async with request.app["db"].acquire() as conn:
+    async with get_db(request).acquire() as conn:
         notes = await select_notes(
             conn,
             sortby=sortby,
@@ -215,7 +215,7 @@ VALUES ($1, $2, $3, $4, $5, $6) returning id
         args["share_email"],
         args["private"],
     )
-    id_ = await request.app["db"].fetchval(query, *args)
+    id_ = await get_db(request).fetchval(query, *args)
 
     id_ = base64.urlsafe_b64encode(str(id_).encode())
 

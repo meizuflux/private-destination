@@ -13,6 +13,7 @@ from app.templating import render_template
 from app.utils import Scopes, Status
 from app.utils.db import (
     ConnOrPool,
+    get_db,
     insert_user,
     select_api_key_exists,
     select_session_exists,
@@ -70,16 +71,16 @@ async def verify_user(
         session = request.cookies.get("_session")
         if session is not None:
             if scopes is None and admin is not True:
-                return await select_session_exists(request.app["db"], token=UUID(session))
-            user = await select_user_by_session(request.app["db"], token=UUID(session), scopes=scopes)
+                return await select_session_exists(get_db(request), token=UUID(session))
+            user = await select_user_by_session(get_db(request), token=UUID(session), scopes=scopes)
             return user
 
     async def by_api_key():
         api_key = request.headers.get("x-api-key")
         if api_key is not None:
             if scopes is None and admin is not True:
-                return await select_api_key_exists(request.app["db"], api_key=api_key)
-            user = await select_user_by_api_key(request.app["db"], api_key=api_key, scopes=scopes)
+                return await select_api_key_exists(get_db(request), api_key=api_key)
+            user = await select_user_by_api_key(get_db(request), api_key=api_key, scopes=scopes)
             return user
 
     user = await by_session() or await by_api_key()
@@ -118,7 +119,7 @@ async def create_user(
         return Status.ERROR, await render_template(template, request, ctx, status=400)
 
     try:
-        async with request.app["db"].acquire() as conn:
+        async with get_db(request).acquire() as conn:
             invite = await conn.fetchrow(
                 "SELECT used_by, required_email FROM invites WHERE code = $1", args["invite_code"]
             )
@@ -190,7 +191,7 @@ async def edit_user(
 
     try:
         await update_user(
-            request.app["db"],
+            get_db(request),
             user_id=old_user["id"],
             session_duration=get_seconds(args["session_duration_amount"], args["session_duration_unit"]),
             email=args["email"],

@@ -10,6 +10,7 @@ from app.utils.auth import edit_user, generate_api_key, requires_auth
 from app.utils.db import (
     delete_session,
     delete_user,
+    get_db,
     select_notes_count,
     select_sessions,
     update_api_key,
@@ -44,8 +45,8 @@ async def api_key_settings(_: web.Request) -> web.Response:
 @requires_auth(redirect=False, scopes=["id", "api_key", "admin"])
 async def regen_api_key(request: web.Request) -> web.Response:
     if request.method == "POST":
-        async with request.app["db"].acquire() as conn:
-            await update_api_key(request.app["db"], user_id=request["user"]["id"], api_key=await generate_api_key(conn))
+        async with get_db(request).acquire() as conn:
+            await update_api_key(get_db(request), user_id=request["user"]["id"], api_key=await generate_api_key(conn))
 
         return web.HTTPFound("/dashboard/settings/api_key")
 
@@ -55,7 +56,7 @@ async def regen_api_key(request: web.Request) -> web.Response:
 @bp.get("/sessions", name="sessions")
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def sessions_settings(request: web.Request) -> web.Response:
-    user_sessions = await select_sessions(request.app["db"], user_id=request["user"]["id"])
+    user_sessions = await select_sessions(get_db(request), user_id=request["user"]["id"])
     return await render_template(
         "dashboard/settings/sessions",
         request,
@@ -68,7 +69,7 @@ async def sessions_settings(request: web.Request) -> web.Response:
 @match_info_schema(SessionSchema)
 async def delete_session_(request: web.Request) -> web.Response:
     # no need for auth since uuids are unique
-    await delete_session(request.app["db"], token=request["match_info"]["token"])
+    await delete_session(get_db(request), token=request["match_info"]["token"])
     return web.HTTPFound("/dashboard/settings/sessions")
 
 
@@ -117,7 +118,7 @@ async def edit_self(request: web.Request) -> web.Response:
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def delete_account(request: web.Request) -> web.Response:
     if request.method == "POST":
-        await delete_user(request.app["db"], user_id=request["user"]["id"])
+        await delete_user(get_db(request), user_id=request["user"]["id"])
 
         res = web.HTTPFound("/")
         res.del_cookie("_session")
@@ -134,7 +135,7 @@ async def delete_account(request: web.Request) -> web.Response:
 @requires_auth(redirect=True, scopes=["id", "admin"])
 async def invites_manager(request: web.Request) -> web.Response:
     # sourcery skip: assign-if-exp, boolean-if-exp-identity, introduce-default-else, remove-unnecessary-cast
-    invites = await request.app["db"].fetch(
+    invites = await get_db(request).fetch(
         "SELECT code, used_by, required_email, creation_date FROM invites WHERE owner = $1 ORDER BY creation_date DESC",
         request["user"]["id"],
     )
@@ -159,7 +160,7 @@ async def create_invite(request: web.Request) -> web.Response:
     try:
         args = await parser.parse(CreateInviteSchema(), request, locations=["form"])
     except ValidationError as error:
-        invites = await request.app["db"].fetch(
+        invites = await get_db(request).fetch(
             "SELECT code, used_by, required_email, creation_date FROM invites WHERE owner = $1 ORDER BY creation_date DESC",
             request["user"]["id"],
         )
@@ -178,7 +179,7 @@ async def create_invite(request: web.Request) -> web.Response:
             status=400,
         )
 
-    async with request.app["db"].acquire() as conn:
+    async with get_db(request).acquire() as conn:
         invites_count = await select_notes_count(conn, owner=request["user"]["id"])
         if invites_count > 5 and request["user"]["admin"] is False:
             return web.HTTPForbidden(reason="You can only create 5 invites")

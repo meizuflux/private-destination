@@ -1,14 +1,13 @@
 import argparse
+import asyncio
 import os
 import sys
-
-from asyncpg import UniqueViolationError, create_pool
+from getpass import getpass
 
 sys.path.append(os.getcwd())  # weird python module resolution but this works so idk
 
-import asyncio
-from getpass import getpass
 
+from asyncpg import UniqueViolationError, create_pool
 from passlib.hash import pbkdf2_sha512
 from yaml import safe_load
 

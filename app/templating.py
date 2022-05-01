@@ -8,6 +8,8 @@ from aiohttp import web
 ContextProcessor = Callable[[web.Request], Awaitable[dict[str, Any]]]
 
 TEMPLATE_SUFFIX = ".html.jinja"
+CONTEXT_PROCESSOR_KEY = "templating_context_processors"
+TEMPLATING_ENVIRONMENT_KEY = "templating_environment"
 
 
 @cache
@@ -40,7 +42,7 @@ def setup(
         context_processors = [request_processor]
     else:
         context_processors.append(request_processor)
-    app["templating_context_processors"] = context_processors
+    app[CONTEXT_PROCESSOR_KEY] = context_processors
 
     return env
 
@@ -48,7 +50,7 @@ def setup(
 async def get_context(request: web.Request, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
     if context is None:
         context = {}
-    for processor in request.app["templating_context_processors"]:
+    for processor in request.app[CONTEXT_PROCESSOR_KEY]:
         context.update(await processor(request))
     return context
 
@@ -57,7 +59,7 @@ async def render_template(
     template_name: str, request: web.Request, context: dict[str, Any] = None, status: int = 200
 ) -> web.Response:
     context = await get_context(request, context)
-    template = request.app["templating_environment"].get_template(get_template_name(template_name))
+    template = request.app[TEMPLATING_ENVIRONMENT_KEY].get_template(get_template_name(template_name))
     return web.Response(
         text=await template.render_async(context),
         status=status,
@@ -68,7 +70,7 @@ async def render_template(
 
 async def render_string(source: str, request: web.Request, context: dict[str, Any], status: int = 200) -> web.Response:
     context = await get_context(request, context)
-    template = request.app["templating_environment"].from_string(source)
+    template = request.app[TEMPLATING_ENVIRONMENT_KEY].from_string(source)
     return web.Response(
         text=await template.render_async(context),
         status=status,

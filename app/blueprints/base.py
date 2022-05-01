@@ -7,7 +7,7 @@ from aiohttp_apispec import match_info_schema
 from app.models.shortener import ShortenerAliasSchema
 from app.routing import Blueprint
 from app.templating import render_template
-from app.utils.auth import requires_auth, verify_user
+from app.utils.auth import is_authorized, requires_auth, verify_user
 from app.utils.db import (
     add_short_url_click,
     get_db,
@@ -25,14 +25,14 @@ bp = Blueprint(name="base")
 
 @bp.get("/", name="index")
 async def login(request: web.Request) -> web.Response:
-    if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
+    if await is_authorized(request):
         return web.HTTPFound("/dashboard")
 
     return await render_template("index", request)
 
 
 @bp.get("/dashboard", name="dashboard")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(scopes=["id", "admin"])
 async def index(request: web.Request) -> web.Response:
     async with get_db(request).acquire() as conn:
         url_count = await select_short_urls_count(conn, owner=request["user"]["id"])

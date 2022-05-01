@@ -32,7 +32,7 @@ bp = Blueprint("/dashboard/shortener", name="shortener")
 
 
 @bp.get("", name="index")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(scopes=["id", "admin"])
 @querystring_schema(ShortenerFilterSchema())
 async def shortener(request: web.Request) -> web.Response:
     current_page = request["querystring"].get("page", 1) - 1
@@ -67,7 +67,7 @@ async def shortener(request: web.Request) -> web.Response:
 
 
 @bp.route("/create", methods=["GET", "POST"], name="create")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(scopes=["id", "admin"])
 async def create_short_url_(request: web.Request) -> web.Response:
     if request.method == "POST":
         try:
@@ -115,7 +115,7 @@ async def create_short_url_(request: web.Request) -> web.Response:
 
 
 @bp.route("/{alias}/edit", methods=["GET", "POST"], name="edit")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(scopes=["id", "admin"])
 @match_info_schema(ShortenerAliasSchema())
 async def edit_short_url_(request: web.Request) -> web.Response:
     alias = request["match_info"]["alias"]
@@ -201,7 +201,7 @@ async def edit_short_url_(request: web.Request) -> web.Response:
 
 
 @bp.route("/{alias}/delete", methods=["GET", "POST"], name="delete")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(scopes=["id", "admin"])
 @match_info_schema(ShortenerAliasSchema)
 async def delete_short_url_(request: web.Request) -> web.Response:
     alias = request["match_info"]["alias"]

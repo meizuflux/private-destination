@@ -31,4 +31,3 @@ copyBtn.addEventListener("click", async () => {
         (r) => alert('Could not copy API Key:\n' + r.toString())
         )
 })
-

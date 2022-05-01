@@ -14,7 +14,7 @@ bp = Blueprint("/admin/users", name="users")
 
 @bp.get("", name="index")
 @querystring_schema(UsersFilterSchema())
-@requires_auth(admin=True, redirect=True)
+@requires_auth(admin=True)
 async def list_users(request: web.Request) -> web.Response:
     direction = request["querystring"].get("direction", "desc")
     sortby = request["querystring"].get("sortby", "joined")
@@ -27,7 +27,7 @@ async def list_users(request: web.Request) -> web.Response:
 
 @bp.route("/{user_id}/edit", methods=["GET", "POST"], name="edit")
 @match_info_schema(UserIDSchema)
-@requires_auth(admin=True, redirect=True, scopes="id")
+@requires_auth(admin=True, scopes="id")
 async def edit_user_(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
     user = await select_user(get_db(request), user_id=user_id)
@@ -72,7 +72,7 @@ async def edit_user_(request: web.Request) -> web.Response:
 
 
 @bp.route("/{user_id}/delete", methods=["GET", "POST"], name="delete")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(scopes=["id", "admin"])
 @match_info_schema(UserIDSchema)
 async def delete_user_(request: web.Request) -> web.Response:
     user_id = request["match_info"]["user_id"]
@@ -99,7 +99,7 @@ async def delete_user_(request: web.Request) -> web.Response:
 
 
 @bp.route("/create", methods=["GET", "POST"], name="create")
-@requires_auth(admin=True, redirect=True)
+@requires_auth(admin=True)
 async def create_user_(request: web.Request) -> web.Response:
     if request.method == "POST":
         ret = await create_user(request, template="onboarding", extra_ctx={"type": "signup"})

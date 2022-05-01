@@ -59,4 +59,3 @@ CREATE TRIGGER oldSessionsExpiry
     ON sessions
     FOR STATEMENT
     EXECUTE PROCEDURE deleteOldSessions();
-

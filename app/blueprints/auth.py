@@ -10,7 +10,7 @@ from app.models.auth import LoginSchema
 from app.routing import Blueprint
 from app.templating import render_template
 from app.utils import Status
-from app.utils.auth import create_user, requires_auth, verify_user
+from app.utils.auth import create_user, is_authorized, requires_auth, verify_user
 from app.utils.db import delete_session, get_db, insert_session
 from app.utils.forms import parser
 
@@ -53,7 +53,7 @@ bp = Blueprint("/auth", name="auth")
 @bp.get("/invite/{code}", name="invite")
 @match_info_schema(InviteCodeSchema())
 async def invite(request: web.Request) -> web.Response:
-    if await verify_user(request, admin=False, redirect=False, scopes=None):
+    if await is_authorized(request):
         return web.HTTPFound("/dashboard")
     return web.HTTPFound(f"/auth/login?code={request['match_info']['code']}")
 
@@ -61,7 +61,7 @@ async def invite(request: web.Request) -> web.Response:
 @bp.route("/signup", methods=["GET", "POST"], name="signup")
 @querystring_schema(InviteCodeSchema())
 async def signup(request: web.Request) -> web.Response:
-    if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
+    if await is_authorized(request):
         return web.HTTPFound("/dashboard")
 
     invite_code = request["querystring"].get("code", "")
@@ -80,7 +80,7 @@ async def signup(request: web.Request) -> web.Response:
 
 @bp.route("/login", methods=["GET", "POST"], name="login")
 async def login(request: web.Request) -> web.Response:
-    if await verify_user(request, admin=False, redirect=False, scopes=None) is True:
+    if await is_authorized(request):
         return web.HTTPFound("/dashboard")
 
     if request.method == "POST":
@@ -130,7 +130,7 @@ async def login(request: web.Request) -> web.Response:
 
 
 @bp.get("/logout", name="logout")
-@requires_auth(redirect=True)
+@requires_auth()
 async def logout(request: web.Request) -> web.Response:
     token = request.cookies.get("_session")
     res = web.HTTPFound("/")

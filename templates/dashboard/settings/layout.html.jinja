@@ -15,10 +15,10 @@
     <div class="tabs mb-3">
         <ul>
             <li class="{{'is-active' if request.rel_url.path == url_for('settings.index') or request.rel_url.path.startswith(url_for('settings.account'))}}"><a href="{{ url_for('settings.index') }}">Account</a></li>
-            {{macros.active_tab(url_for("settings.sessions"), "Sessions")}}            
-            {{macros.active_tab(url_for("settings.api_key"), "API Key")}}  
-            {{macros.active_tab(url_for("settings.shortener"), "URL Shortener")}}  
-            {{macros.active_tab(url_for("settings.invites"), "Invites")}}  
+            {{macros.active_tab(url_for("settings.sessions"), "Sessions")}}
+            {{macros.active_tab(url_for("settings.api_key"), "API Key")}}
+            {{macros.active_tab(url_for("settings.shortener"), "URL Shortener")}}
+            {{macros.active_tab(url_for("settings.invites"), "Invites")}}
         </ul>
     </div>
 

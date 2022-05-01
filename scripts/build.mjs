@@ -20,4 +20,3 @@ await esbuild.build({
     logLevel: "debug",
     platform: "browser",
 })
-

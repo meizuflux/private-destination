@@ -1,7 +1,7 @@
 dev:
   domain: "mzf.one"
   postgres_dsn: ""
-    
+
 prod:
   domain: "mzf.one"
   postgres_dsn: ""

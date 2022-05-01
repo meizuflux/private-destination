@@ -1,8 +1,8 @@
 from typing import List, Union, cast
 from uuid import UUID
 
-from asyncpg import Connection, Pool, Record
 from aiohttp import web
+from asyncpg import Connection, Pool, Record
 
 from app.utils import QueryScopes
 
@@ -11,6 +11,7 @@ ConnOrPool = Union[Connection, Pool]
 
 def form_scopes(scopes: QueryScopes) -> str:
     return scopes if isinstance(scopes, str) else ", ".join(scopes)
+
 
 def get_db(request_or_app: web.Request | web.Application) -> Pool:
     if isinstance(request_or_app, web.Request):
@@ -44,8 +45,8 @@ async def select_short_urls(conn: ConnOrPool, *, sortby: str, direction: str, ow
     # sort and direction weren't working as params to get passed so they have to go directly into the query
     # this is fine as they both are sanitized with the api-spec
     query = f"""
-        SELECT alias, destination, clicks, creation_date 
-        FROM urls 
+        SELECT alias, destination, clicks, creation_date
+        FROM urls
         WHERE owner = $1
         ORDER BY {sortby} {direction.upper()}
         LIMIT 50
@@ -144,8 +145,8 @@ async def get_hash_and_id_by_email(conn: ConnOrPool, *, email: str):
 
 async def insert_session(conn: ConnOrPool, *, user_id: int, browser: str, os: str):
     query = """
-        INSERT INTO sessions (token, user_id, browser, os) 
-        (SELECT gen_random_uuid(), $1, $2, $3) 
+        INSERT INTO sessions (token, user_id, browser, os)
+        (SELECT gen_random_uuid(), $1, $2, $3)
         RETURNING token;
     """  # don't add VALUES before the values, it breaks it
     # I have no idea why but this works

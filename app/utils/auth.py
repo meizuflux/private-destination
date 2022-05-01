@@ -1,16 +1,18 @@
 from secrets import choice
 from string import ascii_letters, digits
-from typing import Any, Callable, Literal, Tuple
+from types import MappingProxyType
+from typing import Any, Callable, Literal, Mapping, MutableMapping, Tuple, overload
 from uuid import UUID
 
 from aiohttp import web
 from asyncpg import Record, UniqueViolationError
 from marshmallow import ValidationError
 from passlib.hash import pbkdf2_sha512
+from typing_extensions import reveal_type
 
 from app.models.auth import SignUpSchema, UsersEditSchema
 from app.templating import render_template
-from app.utils import Scopes, Status
+from app.utils import QueryScopes, Scopes, Status
 from app.utils.db import (
     ConnOrPool,
     get_db,
@@ -35,22 +37,23 @@ async def generate_api_key(database: ConnOrPool) -> str:
     return api_key
 
 
-def requires_auth(
-    *,
-    admin: bool = False,
-    redirect: bool = False,
-    scopes: Scopes = None,
-) -> Callable[[Any], Any]:  # TODO: type hint this and deco
-    if scopes is not None:
-        if isinstance(scopes, str):
-            scopes = [scopes]
+async def is_authorized(request):
+    try:
+        await verify_user(request, redirect=False, scopes=None)
+        return True
+    except web.HTTPException:
+        return False
 
-    if admin is True:
-        if admin is True:
-            if scopes is None:
-                scopes = ["admin"]
-            elif scopes[0] != "*":
-                scopes.append("admin")
+
+def requires_auth(
+    *, admin: bool = False, redirect: bool = False, scopes: Scopes = None
+) -> Callable[[Callable], Callable]:
+    if admin is True and scopes is None:
+        scopes = ["admin"]
+    if isinstance(scopes, str):
+        scopes = [scopes]
+    if admin is True and isinstance(scopes, list) and "admin" not in scopes:
+        scopes.append("admin")
 
     def deco(function):
         setattr(function, "requires_auth", True)
@@ -64,34 +67,49 @@ def requires_auth(
     return deco
 
 
+@overload
 async def verify_user(
-    request: web.Request, *, admin: bool, redirect: bool, scopes: Scopes
-) -> dict[str, str | int | bool] | bool | web.Response:
+    request: web.Request, *, admin: bool = False, redirect: bool = True, scopes: QueryScopes
+) -> MappingProxyType[str, Any]:
+    ...
+
+
+@overload
+async def verify_user(
+    request: web.Request, *, admin: bool = False, redirect: bool = True, scopes: Literal[None]
+) -> bool:
+    ...
+
+
+async def verify_user(request: web.Request, *, admin: bool = False, redirect: bool = True, scopes: Scopes):
+    if admin is True and scopes is None:
+        raise ValueError("Cannot determine if user is admin without any scopes")
+
     async def by_session():
         session = request.cookies.get("_session")
         if session is not None:
-            if scopes is None and admin is not True:
+            if scopes is None:
                 return await select_session_exists(get_db(request), token=UUID(session))
-            user = await select_user_by_session(get_db(request), token=UUID(session), scopes=scopes)
-            return user
+            return await select_user_by_session(get_db(request), token=UUID(session), scopes=["*"])
 
     async def by_api_key():
         api_key = request.headers.get("x-api-key")
         if api_key is not None:
-            if scopes is None and admin is not True:
+            if scopes is None:
                 return await select_api_key_exists(get_db(request), api_key=api_key)
-            user = await select_user_by_api_key(get_db(request), api_key=api_key, scopes=scopes)
-            return user
+            return await select_user_by_api_key(get_db(request), api_key=api_key, scopes=["*"])
 
     user = await by_session() or await by_api_key()
 
-    if not user:
+    if user is None:
+        response = web.HTTPUnauthorized()
         if redirect is True:
-            return web.HTTPFound("/")
-        return web.HTTPUnauthorized()
-    if scopes is not None:
+            response.headers.add("Location", "/login")
+        raise response
+
+    if not isinstance(user, bool):
         if admin is True and user["admin"] is False:
-            return web.HTTPForbidden()
+            raise web.HTTPForbidden()
 
     request["user"] = user
     return user

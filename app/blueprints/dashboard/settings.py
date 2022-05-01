@@ -36,13 +36,13 @@ bp = Blueprint("/dashboard/settings", name="settings")
 
 
 @bp.get("/api_key", name="api_key")
-@requires_auth(redirect=False, scopes=["api_key", "admin"])
+@requires_auth(scopes=["api_key", "admin"])
 async def api_key_settings(_: web.Request) -> web.Response:
     return await render_template("dashboard/settings/api_key/index", _)
 
 
 @bp.route("/api_key/regenerate", methods=["GET", "POST"], name="regenerate_api_key")
-@requires_auth(redirect=False, scopes=["id", "api_key", "admin"])
+@requires_auth(scopes=["id", "api_key", "admin"])
 async def regen_api_key(request: web.Request) -> web.Response:
     if request.method == "POST":
         async with get_db(request).acquire() as conn:
@@ -54,7 +54,7 @@ async def regen_api_key(request: web.Request) -> web.Response:
 
 
 @bp.get("/sessions", name="sessions")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(scopes=["id", "admin"])
 async def sessions_settings(request: web.Request) -> web.Response:
     user_sessions = await select_sessions(get_db(request), user_id=request["user"]["id"])
     return await render_template(
@@ -65,7 +65,7 @@ async def sessions_settings(request: web.Request) -> web.Response:
 
 
 @bp.post("/sessions/{token}/delete", name="delete_session")
-@requires_auth(redirect=True, scopes=["id"])
+@requires_auth(scopes=["id"])
 @match_info_schema(SessionSchema)
 async def delete_session_(request: web.Request) -> web.Response:
     # no need for auth since uuids are unique
@@ -74,7 +74,7 @@ async def delete_session_(request: web.Request) -> web.Response:
 
 
 @bp.get("/shortener", name="shortener")
-@requires_auth(redirect=True, scopes="admin")
+@requires_auth(scopes="admin")
 async def shortener_settings(_: web.Request) -> web.Response:
     return await render_template("dashboard/settings/shortener", _)
 
@@ -82,7 +82,7 @@ async def shortener_settings(_: web.Request) -> web.Response:
 @bp.route("/account/edit", methods=["GET", "POST"], name="edit_account")
 @bp.route("", methods=["GET", "POST"], name="index")
 @bp.route("/account", methods=["GET", "POST"], name="account")
-@requires_auth(redirect=True, scopes=["id", "admin", "email", "joined", "session_duration"])
+@requires_auth(scopes=["id", "admin", "email", "joined", "session_duration"])
 async def edit_self(request: web.Request) -> web.Response:
     user = request["user"]
     session_duration = get_amount_and_unit(user["session_duration"])
@@ -115,7 +115,7 @@ async def edit_self(request: web.Request) -> web.Response:
 
 
 @bp.route("/account/delete", methods=["GET", "POST"], name="delete_account")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(scopes=["id", "admin"])
 async def delete_account(request: web.Request) -> web.Response:
     if request.method == "POST":
         await delete_user(get_db(request), user_id=request["user"]["id"])
@@ -132,7 +132,7 @@ async def delete_account(request: web.Request) -> web.Response:
 
 
 @bp.get("/invites", name="invites")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(scopes=["id", "admin"])
 async def invites_manager(request: web.Request) -> web.Response:
     # sourcery skip: assign-if-exp, boolean-if-exp-identity, introduce-default-else, remove-unnecessary-cast
     invites = await get_db(request).fetch(
@@ -154,7 +154,7 @@ async def invites_manager(request: web.Request) -> web.Response:
 
 
 @bp.post("/invites", name="create_invite")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(scopes=["id", "admin"])
 async def create_invite(request: web.Request) -> web.Response:
     # sourcery skip: assign-if-exp, boolean-if-exp-identity, introduce-default-else, remove-unnecessary-cast
     try:

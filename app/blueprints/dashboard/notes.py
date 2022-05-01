@@ -106,8 +106,13 @@ async def view_note_form(request: web.Request) -> web.Response:
         return web.Response(text="Note not found", status=404)
 
     if note["private"] is True:
-        user = await verify_user(request, scopes=["id"], admin=False, redirect=False)
-        if isinstance(user, web.HTTPException):
+        try:
+            user = await verify_user(
+                request,
+                redirect=False,
+                scopes=["id"],
+            )
+        except web.HTTPException:
             return web.Response(text="Note is private", status=403)
         if user["id"] != note["owner"]:
             return web.Response(text="Note is private", status=403)
@@ -143,7 +148,7 @@ bp = Blueprint("/dashboard/notes", name="notes", subblueprints=[sub_bp])
 
 @bp.get("", name="index")
 @querystring_schema(NotesFilterSchema())
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(scopes=["id", "admin"])
 async def index(request: web.Request) -> web.Response:
     current_page = request["querystring"].get("page", 1) - 1
     direction = request["querystring"].get("direction", "desc")
@@ -177,13 +182,13 @@ async def index(request: web.Request) -> web.Response:
 
 
 @bp.get("/create", name="create")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(scopes=["id", "admin"])
 async def create_note(_: web.Request) -> web.Response:
     return await render_template("dashboard/notes/create", _, {"errors": {}})
 
 
 @bp.post("/create")
-@requires_auth(redirect=True, scopes=["id", "admin"])
+@requires_auth(scopes=["id", "admin"])
 async def create_note_form(request: web.Request) -> web.Response:
     try:
         args = await parser.parse(NoteSchema(), request, locations=["form"])

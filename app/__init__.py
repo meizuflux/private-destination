@@ -38,13 +38,14 @@ async def authentication_middleware(request: web.Request, handler):
         function = getattr(handler, request.method.lower())
 
     if hasattr(function, "requires_auth"):
-        error = await verify_user(
-            request,
-            admin=function.auth["admin"],
-            redirect=function.auth["redirect"],
-            scopes=function.auth["scopes"],
-        )
-        if isinstance(error, web.HTTPException):
+        try:
+            await verify_user(
+                request,
+                admin=function.auth["admin"],
+                redirect=function.auth["redirect"],
+                scopes=function.auth["scopes"],
+            )
+        except web.HTTPException as error:
             return await handle_errors(request, error)
 
     return await handler(request)

@@ -1,3 +1,4 @@
 isort
 black
 aiohttp-devtools
+pre-commit

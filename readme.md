@@ -34,3 +34,4 @@ email with `sendinblue`
 - polls service
 - remove need for email (make it optional) and allow password reset via a secure secret that is shown once
 - make account ids similar to mullvad instead of email
+- gradually migrate to a REST api (use some minimal js on the frontend to send requests and whatnot)

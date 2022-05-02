@@ -107,7 +107,7 @@ async def login(request: web.Request) -> web.Response:
                 "onboarding",
                 request,
                 {
-                    "email_error": ["We could not find a user with that email"],
+                    "errors": {"email": ["We could not find a user with that email"]},
                     "email": args["email"],
                     "password": args["password"],
                 },
@@ -120,7 +120,10 @@ async def login(request: web.Request) -> web.Response:
         return await render_template(
             "onboarding",
             request,
-            {"password_error": ["Invalid password"], "email": args["email"]},
+            {
+                "errors": {"password": ["Invalid password"]},
+                "email": args["email"]
+            },
             status=401,
         )
 

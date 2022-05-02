@@ -139,15 +139,17 @@ async def create_user(
                 "SELECT used_by, required_email FROM invites WHERE code = $1", args["invite_code"]
             )
             if invite["used_by"] is not None:
-                ctx = {
-                    "errors": {"invite_code": ["This invite code has already been used"]}
-                }
+                ctx = {"invite_code_error": ["This invite code has already been used"]}
                 ctx.update(extra_ctx)
                 return Status.ERROR, await render_template(template, request, ctx, status=409)
 
             if invite["required_email"] is not None and invite["required_email"] != args["email"]:
                 ctx = {
-                    "errors": {"invite_code": ["Your email does not match the email specified by the owner of the invite code"]}
+                    "invite_code_error": [
+                        "Your email does not match the email specified by the owner of the invite code"
+                    ],
+                    "email": args["email"],
+                    "password": args["password"],
                 }
                 ctx.update(extra_ctx)
                 return Status.ERROR, await render_template(template, request, ctx, status=409)
@@ -162,7 +164,7 @@ async def create_user(
             await conn.execute("UPDATE invites SET used_by = $1 WHERE code = $2", user_id, args["invite_code"])
     except UniqueViolationError:
         ctx = {
-            "errors": {"email": ["A user with this email already exists"]},
+            "email_error": ["A user with this email already exists"],
             "email": args["email"],
             "password": args["password"],
         }
@@ -210,7 +212,7 @@ async def edit_user(
         )
     except UniqueViolationError:
         ctx = {
-            "errors": {"email": ["A user with this email already exists"]},
+            "email_error": ["A user with this email already exists"],
             "id": old_user["id"],
             "email": args["email"],
             "admin": old_user["admin"],

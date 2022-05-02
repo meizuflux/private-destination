@@ -178,7 +178,7 @@ async def create_invite(request: web.Request) -> web.Response:
         )
 
     async with get_db(request).acquire() as conn:
-        invites_count = await conn.fetchval("SELECT count(code) FROM invites WHERE owner = $1", request["user"]["id"]
+        invites_count = await conn.fetchval("SELECT count(code) FROM invites WHERE owner = $1", request["user"]["id"])
         if invites_count > 5 and request["user"]["admin"] is False:
             return web.HTTPForbidden(reason="You can only create 5 invites")
 

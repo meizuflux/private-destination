@@ -8,7 +8,6 @@ from aiohttp import web
 from asyncpg import Record, UniqueViolationError
 from marshmallow import ValidationError
 from passlib.hash import pbkdf2_sha512
-from typing_extensions import reveal_type
 
 from app.models.auth import SignUpSchema, UsersEditSchema
 from app.templating import render_template

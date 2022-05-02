@@ -6,22 +6,30 @@
 {% endblock title %}
 
 {% block main2 %}
-    <form method="POST">
-        <label for="" class="label">Required Email</label>
-        <div class="columns">
-            <div class="column is-5-desktop is-12-mobile pb-0">
-                <div class="field has-addons ">
-                    <div class="control is-expanded">
-                        <input type="email" name="required_email" class="input {{ macros.class_if_error('required_email') }}" placeholder="Email the user signing up must have">
-                    </div>
-                    <div class="control">
-                        <button type="submit" class="button is-info">Create Invite</button>
+    {% if can_create %}
+        <form method="POST">
+            <label for="" class="label">Required Email</label>
+            <div class="columns">
+                <div class="column is-5-desktop is-12-mobile pb-0">
+                    <div class="field has-addons ">
+                        <div class="control is-expanded">
+                            <input type="email" name="required_email" class="input {{ macros.class_if_error('required_email') }}" placeholder="Email the user signing up must have">
+                        </div>
+                        <div class="control">
+                            <button type="submit" class="button is-info">Create Invite</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        {{ macros.errors_and_help("required_email", "Leave this field blank to allow any email to use the invite code") }}
-    </form>
+            {{ macros.errors_and_help("required_email", "Leave this field blank to allow any email to use the invite code") }}
+        </form>
+    {% else %}
+        <article class="message is-info">
+            <div class="message-body">
+                You have created the max amount of invites (5)
+            </div>
+        </article>
+    {% endif %}
 
     {% if invites != [] %}
         <div class="columns is-multiline">

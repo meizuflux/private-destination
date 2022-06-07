@@ -87,7 +87,6 @@ async def index(request: web.Request) -> web.Response:
 
     async with get_db(request).acquire() as conn:
         ctx["service"] = {
-            "shortener_count": await select_total_short_urls_count(conn),
             "user_count": await select_total_users_count(conn),
             "session_count": await select_total_sessions_count(conn),
             "unique_session_count": await select_total_unique_sessions_count(conn),

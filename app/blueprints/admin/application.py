@@ -21,7 +21,7 @@ FILES = LINES = CHARACTERS = CLASSES = FUNCTIONS = COROUTINES = COMMENTS = 0
 for f in Path("./").rglob("*.*"):
     # no idea how do do this with glob so I'm just gonna do this
     # docs: https://docs.python.org/3/library/fnmatch.html#fnmatch.fnmatch
-    ignored_folders = ("venv", "node_modules", "dist", ".git", ".vscode", ".mypy_cache")
+    ignored_folders = ("venv", "node_modules", "dist", ".git", ".vscode", ".mypy_cache", ".devcontainer")
     ignored_extensions = (".pyc",)
     if any(str(f).startswith(folder) for folder in ignored_folders):
         continue

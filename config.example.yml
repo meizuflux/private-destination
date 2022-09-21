@@ -1,7 +1,7 @@
 dev:
   domain: "mzf.one"
-  postgres_dsn: ""
+  postgres_dsn: "" # postgres://user:password@host:port/database?option=value
 
 prod:
   domain: "mzf.one"
-  postgres_dsn: ""
+  postgres_dsn: "" # postgres://user:password@host:port/database?option=value

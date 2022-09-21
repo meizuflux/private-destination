@@ -3,17 +3,15 @@ $ psql -h localhost -p 5432 -U postgres
 ```
 ### run migration
 ```bash
-$ psql [options] < migrations/[time].sql
+$ python scripts/sql.py -f migrations/[time].sql
 ```
-
-uri is `postgres://postgres:mysecretpassword@localhost:5432/postgres`
 
 nginx should serve static in production
 
 # setting up admin user
 first create tables
 ```bash
-$ psql [options] < schema.sql
+$ python scripts/sql.py -f schema.sql
 ```
 
 then run `scripts/admin.py [--production]` and follow the prompt. this will create an admin user with the credentials you provide

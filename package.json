@@ -6,12 +6,6 @@
   "author": "meizuflux",
   "license": "MPL-2.0",
   "dependencies": {
-    "@codemirror/basic-setup": "^0.19.1",
-    "@codemirror/lang-css": "^0.19.3",
-    "@codemirror/lang-javascript": "^0.19.7",
-    "@codemirror/lang-json": "^0.19.2",
-    "@codemirror/lang-python": "^0.19.4",
-    "@codemirror/lang-rust": "^0.19.2",
     "chokidar-cli": "^3.0.0",
     "esbuild": "^0.14.25"
   }

@@ -5,7 +5,7 @@ start-db:
     docker start db
 
 dev:
-    adev runserver server.py --app-factory app_factory --host 0.0.0.0
+    adev runserver server.py --app-factory app_factory --host localhost
 
 format:
     isort . && black .

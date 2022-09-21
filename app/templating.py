@@ -37,7 +37,7 @@ def setup(
     env.globals["app"] = app
     if global_functions:
         env.globals.update(global_functions)
-    app["templating_environment"] = env
+    app[TEMPLATING_ENVIRONMENT_KEY] = env
     if context_processors is None:
         context_processors = [request_processor]
     else:

@@ -93,16 +93,8 @@ def register_blueprint(app: web.Application, blueprint: Blueprint) -> None:
     app.router.add_routes(blueprint.route_table)
 
 
-cached_urls: dict[str, str] = {}
-
-
 def url_for(app: web.Application, name: str, *, query: dict[str, str] = None, **match_info: str | int) -> str:
     """Finds the url for a named route"""
-    cache_key = name + str(query) + str(match_info)
-    cached_url = cached_urls.get(cache_key)
-    if cached_url is not None:
-        return cached_url
-
     resource = app.router.get(name)
 
     if resource is None:
@@ -114,6 +106,5 @@ def url_for(app: web.Application, name: str, *, query: dict[str, str] = None, **
     if query:
         _url = _url.with_query(query)
     url = str(_url)
-    cached_urls[cache_key] = url
 
     return url

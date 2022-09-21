@@ -171,7 +171,7 @@ async def create_user(
         ctx.update(extra_ctx)
         return Status.ERROR, await render_template(template, request, ctx, status=409)
 
-    return Status.OK, user_id, args["admin"]
+    return Status.OK, user_id, args["email"]
 
 
 async def edit_user(
